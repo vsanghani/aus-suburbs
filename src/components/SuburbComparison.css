@@ -1,0 +1,257 @@
+/* SuburbComparison Styling */
+.compare-container {
+  width: 100%;
+  margin-top: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.compare-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  gap: 20px;
+}
+
+.compare-title {
+  font-size: 32px;
+  margin: 6px 0;
+  color: #FFFFFF;
+}
+
+.compare-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 600px;
+}
+
+.add-suburb-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  color: var(--text-bright);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  cursor: pointer;
+  outline: none;
+}
+
+.add-suburb-select:focus {
+  border-color: var(--accent-emerald);
+}
+
+.empty-compare-state {
+  padding: 50px;
+  text-align: center;
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-muted);
+}
+
+.quick-suggest-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Comparison Table */
+.comparison-table-wrapper {
+  border-radius: var(--radius-xl);
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.comparison-cards-row {
+  display: grid;
+  grid-template-columns: 240px repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1px;
+  background: var(--border-subtle);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.metric-label-column {
+  background: var(--bg-surface);
+  padding: 16px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.lbl-faded {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.suburb-compare-card {
+  background: var(--bg-surface);
+  padding: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.remove-compare-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.remove-compare-btn:hover {
+  background: rgba(244, 63, 94, 0.2);
+  color: #FDA4AF;
+}
+
+.card-suburb-name {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 6px 0 2px;
+  color: #FFFFFF;
+}
+
+.card-suburb-state {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.card-iq-score-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid var(--border-accent);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  margin-bottom: 14px;
+  width: fit-content;
+}
+
+.iq-num {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--accent-emerald);
+}
+
+.iq-txt {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.view-dossier-link {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 6px 0;
+  font-size: 12.5px;
+  color: var(--accent-emerald);
+}
+
+/* Sections */
+.compare-section-header {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px 20px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent-cyan);
+  border-bottom: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.compare-row {
+  display: grid;
+  grid-template-columns: 240px repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1px;
+  background: var(--border-subtle);
+}
+
+.compare-data-cell {
+  background: var(--bg-surface);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  position: relative;
+  transition: background var(--transition-fast);
+}
+
+.cell-highlight {
+  background: rgba(16, 185, 129, 0.04);
+}
+
+.cell-value {
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.winner-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--accent-emerald);
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+}
+
+.cell-score-bar-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.cell-score-num {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 16px;
+  min-width: 26px;
+}
+
+.mini-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mini-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+  .compare-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

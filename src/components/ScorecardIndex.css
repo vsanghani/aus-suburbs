@@ -1,0 +1,180 @@
+/* ScorecardIndex Styling */
+.scorecard-index-container {
+  width: 100%;
+  margin-top: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.index-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  gap: 20px;
+}
+
+.index-title {
+  font-size: 32px;
+  margin: 6px 0;
+  color: #FFFFFF;
+}
+
+.index-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 650px;
+}
+
+.table-search-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  gap: 8px;
+  color: var(--text-dim);
+}
+
+.table-search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-bright);
+  font-size: 13.5px;
+}
+
+/* Table Card */
+.index-table-card {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.score-table th {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px 18px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border-strong);
+  user-select: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.score-table th:hover {
+  color: var(--text-bright);
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sort-icon-neutral {
+  opacity: 0.4;
+}
+
+.sort-icon-active {
+  color: var(--accent-emerald);
+}
+
+.score-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.table-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cell-suburb-main {
+  cursor: pointer;
+}
+
+.suburb-main-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.suburb-main-info .name {
+  font-weight: 700;
+  color: var(--text-bright);
+  font-size: 14.5px;
+}
+
+.suburb-main-info .postcode {
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+
+.font-semibold {
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.score-tag {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.score-tag.purple { background: rgba(139, 92, 246, 0.15); color: #C4B5FD; }
+.score-tag.emerald { background: rgba(16, 185, 129, 0.15); color: #6EE7B7; }
+.score-tag.blue { background: rgba(59, 130, 246, 0.15); color: #93C5FD; }
+
+.score-iq-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+  border: 1px solid var(--accent-emerald);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 13.5px;
+  color: #FFFFFF;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-sm-tbl {
+  padding: 6px;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+}
+
+@media (max-width: 768px) {
+  .index-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
