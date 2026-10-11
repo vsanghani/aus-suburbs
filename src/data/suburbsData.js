@@ -71,7 +71,83 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Limited off-street parking', 'Higher weekend pedestrian noise', 'High property price per sqm'],
       idealFor: ['Tech & Creative Professionals', 'Couples without children', 'Urban Foodies', 'Investors seeking tight vacancy'],
       developmentHotspots: 'Tech Central corridor expansion around Central Station precinct.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "crown-st-corridor",
+            "name": "Crown Street Dining Spine",
+            "tag": "Gastronomy & Nightlife",
+            "noiseLevel": "High",
+            "noiseIndex": 82,
+            "parkingEase": "Challenging (Permit Only)",
+            "walkScore": 99,
+            "priceDisparity": "+8% vs suburb avg",
+            "trafficVolume": "Moderate Arterial",
+            "character": "Historic Victorian retail shopfronts and converted terraces directly above bustling dining institutions, wine bars, and specialty coffee roasters.",
+            "keyStreets": [
+                  "Crown St",
+                  "Devonshire St",
+                  "Foveaux St"
+            ],
+            "residentPersona": "Foodies, hospitality founders, design creatives, and active urbanites",
+            "microScores": {
+                  "vibe": 99,
+                  "quiet": 42,
+                  "convenience": 98,
+                  "family": 56
+            }
+      },
+      {
+            "id": "ward-park-terraces",
+            "name": "Ward Park & Heritage Terraces",
+            "tag": "Tranquil Victorian Enclave",
+            "noiseLevel": "Low",
+            "noiseIndex": 32,
+            "parkingEase": "Moderate (Resident Permit)",
+            "walkScore": 94,
+            "priceDisparity": "+14% vs suburb avg",
+            "trafficVolume": "Low (Laneways & Cul-de-sacs)",
+            "character": "Stately iron-laced Victorian terraces framed by mature jacarandas and peaceful pocket parks, removed from arterial vehicle flow.",
+            "keyStreets": [
+                  "Marlborough St",
+                  "Collins St",
+                  "Tudor St",
+                  "Shannon Reserve"
+            ],
+            "residentPersona": "Established professionals, architects, pet owners, and discerning terrace lovers",
+            "microScores": {
+                  "vibe": 86,
+                  "quiet": 84,
+                  "convenience": 92,
+                  "family": 78
+            }
+      },
+      {
+            "id": "central-tech-quarter",
+            "name": "Devonshire & Central Tech Fringe",
+            "tag": "Transit & Startup Hub",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 64,
+            "parkingEase": "Strict Permit Only",
+            "walkScore": 98,
+            "priceDisparity": "-6% vs suburb avg",
+            "trafficVolume": "High Pedestrian / Light Rail",
+            "character": "Former garment district warehouse conversions housing tech accelerators, media lofts, and light rail connections into Sydney CBD.",
+            "keyStreets": [
+                  "Kippax St",
+                  "Holt St",
+                  "Elizabeth St",
+                  "Devonshire Light Rail Stop"
+            ],
+            "residentPersona": "Software engineers, startup founders, commuters, and high-frequency renters",
+            "microScores": {
+                  "vibe": 92,
+                  "quiet": 58,
+                  "convenience": 99,
+                  "family": 50
+            }
+      }
+]
   },
   {
     id: 'bondi-beach-nsw',
@@ -141,7 +217,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Summer tourist congestion', 'No direct passenger rail line', 'High strata levies on oceanfront units'],
       idealFor: ['High-income Singles & Couples', 'Fitness & Ocean Enthusiasts', 'Luxury Holiday Let Investors'],
       developmentHotspots: 'Boutique architectural luxury apartment redevelopments along Campbell Parade.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "north-bondi-pocket",
+            "name": "North Bondi & Grassy Knoll",
+            "tag": "Coastal Sanctuary",
+            "noiseLevel": "Low",
+            "noiseIndex": 36,
+            "parkingEase": "Challenging on weekends",
+            "walkScore": 86,
+            "priceDisparity": "+18% vs suburb avg",
+            "trafficVolume": "Low Residential",
+            "character": "Sun-drenched amphitheater overlooking the surf with direct access to tidal pools, coastal cafes, and prestigious hillside freestanding homes.",
+            "keyStreets": [
+                  "Ben Buckler Point",
+                  "Ramsgate Ave",
+                  "Hastings Pde",
+                  "Wairoa Ave"
+            ],
+            "residentPersona": "Dawn surfers, wellness practitioners, young affluent families, and long-term locals",
+            "microScores": {
+                  "vibe": 94,
+                  "quiet": 82,
+                  "convenience": 88,
+                  "family": 84
+            }
+      },
+      {
+            "id": "campbell-pde-oceanfront",
+            "name": "Campbell Parade Oceanfront",
+            "tag": "Bustling Promenade",
+            "noiseLevel": "High",
+            "noiseIndex": 88,
+            "parkingEase": "Extremely Difficult",
+            "walkScore": 98,
+            "priceDisparity": "+12% vs suburb avg",
+            "trafficVolume": "Heavy Tourist / Bus Corridor",
+            "character": "Uninterrupted sandy beach vistas, Art Deco apartment blocks, world-famous dining rooms, and high weekend foot traffic.",
+            "keyStreets": [
+                  "Campbell Pde",
+                  "Curlewis St",
+                  "Hall St",
+                  "Beach Road"
+            ],
+            "residentPersona": "Overseas expats, international corporate executives, and hospitality socialites",
+            "microScores": {
+                  "vibe": 99,
+                  "quiet": 38,
+                  "convenience": 97,
+                  "family": 62
+            }
+      },
+      {
+            "id": "bondi-rd-strip",
+            "name": "Bondi Road Village Spine",
+            "tag": "Elevated Commuter Hub",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 68,
+            "parkingEase": "Moderate (Side Streets)",
+            "walkScore": 92,
+            "priceDisparity": "-10% vs suburb avg",
+            "trafficVolume": "Continuous Transit Flow",
+            "character": "Traditional Jewish bakeries, organic grocers, neighborhood taverns, and classic 1970s brick walk-ups connecting the beach to Bondi Junction.",
+            "keyStreets": [
+                  "Bondi Rd",
+                  "Ocean St",
+                  "Wellington St",
+                  "Bennett St"
+            ],
+            "residentPersona": "Young rental sharers, CBD commuters, first home buyers, and foodies",
+            "microScores": {
+                  "vibe": 89,
+                  "quiet": 55,
+                  "convenience": 94,
+                  "family": 68
+            }
+      }
+]
   },
   {
     id: 'manly-nsw',
@@ -212,7 +365,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Spit Bridge road bottlenecks during peak hours', 'Extremely high barrier to house entry'],
       idealFor: ['Executive Families', 'Surf & Ocean Athletes', 'Discerning Lifestyle Buyers'],
       developmentHotspots: 'Manly Wharf dining precinct revamp.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "shelly-bower-enclave",
+            "name": "Bower & Shelly Beach Marine Reserve",
+            "tag": "Elite Harbor Cliffside",
+            "noiseLevel": "Low",
+            "noiseIndex": 22,
+            "parkingEase": "Private Garages Only",
+            "walkScore": 84,
+            "priceDisparity": "+28% vs suburb avg",
+            "trafficVolume": "Pedestrian Walkway Only",
+            "character": "Spectacular cliffside promenade wrapping Cabbage Tree Bay aquatic reserve with protected snorkeling reefs and multi-million-dollar architectural statements.",
+            "keyStreets": [
+                  "Bower St",
+                  "Marine Pde",
+                  "College St",
+                  "Shelly Beach Headland"
+            ],
+            "residentPersona": "Ultra-high-net-worth ocean swimmers, executive retirees, and private equity leaders",
+            "microScores": {
+                  "vibe": 88,
+                  "quiet": 95,
+                  "convenience": 82,
+                  "family": 86
+            }
+      },
+      {
+            "id": "the-corso-wharf",
+            "name": "The Corso & Fast Ferry Corridor",
+            "tag": "Vibrant Transit & Retail",
+            "noiseLevel": "High",
+            "noiseIndex": 78,
+            "parkingEase": "Pedestrian Mall (No Cars)",
+            "walkScore": 99,
+            "priceDisparity": "-4% vs suburb avg",
+            "trafficVolume": "Pedestrian & Ferry Plaza",
+            "character": "Pedestrian boulevard linking Sydney Harbour wharf to the ocean beach, packed with surf shops, alfresco pubs, and ferry commuters.",
+            "keyStreets": [
+                  "The Corso",
+                  "East Esplanade",
+                  "Belgrave St",
+                  "Wharf Promenade"
+            ],
+            "residentPersona": "City commuters taking the 18-min ferry, surf lifestyle enthusiasts, and young professionals",
+            "microScores": {
+                  "vibe": 96,
+                  "quiet": 48,
+                  "convenience": 99,
+                  "family": 74
+            }
+      },
+      {
+            "id": "north-steyne-surf",
+            "name": "North Steyne Surf Strip",
+            "tag": "Surf & Fitness Strip",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 58,
+            "parkingEase": "Moderate Along Pines",
+            "walkScore": 91,
+            "priceDisparity": "+6% vs suburb avg",
+            "trafficVolume": "Moderate Coastal Road",
+            "character": "Towering Norfolk Island pines, beachfront apartment blocks, morning jogging paths, and world-class beach break sandbars.",
+            "keyStreets": [
+                  "North Steyne",
+                  "Pine St",
+                  "Collingwood St",
+                  "Raglan St"
+            ],
+            "residentPersona": "Triathletes, surf lifesavers, active families, and seaside apartment owners",
+            "microScores": {
+                  "vibe": 87,
+                  "quiet": 72,
+                  "convenience": 90,
+                  "family": 88
+            }
+      }
+]
   },
   {
     id: 'chatswood-nsw',
@@ -283,7 +513,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['High density tower congestion along Victoria Ave', 'Competitive school catchments'],
       idealFor: ['Education-focused Families', 'Corporate Commuters', 'Apartment Investors'],
       developmentHotspots: 'Chatswood Chase luxury retail expansion and Victoria Avenue civic improvements.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "victoria-ave-core",
+            "name": "Victoria Avenue Commercial & Metro Core",
+            "tag": "Cosmopolitan High-Density",
+            "noiseLevel": "High",
+            "noiseIndex": 82,
+            "parkingEase": "Underground Basements Only",
+            "walkScore": 99,
+            "priceDisparity": "-8% vs suburb avg",
+            "trafficVolume": "Heavy Urban & Metro",
+            "character": "Twin retail powerhouses (Westfield & Chase), high-rise residential towers, The Concourse theatre, and unmatched Metro transit into Barangaroo.",
+            "keyStreets": [
+                  "Victoria Ave",
+                  "Railway St",
+                  "Anderson St",
+                  "Thomas St"
+            ],
+            "residentPersona": "Corporate professionals, international university scholars, and multi-generational families",
+            "microScores": {
+                  "vibe": 92,
+                  "quiet": 46,
+                  "convenience": 99,
+                  "family": 79
+            }
+      },
+      {
+            "id": "chatswood-west-bush",
+            "name": "Leafy Bushland Family Pocket",
+            "tag": "Quiet Bushland Sanctuary",
+            "noiseLevel": "Low",
+            "noiseIndex": 25,
+            "parkingEase": "Plentiful Driveways",
+            "walkScore": 68,
+            "priceDisparity": "+16% vs suburb avg",
+            "trafficVolume": "Low Local Residential",
+            "character": "Spacious mid-century and modern architect-designed family houses on generous blocks backing onto the serene Lane Cove River valley.",
+            "keyStreets": [
+                  "Greville St",
+                  "Fullers Rd",
+                  "Millwood Ave",
+                  "Blue Gum Reserve"
+            ],
+            "residentPersona": "Families prioritizing high-ranking public high schools, quiet gardens, and nature walks",
+            "microScores": {
+                  "vibe": 65,
+                  "quiet": 94,
+                  "convenience": 72,
+                  "family": 96
+            }
+      },
+      {
+            "id": "archer-neridah-strip",
+            "name": "Archer & Neridah Residential Spine",
+            "tag": "School & Parkland Corridor",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 52,
+            "parkingEase": "Moderate Street Parking",
+            "walkScore": 91,
+            "priceDisparity": "+4% vs suburb avg",
+            "trafficVolume": "Moderate City Fringe",
+            "character": "Low-to-mid rise brick residences and townhouses within walking distance of Beauchamp Park and top-tier primary schools.",
+            "keyStreets": [
+                  "Archer St",
+                  "Neridah St",
+                  "Beauchamp St",
+                  "Ashley St"
+            ],
+            "residentPersona": "Young growing families, academic professionals, and downsizers",
+            "microScores": {
+                  "vibe": 80,
+                  "quiet": 76,
+                  "convenience": 92,
+                  "family": 91
+            }
+      }
+]
   },
   {
     id: 'newtown-nsw',
@@ -353,7 +660,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Aircraft flight path noise exposure', 'Narrow residential streets with competitive street parking'],
       idealFor: ['Academics & Medical Staff', 'Students & Young Creatives', 'Investors looking for yield'],
       developmentHotspots: 'Inner West green canopy enhancement and active transport links.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "king-st-spine",
+            "name": "King Street Bohemian Strip",
+            "tag": "Arts, Vintage & Dining",
+            "noiseLevel": "High",
+            "noiseIndex": 90,
+            "parkingEase": "Extremely Difficult",
+            "walkScore": 99,
+            "priceDisparity": "-2% vs suburb avg",
+            "trafficVolume": "Heavy Bus & Pedestrian",
+            "character": "Legendary arts artery packed with second-hand bookstores, vegan diners, vintage apparel, live theatres, and vibrant street murals.",
+            "keyStreets": [
+                  "King St",
+                  "Enmore Rd",
+                  "Mary St",
+                  "Station St"
+            ],
+            "residentPersona": "Musicians, university students, writers, and counter-culture creatives",
+            "microScores": {
+                  "vibe": 99,
+                  "quiet": 32,
+                  "convenience": 99,
+                  "family": 52
+            }
+      },
+      {
+            "id": "camperdown-park-row",
+            "name": "Camperdown Memorial Rest Park Enclave",
+            "tag": "Community & Dog-Friendly Terraces",
+            "noiseLevel": "Low",
+            "noiseIndex": 35,
+            "parkingEase": "Narrow One-Way Permit",
+            "walkScore": 94,
+            "priceDisparity": "+12% vs suburb avg",
+            "trafficVolume": "Local Resident Only",
+            "character": "Restored Victorian worker terraces fronting a sprawling community park with communal dog gatherings and weekend picnics.",
+            "keyStreets": [
+                  "Australia St",
+                  "Lennox St",
+                  "Church St",
+                  "Federation Rd"
+            ],
+            "residentPersona": "Young professional couples, pet enthusiasts, university lecturers, and young families",
+            "microScores": {
+                  "vibe": 92,
+                  "quiet": 82,
+                  "convenience": 94,
+                  "family": 82
+            }
+      },
+      {
+            "id": "south-newtown-industrial",
+            "name": "Alice Street / Southern Warehouse Quarter",
+            "tag": "Craft Breweries & Modern Lofts",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 55,
+            "parkingEase": "Moderate",
+            "walkScore": 89,
+            "priceDisparity": "-7% vs suburb avg",
+            "trafficVolume": "Moderate Mixed-Use",
+            "character": "Former industrial brick factories converted into warehouse lofts, micro-distilleries, and quiet residential cul-de-sacs bordering St Peters.",
+            "keyStreets": [
+                  "Alice St",
+                  "Edgeware Rd",
+                  "Hawken St",
+                  "Bedford St"
+            ],
+            "residentPersona": "Graphic designers, tech contractors, beer connoisseurs, and urban renovators",
+            "microScores": {
+                  "vibe": 91,
+                  "quiet": 68,
+                  "convenience": 88,
+                  "family": 65
+            }
+      }
+]
   },
   {
     id: 'fitzroy-vic',
@@ -424,7 +808,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Weekend nightlife noise', 'Limited land parcel sizes', 'Premium price per square meter'],
       idealFor: ['Creative Entrepreneurs', 'Design Enthusiasts', 'Young Executives'],
       developmentHotspots: 'Heritage warehouse residential conversions.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "gertrude-st-quarter",
+            "name": "Gertrude Street Design & Wine Precinct",
+            "tag": "Boutique Heritage Elegance",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 58,
+            "parkingEase": "Challenging",
+            "walkScore": 98,
+            "priceDisparity": "+15% vs suburb avg",
+            "trafficVolume": "Tram Line & Pedestrians",
+            "character": "Tree-lined heritage street lined with boutique Australian fashion labels, natural wine cellars, world-renowned bakeries, and bluestone terraces.",
+            "keyStreets": [
+                  "Gertrude St",
+                  "Napier St",
+                  "Young St",
+                  "Little Gore St"
+            ],
+            "residentPersona": "Fashion stylists, architects, culinary enthusiasts, and corporate creatives",
+            "microScores": {
+                  "vibe": 98,
+                  "quiet": 65,
+                  "convenience": 97,
+                  "family": 62
+            }
+      },
+      {
+            "id": "brunswick-st-bohemian",
+            "name": "Brunswick Street Live Music & Nightlife",
+            "tag": "Eclectic Indie Core",
+            "noiseLevel": "High",
+            "noiseIndex": 88,
+            "parkingEase": "Extremely Difficult",
+            "walkScore": 99,
+            "priceDisparity": "-5% vs suburb avg",
+            "trafficVolume": "Heavy Tram & Foot Traffic",
+            "character": "The historic beating heart of Melbourne alternative culture, famed for rooftop cocktail bars, vintage record shops, and all-night diners.",
+            "keyStreets": [
+                  "Brunswick St",
+                  "Johnston St",
+                  "Kerr St",
+                  "Argyle St"
+            ],
+            "residentPersona": "Night owls, artists, live music lovers, and hospitality workers",
+            "microScores": {
+                  "vibe": 99,
+                  "quiet": 35,
+                  "convenience": 99,
+                  "family": 50
+            }
+      },
+      {
+            "id": "edinburgh-gardens-border",
+            "name": "North Fitzroy / Edinburgh Gardens Fringe",
+            "tag": "Leafy Victorian Cottage Enclave",
+            "noiseLevel": "Low",
+            "noiseIndex": 30,
+            "parkingEase": "Moderate Residential",
+            "walkScore": 92,
+            "priceDisparity": "+10% vs suburb avg",
+            "trafficVolume": "Quiet Neighborhood Streets",
+            "character": "Charming single-fronted Victorian worker cottages on quiet leafy streets within 200m of the historic Edinburgh Gardens parklands.",
+            "keyStreets": [
+                  "Alfred Cres",
+                  "St Georges Rd",
+                  "Freeman St",
+                  "Best St"
+            ],
+            "residentPersona": "Eco-conscious young families, cyclists, professional dog owners, and downsizers",
+            "microScores": {
+                  "vibe": 88,
+                  "quiet": 86,
+                  "convenience": 91,
+                  "family": 84
+            }
+      }
+]
   },
   {
     id: 'south-yarra-vic',
@@ -495,7 +956,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Oversupply of high-rise micro-apartments near Forrest Hill', 'Traffic on Toorak Road'],
       idealFor: ['High-earning Corporate Singles', 'Downsizers', 'Fitness and Nature Walkers'],
       developmentHotspots: 'Jam Factory multi-hundred-million precinct masterplan.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "domain-tan-track",
+            "name": "Domain Precinct & Royal Botanic Gardens",
+            "tag": "Prestige Executive Haven",
+            "noiseLevel": "Low",
+            "noiseIndex": 26,
+            "parkingEase": "Private Garages & Permits",
+            "walkScore": 92,
+            "priceDisparity": "+24% vs suburb avg",
+            "trafficVolume": "Low Local Prestige",
+            "character": "Grand historic estates and boutique low-rise apartments overlooking the world-famous Tan Track and Royal Botanic Gardens.",
+            "keyStreets": [
+                  "Domain Rd",
+                  "Anderson St",
+                  "Walsh St",
+                  "Clowes St"
+            ],
+            "residentPersona": "CEOs, top medical consultants, fitness joggers, and established Melbourne dynasty families",
+            "microScores": {
+                  "vibe": 90,
+                  "quiet": 92,
+                  "convenience": 90,
+                  "family": 80
+            }
+      },
+      {
+            "id": "chapel-st-fashion",
+            "name": "Chapel Street Fashion & Dining Strip",
+            "tag": "High-Energy Urban Living",
+            "noiseLevel": "High",
+            "noiseIndex": 84,
+            "parkingEase": "Basement Parking Required",
+            "walkScore": 99,
+            "priceDisparity": "-12% vs suburb avg",
+            "trafficVolume": "Heavy Tram & Nightlife Traffic",
+            "character": "Cosmopolitan fashion boulevard offering round-the-clock dining, boutique cocktail bars, and modern high-density apartment complexes.",
+            "keyStreets": [
+                  "Chapel St",
+                  "Toorak Rd",
+                  "River St",
+                  "Malcolm St"
+            ],
+            "residentPersona": "Corporate high-earners, fashion buyers, young singles, and fast-paced city lovers",
+            "microScores": {
+                  "vibe": 97,
+                  "quiet": 42,
+                  "convenience": 99,
+                  "family": 52
+            }
+      },
+      {
+            "id": "fawkner-park-pocket",
+            "name": "Fawkner Park Family Border",
+            "tag": "Lush Green Canopy",
+            "noiseLevel": "Low",
+            "noiseIndex": 34,
+            "parkingEase": "Moderate Side Streets",
+            "walkScore": 90,
+            "priceDisparity": "+14% vs suburb avg",
+            "trafficVolume": "Local Residential Flow",
+            "character": "Tree-lined plane tree avenues bordering sports pavilions, tennis clubs, and premier private grammar schools.",
+            "keyStreets": [
+                  "Commercial Rd",
+                  "Pasley St",
+                  "Osborne St",
+                  "Park St"
+            ],
+            "residentPersona": "Families with private school children, healthcare executives from Alfred Hospital, and downsizers",
+            "microScores": {
+                  "vibe": 84,
+                  "quiet": 85,
+                  "convenience": 92,
+                  "family": 89
+            }
+      }
+]
   },
   {
     id: 'brighton-vic',
@@ -566,7 +1104,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Substantial capital cost to enter', 'Slower nightlife / evening quietness'],
       idealFor: ['Affluent Families', 'Established Executives', 'Long-term Generational Wealth'],
       developmentHotspots: 'Boutique single-level downsizer residences along Church St corridor.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "golden-mile-esplanade",
+            "name": "The Golden Mile & Esplanade",
+            "tag": "Trophy Beachfront Mansions",
+            "noiseLevel": "Low",
+            "noiseIndex": 20,
+            "parkingEase": "Gated Multi-Car Estates",
+            "walkScore": 72,
+            "priceDisparity": "+35% vs suburb avg",
+            "trafficVolume": "Low Tourist / Coastal Walk",
+            "character": "Australias most exclusive bayside strip with private tennis courts, basement showrooms, and direct gated access to the bathing boxes.",
+            "keyStreets": [
+                  "Seacombe Gr",
+                  "Moule Ave",
+                  "St Ninians Rd",
+                  "Esplanade"
+            ],
+            "residentPersona": "Business magnates, tech entrepreneurs, and intergenerational wealth families",
+            "microScores": {
+                  "vibe": 78,
+                  "quiet": 96,
+                  "convenience": 76,
+                  "family": 94
+            }
+      },
+      {
+            "id": "church-st-village",
+            "name": "Church Street Boutique Village",
+            "tag": "Affluent Cafe & Retail Spine",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 54,
+            "parkingEase": "Moderate Village Parking",
+            "walkScore": 94,
+            "priceDisparity": "+5% vs suburb avg",
+            "trafficVolume": "Moderate Local Shopping",
+            "character": "Sophisticated open-air retail high street with artisanal delis, luxury fashion labels, Dendy cinema, and train station access.",
+            "keyStreets": [
+                  "Church St",
+                  "Male St",
+                  "Carpenter St",
+                  "Well St"
+            ],
+            "residentPersona": "Discerning couples, local luxury shoppers, and Melbourne private school parents",
+            "microScores": {
+                  "vibe": 86,
+                  "quiet": 78,
+                  "convenience": 96,
+                  "family": 92
+            }
+      },
+      {
+            "id": "dendy-park-enclave",
+            "name": "Dendy Park Sports & Family Enclave",
+            "tag": "Quiet Tree-Canopied Streets",
+            "noiseLevel": "Low",
+            "noiseIndex": 24,
+            "parkingEase": "Plentiful Street & Garages",
+            "walkScore": 74,
+            "priceDisparity": "-10% vs suburb avg",
+            "trafficVolume": "Quiet Cul-de-Sacs",
+            "character": "Substantial California bungalows and newly constructed luxury homes adjacent to extensive cricket ovals, athletics tracks, and parks.",
+            "keyStreets": [
+                  "Dendy St",
+                  "Cummins Rd",
+                  "Marriage Rd",
+                  "Binnie St"
+            ],
+            "residentPersona": "Active sports-loving families, grammar school pupils, and suburban upgraders",
+            "microScores": {
+                  "vibe": 74,
+                  "quiet": 92,
+                  "convenience": 78,
+                  "family": 98
+            }
+      }
+]
   },
   {
     id: 'new-farm-qld',
@@ -636,7 +1251,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Low-lying pockets require flood overlay check', 'Limited off-street parking on older streets'],
       idealFor: ['Executive Professionals', 'Urban Upsizers & Downsizers', 'High-net-worth River Lifestyle Seekers'],
       developmentHotspots: 'Riverfront luxury penthouse developments.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "merthyr-riverfront",
+            "name": "Merthyr & Riverwalk Esplanade",
+            "tag": "Prestige Subtropical Riverfront",
+            "noiseLevel": "Low",
+            "noiseIndex": 25,
+            "parkingEase": "Private Riverfront Garages",
+            "walkScore": 86,
+            "priceDisparity": "+26% vs suburb avg",
+            "trafficVolume": "Low River Cul-de-Sacs",
+            "character": "Spectacular multi-million-dollar riverfront estates, private boat pontoons, jacaranda canopies, and direct access to the suspended Brisbane Riverwalk.",
+            "keyStreets": [
+                  "Merthyr Rd",
+                  "Oxlade Dr",
+                  "Maxwell St",
+                  "Sydney St"
+            ],
+            "residentPersona": "Prominent business leaders, river lifestyle purists, and executive downsizers",
+            "microScores": {
+                  "vibe": 92,
+                  "quiet": 90,
+                  "convenience": 88,
+                  "family": 85
+            }
+      },
+      {
+            "id": "powerhouse-parkland",
+            "name": "New Farm Park & Powerhouse Arts",
+            "tag": "Cultural Green Sanctuary",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 48,
+            "parkingEase": "Parkland Weekend Traffic",
+            "walkScore": 89,
+            "priceDisparity": "+8% vs suburb avg",
+            "trafficVolume": "Park Loop & CityCat",
+            "character": "Surrounding historic 37-acre rose gardens, farmers markets, century-old fig trees, and the converted industrial brick Brisbane Powerhouse arts precinct.",
+            "keyStreets": [
+                  "Sydney St",
+                  "Dixon St",
+                  "Lamington St",
+                  "Brunswick St (Park end)"
+            ],
+            "residentPersona": "Art patrons, weekend runners, market shoppers, and young families",
+            "microScores": {
+                  "vibe": 96,
+                  "quiet": 82,
+                  "convenience": 91,
+                  "family": 91
+            }
+      },
+      {
+            "id": "brunswick-commercial",
+            "name": "Brunswick Street Culinary Strip",
+            "tag": "Vibrant Dining Corridor",
+            "noiseLevel": "High",
+            "noiseIndex": 76,
+            "parkingEase": "Challenging",
+            "walkScore": 96,
+            "priceDisparity": "-8% vs suburb avg",
+            "trafficVolume": "High Transit & Dining Flow",
+            "character": "Lively strip of European delis, craft cocktail bars, specialty gelato, and Art Deco apartments within walking distance of James Street.",
+            "keyStreets": [
+                  "Brunswick St",
+                  "Barker St",
+                  "Langshaw St",
+                  "James St Border"
+            ],
+            "residentPersona": "Food and wine lovers, young professionals, and urban apartment dwellers",
+            "microScores": {
+                  "vibe": 98,
+                  "quiet": 52,
+                  "convenience": 97,
+                  "family": 68
+            }
+      }
+]
   },
   {
     id: 'west-end-qld',
@@ -706,7 +1398,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Rapid density growth along Montague Road', 'Monsoon season stormwater drainage watch'],
       idealFor: ['Families prioritizing high school entrance', 'Eco-conscious Professionals', 'Food & Market Lovers'],
       developmentHotspots: 'Montague Markets urban renewal precinct.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "boundary-st-quarter",
+            "name": "Boundary Street Cultural & Dining Spine",
+            "tag": "Multicultural Gastronomy",
+            "noiseLevel": "High",
+            "noiseIndex": 82,
+            "parkingEase": "Challenging",
+            "walkScore": 98,
+            "priceDisparity": "-4% vs suburb avg",
+            "trafficVolume": "High Pedestrian & CityGlider",
+            "character": "Historic Greek tavernas, indie bookstores, microbreweries, and eclectic live music venues defining West Ends creative soul.",
+            "keyStreets": [
+                  "Boundary St",
+                  "Vulture St",
+                  "Russell St",
+                  "Thomas St"
+            ],
+            "residentPersona": "Artists, musicians, hospitality owners, and university students",
+            "microScores": {
+                  "vibe": 99,
+                  "quiet": 40,
+                  "convenience": 98,
+                  "family": 64
+            }
+      },
+      {
+            "id": "orleigh-riverside",
+            "name": "Orleigh Park & River Bend Sanctuary",
+            "tag": "Leafy Subtropical Waterfront",
+            "noiseLevel": "Low",
+            "noiseIndex": 28,
+            "parkingEase": "Moderate Residential",
+            "walkScore": 84,
+            "priceDisparity": "+18% vs suburb avg",
+            "trafficVolume": "Quiet Riverside Road",
+            "character": "Traditional timber Queenslanders with wide verandas nestled beneath ancient Moreton Bay figs along the broad sweep of the Brisbane River.",
+            "keyStreets": [
+                  "Hill End Tce",
+                  "Riverside Dr",
+                  "Hoogley St",
+                  "Forbes St"
+            ],
+            "residentPersona": "Families in the Brisbane State High catchment, rowing club members, and long-term locals",
+            "microScores": {
+                  "vibe": 89,
+                  "quiet": 88,
+                  "convenience": 86,
+                  "family": 92
+            }
+      },
+      {
+            "id": "montague-markets-zone",
+            "name": "Montague Urban Renewal Precinct",
+            "tag": "Modern Masterplanned Living",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 60,
+            "parkingEase": "Secure Basements",
+            "walkScore": 92,
+            "priceDisparity": "-9% vs suburb avg",
+            "trafficVolume": "Moderate Mixed-Use",
+            "character": "Contemporary riverside apartment communities with rooftop gardens, Woolworths retail anchor, craft taprooms, and bike path links to CBD.",
+            "keyStreets": [
+                  "Montague Rd",
+                  "Ferry Rd",
+                  "Victoria St",
+                  "Donkin St"
+            ],
+            "residentPersona": "Young professionals, downsizers, tech contractors, and property investors",
+            "microScores": {
+                  "vibe": 93,
+                  "quiet": 65,
+                  "convenience": 94,
+                  "family": 76
+            }
+      }
+]
   },
   {
     id: 'burleigh-heads-qld',
@@ -776,7 +1545,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Weekend parking competition near The Hill', 'Higher building insurance costs near sea spray'],
       idealFor: ['Interstate Migrants', 'Ocean & Outdoor Enthusiasts', 'Capital Growth Property Investors'],
       developmentHotspots: 'Gold Coast Light Rail Stage 3 transport corridor integration.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "the-point-headland",
+            "name": "Burleigh Point & National Park Ridge",
+            "tag": "World Surf Point & Scenic Basalt",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 52,
+            "parkingEase": "Challenging on Swell Days",
+            "walkScore": 82,
+            "priceDisparity": "+24% vs suburb avg",
+            "trafficVolume": "Scenic Coastal Route",
+            "character": "Basalt volcanic headland boasting a world-tour point break, ancient eucalyptus rainforest, beachfront dining pavilion, and whale watching lookouts.",
+            "keyStreets": [
+                  "Goodwin Tce",
+                  "Hill Ave",
+                  "The Esplanade",
+                  "Burleigh Head National Park"
+            ],
+            "residentPersona": "Elite surfers, interstate sea-changers, luxury holiday home owners, and nature lovers",
+            "microScores": {
+                  "vibe": 96,
+                  "quiet": 74,
+                  "convenience": 82,
+                  "family": 86
+            }
+      },
+      {
+            "id": "james-st-village",
+            "name": "James Street Boutique Village",
+            "tag": "Casual Coastal Dining & Retail",
+            "noiseLevel": "High",
+            "noiseIndex": 74,
+            "parkingEase": "Moderate Village",
+            "walkScore": 96,
+            "priceDisparity": "+5% vs suburb avg",
+            "trafficVolume": "Pedestrian Centered",
+            "character": "Sun-drenched laneways filled with organic acai bars, designer swimwear boutiques, sourdough bakeries, and alfresco gin bars.",
+            "keyStreets": [
+                  "James St",
+                  "Connor St",
+                  "Park Ave",
+                  "Tweed St"
+            ],
+            "residentPersona": "Young creatives, wellness enthusiasts, boutique retail owners, and weekend socialites",
+            "microScores": {
+                  "vibe": 97,
+                  "quiet": 52,
+                  "convenience": 96,
+                  "family": 82
+            }
+      },
+      {
+            "id": "koala-park-lagoon",
+            "name": "Koala Park & Tallebudgera Estuary",
+            "tag": "Turquoise Waterway Sanctuary",
+            "noiseLevel": "Low",
+            "noiseIndex": 30,
+            "parkingEase": "Plentiful Residential",
+            "walkScore": 78,
+            "priceDisparity": "+12% vs suburb avg",
+            "trafficVolume": "Quiet Waterway Cul-de-Sacs",
+            "character": "Idyllic family enclave tucked between the national park and the tranquil turquoise waters of Tallebudgera Creek, perfect for paddleboarding.",
+            "keyStreets": [
+                  "Ikkina Rd",
+                  "Guyra Ave",
+                  "Elanora Dr",
+                  "Kooning St"
+            ],
+            "residentPersona": "Outdoor families, paddleboarders, boat owners, and tranquility seekers",
+            "microScores": {
+                  "vibe": 84,
+                  "quiet": 92,
+                  "convenience": 80,
+                  "family": 94
+            }
+      }
+]
   },
   {
     id: 'subiaco-wa',
@@ -847,7 +1693,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Subiaco Oval redevelopment still concluding', 'Commercial retail vacancy adjusting after boom'],
       idealFor: ['High-tech & Mining Executives', 'Families seeking top WA public secondary education', 'Yield investors'],
       developmentHotspots: 'Subi East landmark masterplanned village.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "rokeby-rd-heritage",
+            "name": "Rokeby Road Dining & Civic Spine",
+            "tag": "Historic European Cafe Strip",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 65,
+            "parkingEase": "Moderate Street Meters",
+            "walkScore": 96,
+            "priceDisparity": "+4% vs suburb avg",
+            "trafficVolume": "Moderate Boulevard",
+            "character": "Historic Federation brick facades, alfresco Italian espresso bars, the landmark Subiaco Hotel, Regal Theatre, and boutique shopping.",
+            "keyStreets": [
+                  "Rokeby Rd",
+                  "Hay St",
+                  "Roberts Rd",
+                  "Barker Rd"
+            ],
+            "residentPersona": "Corporate executives, medical specialists, theater lovers, and cosmopolitan diners",
+            "microScores": {
+                  "vibe": 94,
+                  "quiet": 64,
+                  "convenience": 97,
+                  "family": 78
+            }
+      },
+      {
+            "id": "subi-centro-lake",
+            "name": "Subi Centro Lake & Common",
+            "tag": "Award-winning Eco Urban Renewal",
+            "noiseLevel": "Low",
+            "noiseIndex": 32,
+            "parkingEase": "Allocated Basements",
+            "walkScore": 92,
+            "priceDisparity": "+10% vs suburb avg",
+            "trafficVolume": "Low Traffic Calmed",
+            "character": "Pioneering urban village built around landscaped lakes, weeping willows, contemporary townhomes, and a sub-5-minute walk to the train station.",
+            "keyStreets": [
+                  "Subiaco Common",
+                  "Centro Ave",
+                  "Railway Rd",
+                  "Station St"
+            ],
+            "residentPersona": "Resource sector professionals, environmentally-conscious couples, and downsizers",
+            "microScores": {
+                  "vibe": 86,
+                  "quiet": 88,
+                  "convenience": 94,
+                  "family": 88
+            }
+      },
+      {
+            "id": "barker-rd-cottages",
+            "name": "Barker Road Federation Cottages",
+            "tag": "Tree-Lined Heritage Residential",
+            "noiseLevel": "Low",
+            "noiseIndex": 25,
+            "parkingEase": "Driveways & Permits",
+            "walkScore": 85,
+            "priceDisparity": "+15% vs suburb avg",
+            "trafficVolume": "Local Resident Only",
+            "character": "Beautifully restored tuck-pointed brick and iron Federation worker homes with manicured cottage gardens and broad verandas.",
+            "keyStreets": [
+                  "Barker Rd",
+                  "Bagot Rd",
+                  "Hamersley Rd",
+                  "Hensman Rd"
+            ],
+            "residentPersona": "Bob Hawke College & Perth Modern school families, architects, and established professionals",
+            "microScores": {
+                  "vibe": 82,
+                  "quiet": 92,
+                  "convenience": 88,
+                  "family": 95
+            }
+      }
+]
   },
   {
     id: 'norwood-sa',
@@ -918,7 +1841,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Tight supply of detached houses for sale', 'The Parade traffic during AFL Gather Round & events'],
       idealFor: ['Medical & Academic Professionals', 'Upscale Families', 'Downsizers'],
       developmentHotspots: 'The Parade apartment and cinema precinct modernizations.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "the-parade-strip",
+            "name": "The Parade Commercial & Dining Boulevard",
+            "tag": "Cosmopolitan Alfresco Hub",
+            "noiseLevel": "High",
+            "noiseIndex": 75,
+            "parkingEase": "Moderate Council Car Parks",
+            "walkScore": 97,
+            "priceDisparity": "+2% vs suburb avg",
+            "trafficVolume": "Moderate-to-High City Corridor",
+            "character": "Adelaides premier shopping and dining strip featuring outdoor Italian cafes, heritage pubs, independent cinemas, and SANFL Norwood Oval.",
+            "keyStreets": [
+                  "The Parade",
+                  "Queen St",
+                  "George St",
+                  "Edward St"
+            ],
+            "residentPersona": "Foodies, retail business owners, young professionals, and AFL fans",
+            "microScores": {
+                  "vibe": 96,
+                  "quiet": 50,
+                  "convenience": 98,
+                  "family": 76
+            }
+      },
+      {
+            "id": "beulah-rd-bluestone",
+            "name": "Beulah Road Bluestone Villa Enclave",
+            "tag": "Historic Plane Tree Canopy",
+            "noiseLevel": "Low",
+            "noiseIndex": 26,
+            "parkingEase": "Wide Shaded Streets",
+            "walkScore": 88,
+            "priceDisparity": "+18% vs suburb avg",
+            "trafficVolume": "Low Neighborhood Residential",
+            "character": "Iconic wide tree-lined boulevard lined with 19th-century bluestone cottages and return-verandah villas adorned with heritage roses.",
+            "keyStreets": [
+                  "Beulah Rd",
+                  "Osmond Tce",
+                  "William St",
+                  "Sydenham Rd"
+            ],
+            "residentPersona": "Medical specialists, academics, established families, and heritage enthusiasts",
+            "microScores": {
+                  "vibe": 85,
+                  "quiet": 92,
+                  "convenience": 90,
+                  "family": 94
+            }
+      },
+      {
+            "id": "east-parklands-border",
+            "name": "East Parklands Fringe",
+            "tag": "Steps to Adelaide Fringe & CBD",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 48,
+            "parkingEase": "Moderate",
+            "walkScore": 94,
+            "priceDisparity": "+8% vs suburb avg",
+            "trafficVolume": "City Fringe Edge",
+            "character": "Direct walking link across the lush green belt of Adelaide Parklands into the city center, university campuses, and annual Fringe festival venues.",
+            "keyStreets": [
+                  "Fullarton Rd",
+                  "Kensington Rd",
+                  "Webbe St",
+                  "Flinders St border"
+            ],
+            "residentPersona": "Active cyclists, festival lovers, university academics, and city commuters",
+            "microScores": {
+                  "vibe": 90,
+                  "quiet": 78,
+                  "convenience": 96,
+                  "family": 84
+            }
+      }
+]
   },
   {
     id: 'braddon-act',
@@ -988,7 +1988,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Weekend night street activity along Lonsdale St', 'Limited stand-alone house stock'],
       idealFor: ['Diplomatic & Public Sector Professionals', 'Tech Contractors', 'High-yield Property Investors'],
       developmentHotspots: 'Haig Park community activated masterplan.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "lonsdale-st-foodie",
+            "name": "Lonsdale Street Gastronomy & Microbrewery",
+            "tag": "Canberras Hipster Capital",
+            "noiseLevel": "High",
+            "noiseIndex": 82,
+            "parkingEase": "Challenging (Paid Meters)",
+            "walkScore": 99,
+            "priceDisparity": "+6% vs suburb avg",
+            "trafficVolume": "Pedestrian & Light Rail",
+            "character": "Transformed industrial automotive street now renowned for craft breweries, specialty micro-roasters, boutique fashion, and gourmet burger joints.",
+            "keyStreets": [
+                  "Lonsdale St",
+                  "Elouera St",
+                  "Girrahween St",
+                  "Alinga Light Rail corridor"
+            ],
+            "residentPersona": "Tech consultants, political advisors, hospitality creatives, and diplomats",
+            "microScores": {
+                  "vibe": 98,
+                  "quiet": 42,
+                  "convenience": 99,
+                  "family": 56
+            }
+      },
+      {
+            "id": "haig-park-enclave",
+            "name": "Haig Park Heritage Pine Forest",
+            "tag": "Tranquil Green Canopy Living",
+            "noiseLevel": "Low",
+            "noiseIndex": 32,
+            "parkingEase": "Moderate Residential",
+            "walkScore": 91,
+            "priceDisparity": "+11% vs suburb avg",
+            "trafficVolume": "Parkland Periphery",
+            "character": "Historic 100-year-old pine forest hosting Sunday village markets, creative play areas, and quiet contemporary apartment buildings.",
+            "keyStreets": [
+                  "Masson St",
+                  "Ipima St",
+                  "Limestone Ave",
+                  "Haig Park Path"
+            ],
+            "residentPersona": "Public servants, dog lovers, young couples, and nature walkers",
+            "microScores": {
+                  "vibe": 88,
+                  "quiet": 88,
+                  "convenience": 92,
+                  "family": 80
+            }
+      },
+      {
+            "id": "mort-st-mixed-use",
+            "name": "Mort Street Tech & Lofts Corridor",
+            "tag": "Startups & Modern Apartments",
+            "noiseLevel": "Moderate",
+            "noiseIndex": 64,
+            "parkingEase": "Secure Undercover",
+            "walkScore": 96,
+            "priceDisparity": "-8% vs suburb avg",
+            "trafficVolume": "Moderate Urban Flow",
+            "character": "Sleek glass mid-rise residential buildings sharing street frontages with tech agencies, co-working incubators, and modern cafes.",
+            "keyStreets": [
+                  "Mort St",
+                  "Cooyong St",
+                  "Torrens St",
+                  "Bunda St Border"
+            ],
+            "residentPersona": "Public service contractors, digital nomad tech workers, and high-yield investors",
+            "microScores": {
+                  "vibe": 92,
+                  "quiet": 60,
+                  "convenience": 98,
+                  "family": 58
+            }
+      }
+]
   },
   {
     id: 'parramatta-nsw',
@@ -1059,7 +2136,84 @@ export const AUSTRALIAN_SUBURBS = [
       cons: ['Substantial apartment supply pipeline', 'Traffic density along Victoria Road & Great Western Hwy'],
       idealFor: ['First Home Buyers', 'Young Families', 'Commuters working in Western Sydney or Barangaroo'],
       developmentHotspots: 'Parramatta Square and Civic Link transformation.'
-    }
+    },
+    microPockets: [
+      {
+            "id": "eat-street-foreshore",
+            "name": "Eat Street & River Foreshore",
+            "tag": "Alfresco Dining & Rivercat Ferry",
+            "noiseLevel": "High",
+            "noiseIndex": 80,
+            "parkingEase": "Multi-deck Public Stations",
+            "walkScore": 98,
+            "priceDisparity": "+4% vs suburb avg",
+            "trafficVolume": "Light Rail & Pedestrian",
+            "character": "Palm-fringed pedestrian mall lined with outdoor restaurants, live music venues, Riverside Theatres, and the Parramatta River ferry wharf.",
+            "keyStreets": [
+                  "Church St",
+                  "Phillip St",
+                  "Market St",
+                  "Charles St Ferry Wharf"
+            ],
+            "residentPersona": "Food lovers, performing arts patrons, urban professionals, and commuters",
+            "microScores": {
+                  "vibe": 95,
+                  "quiet": 46,
+                  "convenience": 98,
+                  "family": 72
+            }
+      },
+      {
+            "id": "parramatta-sq-metro",
+            "name": "Parramatta Square & Civic Transit Core",
+            "tag": "Corporate Headquarters & High-Rise",
+            "noiseLevel": "High",
+            "noiseIndex": 78,
+            "parkingEase": "Direct Station Access (No Car Needed)",
+            "walkScore": 99,
+            "priceDisparity": "-7% vs suburb avg",
+            "trafficVolume": "Heavy Train & Metro Hub",
+            "character": "Sleek world-class commercial towers, university hubs, high-density luxury apartments, and lightning-fast rail access across Sydney.",
+            "keyStreets": [
+                  "Darcy St",
+                  "Macquarie St",
+                  "Smith St",
+                  "Station St"
+            ],
+            "residentPersona": "Banking executives, government analysts, university students, and commuters",
+            "microScores": {
+                  "vibe": 91,
+                  "quiet": 48,
+                  "convenience": 99,
+                  "family": 70
+            }
+      },
+      {
+            "id": "north-parramatta-heritage",
+            "name": "North Parramatta & Parklands Pocket",
+            "tag": "UNESCO Heritage & Quiet Streets",
+            "noiseLevel": "Low",
+            "noiseIndex": 35,
+            "parkingEase": "Plentiful Street & Carports",
+            "walkScore": 78,
+            "priceDisparity": "+12% vs suburb avg",
+            "trafficVolume": "Low Local Residential",
+            "character": "Sprawling UNESCO World Heritage Parramatta Park, historic sandstone buildings, CommBank Stadium precinct, and peaceful family streets.",
+            "keyStreets": [
+                  "OConnell St",
+                  "Grose St",
+                  "Fleet St",
+                  "Parramatta Park Periphery"
+            ],
+            "residentPersona": "Young growing families, stadium sports fans, joggers, and long-term locals",
+            "microScores": {
+                  "vibe": 82,
+                  "quiet": 84,
+                  "convenience": 84,
+                  "family": 92
+            }
+      }
+]
   }
 ];
 

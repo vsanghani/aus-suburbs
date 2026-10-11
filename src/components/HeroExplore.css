@@ -331,6 +331,36 @@
   overflow: hidden;
 }
 
+.card-pockets-preview {
+  display: flex;
+  margin: -2px 0 2px;
+}
+
+.pockets-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.pockets-chip strong {
+  color: var(--accent-cyan);
+}
+
+.pin-micro-icon {
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+}
+
 .card-actions-row {
   display: flex;
   gap: 8px;

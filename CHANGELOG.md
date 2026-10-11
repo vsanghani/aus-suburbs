@@ -12,8 +12,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned
 - Integration with live ABS Census TableBuilder API & GeoJSON boundary polygons.
 - Historical 10-year capital appreciation charts using SVG time-series.
-- Street-level micro-meshblock granularity (sub-pocket insights).
 - Climate, flood, and bushfire risk overlay layers.
+- Australian property investment cash flow & stamp duty calculator.
+
+---
+
+## [0.2.0] - 2026-10-11
+
+### Micro-Pocket & Street-Level Explorer
+
+#### Added
+- **Street-by-Street Micro-Pocket Dataset (`src/data/suburbsData.js`)**:
+  - Enriched all 15 Australian metropolitan suburbs with 3 unique micro-meshblock pockets each (45 distinct street-level enclaves).
+  - Modeled pocket-level metrics: noise ratings & energy index (0–100), parking ease, walk score, price disparities vs suburb medians, key street names, traffic volumes, and dominant resident personas.
+- **MicroPocketExplorer Component (`src/components/MicroPocketExplorer.jsx`, `src/components/MicroPocketExplorer.css`)**:
+  - Built interactive pocket selector pills with noise indicators and price disparity badges.
+  - Developed deep-dive single pocket viewer featuring streetscape architecture narratives, micro-scores quartet (Vibe, Quiet, Convenience, Family), and key streets tag cloud.
+  - Implemented in-suburb **Head-to-Head Pocket Showdown** mode allowing users to compare two pockets of the same suburb side-by-side.
+- **Dossier & Explorer Integration**:
+  - Added dedicated **"Street & Micro-Pockets"** tab to the Suburb Dossier modal (`SuburbDossier.jsx`).
+  - Added micro-pockets preview chip on all suburb cards in `HeroExplore.jsx`.
+  - Added **Micro-Pocket Street Enclaves** section to the printable executive briefing in `ReportModal.jsx` and updated print styles (`ReportModal.css`).
 
 ---
 
