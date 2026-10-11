@@ -21,9 +21,11 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Info,
-  Sparkles
+  Sparkles,
+  Layers
 } from 'lucide-react';
 import { SCORE_METRICS_INFO } from '../data/suburbsData';
+import { MicroPocketExplorer } from './MicroPocketExplorer';
 import './SuburbDossier.css';
 
 export function SuburbDossier({ 
@@ -191,6 +193,13 @@ export function SuburbDossier({
           >
             <CheckCircle2 size={16} />
             <span>Pocket Character & Insights</span>
+          </button>
+          <button 
+            className={`dossier-tab-btn ${activeTab === 'microPockets' ? 'active' : ''}`}
+            onClick={() => setActiveTab('microPockets')}
+          >
+            <Layers size={16} />
+            <span>Street & Micro-Pockets</span>
           </button>
         </div>
 
@@ -518,6 +527,13 @@ export function SuburbDossier({
                 </div>
               </div>
 
+            </div>
+          )}
+
+          {/* TAB 5: STREET & MICRO-POCKETS */}
+          {activeTab === 'microPockets' && (
+            <div className="tab-pane pockets-pane">
+              <MicroPocketExplorer suburb={suburb} />
             </div>
           )}
 

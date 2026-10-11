@@ -169,6 +169,16 @@ export function HeroExplore({
 
                   <p className="card-blurb">{suburb.summary}</p>
 
+                  {/* Micro-Pockets Quick Badge */}
+                  {suburb.microPockets && suburb.microPockets.length > 0 && (
+                    <div className="card-pockets-preview">
+                      <span className="pockets-chip">
+                        <MapPin size={11} className="pin-micro-icon" />
+                        <span><strong>{suburb.microPockets.length} Micro-Pockets:</strong> {suburb.microPockets.map(p => p.name).join(' • ')}</span>
+                      </span>
+                    </div>
+                  )}
+
                   {/* Card Actions */}
                   <div className="card-actions-row">
                     <button 
