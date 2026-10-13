@@ -12,6 +12,8 @@ import {
   Building 
 } from 'lucide-react';
 import { SuburbMap } from './SuburbMap';
+import { scoreSignal, bandSignal, THRESHOLDS } from '../utils/metricSignals';
+import { SignalDot } from './SignalBadge';
 import './HeroExplore.css';
 
 export function HeroExplore({ 
@@ -135,19 +137,31 @@ export function HeroExplore({
                   <div className="micro-scores-row">
                     <div className="m-score">
                       <span className="m-lbl">Vibe</span>
-                      <span className="m-val text-purple">{suburb.lifestyleScores.vibeCulture}</span>
+                      <span className="m-val-row">
+                        <SignalDot level={scoreSignal(suburb.lifestyleScores.vibeCulture)} />
+                        <span className="m-val text-purple">{suburb.lifestyleScores.vibeCulture}</span>
+                      </span>
                     </div>
                     <div className="m-score">
                       <span className="m-lbl">Family</span>
-                      <span className="m-val text-green">{suburb.lifestyleScores.familyLiving}</span>
+                      <span className="m-val-row">
+                        <SignalDot level={scoreSignal(suburb.lifestyleScores.familyLiving)} />
+                        <span className="m-val text-green">{suburb.lifestyleScores.familyLiving}</span>
+                      </span>
                     </div>
                     <div className="m-score">
                       <span className="m-lbl">Transit</span>
-                      <span className="m-val text-blue">{suburb.lifestyleScores.transitWalk}</span>
+                      <span className="m-val-row">
+                        <SignalDot level={scoreSignal(suburb.lifestyleScores.transitWalk)} />
+                        <span className="m-val text-blue">{suburb.lifestyleScores.transitWalk}</span>
+                      </span>
                     </div>
                     <div className="m-score">
                       <span className="m-lbl">Safety</span>
-                      <span className="m-val text-cyan">{suburb.lifestyleScores.safetyCommunity}</span>
+                      <span className="m-val-row">
+                        <SignalDot level={scoreSignal(suburb.lifestyleScores.safetyCommunity)} />
+                        <span className="m-val text-cyan">{suburb.lifestyleScores.safetyCommunity}</span>
+                      </span>
                     </div>
                   </div>
 
@@ -159,11 +173,17 @@ export function HeroExplore({
                     </div>
                     <div className="cp-col">
                       <span className="cp-lbl">12m Growth</span>
-                      <span className="cp-val text-green">+{suburb.propertyMetrics.growth12mPercent}%</span>
+                      <span className="cp-val m-val-row">
+                        <SignalDot level={bandSignal(suburb.propertyMetrics.growth12mPercent, THRESHOLDS.growth12m.green, THRESHOLDS.growth12m.amber)} />
+                        +{suburb.propertyMetrics.growth12mPercent}%
+                      </span>
                     </div>
                     <div className="cp-col">
                       <span className="cp-lbl">Unit Yield</span>
-                      <span className="cp-val">{suburb.propertyMetrics.unitRentalYield}%</span>
+                      <span className="cp-val m-val-row">
+                        <SignalDot level={bandSignal(suburb.propertyMetrics.unitRentalYield, THRESHOLDS.unitYield.green, THRESHOLDS.unitYield.amber)} />
+                        {suburb.propertyMetrics.unitRentalYield}%
+                      </span>
                     </div>
                   </div>
 

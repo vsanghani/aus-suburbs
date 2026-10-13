@@ -131,8 +131,16 @@
   color: var(--text-bright);
 }
 
+.cell-with-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .score-tag {
   display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 2px 8px;
   border-radius: 4px;
   font-family: var(--font-heading);

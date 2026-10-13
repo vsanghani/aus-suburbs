@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Compass, Search, MapPin, ArrowRight, SlidersHorizontal, BarChart3, Scale, Layers } from 'lucide-react';
+import { Compass, Search, MapPin, SlidersHorizontal, BarChart3, Scale, Layers, Calculator } from 'lucide-react';
 import './Navbar.css';
 
 export function Navbar({ 
@@ -135,6 +135,14 @@ export function Navbar({
           >
             <BarChart3 size={16} />
             <span>Scorecard Index</span>
+          </button>
+
+          <button 
+            className={`nav-tab-btn ${activeTab === 'calculator' ? 'active' : ''}`}
+            onClick={() => setActiveTab('calculator')}
+          >
+            <Calculator size={16} />
+            <span>Calculator</span>
           </button>
         </nav>
 

@@ -244,6 +244,12 @@
   color: var(--text-bright);
 }
 
+.peek-val-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .text-green {
   color: var(--accent-emerald) !important;
 }

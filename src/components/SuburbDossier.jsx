@@ -22,9 +22,12 @@ import {
   AlertCircle, 
   Info,
   Sparkles,
-  Layers
+  Layers,
+  Calculator
 } from 'lucide-react';
 import { SCORE_METRICS_INFO } from '../data/suburbsData';
+import { icseaSignal, scoreSignal } from '../utils/metricSignals';
+import { SignalBadge, SignalBoard } from './SignalBadge';
 import { MicroPocketExplorer } from './MicroPocketExplorer';
 import './SuburbDossier.css';
 
@@ -32,7 +35,8 @@ export function SuburbDossier({
   suburb, 
   onClose, 
   onAddToCompare, 
-  onOpenReport 
+  onOpenReport,
+  onOpenCalculator
 }) {
   const [activeTab, setActiveTab] = useState('lifestyle');
 
@@ -79,6 +83,16 @@ export function SuburbDossier({
               <Printer size={15} />
               <span>Report</span>
             </button>
+            {onOpenCalculator && (
+              <button 
+                className="btn btn-secondary btn-sm"
+                onClick={() => onOpenCalculator(suburb)}
+                title="Model stamp duty and cash flow"
+              >
+                <Calculator size={15} />
+                <span>Calculator</span>
+              </button>
+            )}
             <button 
               className="close-dossier-btn" 
               onClick={onClose}
@@ -111,7 +125,7 @@ export function SuburbDossier({
             </div>
             <div className="score-label-col">
               <span className="score-header-txt">SuburbIQ Index</span>
-              <span className="score-rank-tag">Top 4% Nationwide</span>
+              <SignalBadge level={scoreSignal(lifestyleScores.overallScore)} />
             </div>
           </div>
         </div>
@@ -124,7 +138,7 @@ export function SuburbDossier({
               <span>Median House</span>
             </div>
             <div className="metric-box-val">{formatCur(propertyMetrics.medianHousePrice)}</div>
-            <div className="metric-box-sub text-green">
+            <div className="metric-box-sub">
               <TrendingUp size={12} />
               <span>+{propertyMetrics.growth12mPercent}% (12m)</span>
             </div>
@@ -163,6 +177,8 @@ export function SuburbDossier({
             </div>
           </div>
         </div>
+
+        <SignalBoard suburb={suburb} />
 
         {/* Dossier Tabs Navigation */}
         <div className="dossier-tabs-nav">
@@ -212,6 +228,7 @@ export function SuburbDossier({
               <div className="lifestyle-grid">
                 {Object.entries(SCORE_METRICS_INFO).map(([key, info]) => {
                   const score = lifestyleScores[key] || 0;
+                  const level = scoreSignal(score);
                   return (
                     <div key={key} className="score-card-item">
                       <div className="score-card-top">
@@ -237,11 +254,9 @@ export function SuburbDossier({
 
                       <div className="score-card-footer">
                         <span className="state-benchmark">
-                          {score >= 80 ? 'Well above state benchmark' : (score >= 65 ? 'Above state average' : 'Moderate performance')}
+                          {level === 'green' ? 'Well above typical metro score' : (level === 'amber' ? 'Around the metro middle' : 'Below typical metro score')}
                         </span>
-                        <span className="rank-indicator">
-                          {score >= 90 ? 'Top Tier' : (score >= 75 ? 'Strong' : 'Average')}
-                        </span>
+                        <SignalBadge level={level} />
                       </div>
                     </div>
                   );
@@ -283,7 +298,11 @@ export function SuburbDossier({
                     </div>
                   </div>
                   <div className="income-delta-badge">
-                    +{Math.round(((demographics.weeklyHouseholdIncome - demographics.stateAvgWeeklyIncome) / demographics.stateAvgWeeklyIncome) * 100)}% higher than {suburb.state} state average
+                    {(() => {
+                      const premium = ((demographics.weeklyHouseholdIncome - demographics.stateAvgWeeklyIncome) / demographics.stateAvgWeeklyIncome) * 100;
+                      const rounded = Math.round(premium);
+                      return `${rounded >= 0 ? '+' : ''}${rounded}% ${rounded >= 0 ? 'higher' : 'lower'} than ${suburb.state} state average`;
+                    })()}
                   </div>
                 </div>
 
@@ -410,6 +429,7 @@ export function SuburbDossier({
                         <div className="school-icsea">
                           <span className="icsea-val">{school.icsea}</span>
                           <span className="icsea-lbl">ICSEA Rating</span>
+                          <SignalBadge level={icseaSignal(school.icsea)} />
                         </div>
                       </div>
                     ))}

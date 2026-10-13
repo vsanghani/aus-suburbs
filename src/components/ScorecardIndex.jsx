@@ -8,6 +8,8 @@ import {
   Scale, 
   ArrowUpRight 
 } from 'lucide-react';
+import { scoreSignal, bandSignal, THRESHOLDS } from '../utils/metricSignals';
+import { SignalDot } from './SignalBadge';
 import './ScorecardIndex.css';
 
 export function ScorecardIndex({ 
@@ -173,19 +175,38 @@ export function ScorecardIndex({
                   </td>
                   <td>{s.distanceToCbdKm} km</td>
                   <td className="font-semibold">${(s.propertyMetrics.medianHousePrice / 1000000).toFixed(2)}M</td>
-                  <td className="text-green font-semibold">+{s.propertyMetrics.growth12mPercent}%</td>
-                  <td>{s.propertyMetrics.unitRentalYield}%</td>
-                  <td>
-                    <span className="score-tag purple">{s.lifestyleScores.vibeCulture}</span>
+                  <td className="font-semibold">
+                    <span className="cell-with-signal">
+                      <SignalDot level={bandSignal(s.propertyMetrics.growth12mPercent, THRESHOLDS.growth12m.green, THRESHOLDS.growth12m.amber)} />
+                      +{s.propertyMetrics.growth12mPercent}%
+                    </span>
                   </td>
                   <td>
-                    <span className="score-tag emerald">{s.lifestyleScores.familyLiving}</span>
+                    <span className="cell-with-signal">
+                      <SignalDot level={bandSignal(s.propertyMetrics.unitRentalYield, THRESHOLDS.unitYield.green, THRESHOLDS.unitYield.amber)} />
+                      {s.propertyMetrics.unitRentalYield}%
+                    </span>
                   </td>
                   <td>
-                    <span className="score-tag blue">{s.lifestyleScores.transitWalk}</span>
+                    <span className="score-tag purple cell-with-signal">
+                      <SignalDot level={scoreSignal(s.lifestyleScores.vibeCulture)} />
+                      {s.lifestyleScores.vibeCulture}
+                    </span>
                   </td>
                   <td>
-                    <div className="score-iq-badge">
+                    <span className="score-tag emerald cell-with-signal">
+                      <SignalDot level={scoreSignal(s.lifestyleScores.familyLiving)} />
+                      {s.lifestyleScores.familyLiving}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="score-tag blue cell-with-signal">
+                      <SignalDot level={scoreSignal(s.lifestyleScores.transitWalk)} />
+                      {s.lifestyleScores.transitWalk}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="score-iq-badge" title={`Liveability ${scoreSignal(s.lifestyleScores.overallScore)}`}>
                       <span>{s.lifestyleScores.overallScore}</span>
                     </div>
                   </td>

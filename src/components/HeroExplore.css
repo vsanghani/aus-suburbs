@@ -274,6 +274,12 @@
   align-items: center;
 }
 
+.m-val-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .m-lbl {
   font-size: 9.5px;
   color: var(--text-dim);

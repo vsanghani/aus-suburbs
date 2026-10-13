@@ -6,12 +6,13 @@ import { SuburbComparison } from './components/SuburbComparison';
 import { SuburbMatchmaker } from './components/SuburbMatchmaker';
 import { ScorecardIndex } from './components/ScorecardIndex';
 import { ReportModal } from './components/ReportModal';
+import { InvestmentCalculator } from './components/InvestmentCalculator';
 import { AUSTRALIAN_SUBURBS, METRO_REGIONS } from './data/suburbsData';
-import { Compass, ShieldCheck, Heart, Sparkles, MapPin } from 'lucide-react';
+import { Compass } from 'lucide-react';
 import './App.css';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState('explore'); // 'explore' | 'compare' | 'matchmaker' | 'scores'
+  const [activeTab, setActiveTab] = useState('explore'); // 'explore' | 'compare' | 'matchmaker' | 'scores' | 'calculator'
   const [selectedCity, setSelectedCity] = useState('all');
   const [activeSuburb, setActiveSuburb] = useState(AUSTRALIAN_SUBURBS[0]);
   const [dossierSuburb, setDossierSuburb] = useState(null);
@@ -59,6 +60,12 @@ export function App() {
 
   const handleCloseReport = () => {
     setReportSuburb(null);
+  };
+
+  const handleOpenCalculator = (suburb) => {
+    if (suburb) setActiveSuburb(suburb);
+    setDossierSuburb(null);
+    setActiveTab('calculator');
   };
 
   return (
@@ -123,6 +130,16 @@ export function App() {
           />
         )}
 
+        {activeTab === 'calculator' && (
+          <InvestmentCalculator
+            suburbs={AUSTRALIAN_SUBURBS}
+            activeSuburb={activeSuburb}
+            onSelectSuburb={handleSelectSuburb}
+            onOpenDossier={handleOpenDossier}
+            onAddToCompare={handleAddToCompare}
+          />
+        )}
+
       </main>
 
       {/* Micro-Demographic Deep Dive Dossier Modal */}
@@ -132,6 +149,7 @@ export function App() {
           onClose={handleCloseDossier}
           onAddToCompare={handleAddToCompare}
           onOpenReport={handleOpenReport}
+          onOpenCalculator={handleOpenCalculator}
         />
       )}
 
@@ -166,6 +184,7 @@ export function App() {
               <li onClick={() => setActiveTab('compare')}>3-Way Suburb Comparison</li>
               <li onClick={() => setActiveTab('matchmaker')}>Matchmaker Finder</li>
               <li onClick={() => setActiveTab('scores')}>National Liveability League</li>
+              <li onClick={() => setActiveTab('calculator')}>Stamp Duty & Cash Flow</li>
             </ul>
           </div>
 

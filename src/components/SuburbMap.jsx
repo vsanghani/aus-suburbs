@@ -13,6 +13,8 @@ import {
   ShieldCheck,
   Trees
 } from 'lucide-react';
+import { bandSignal, THRESHOLDS } from '../utils/metricSignals';
+import { SignalDot } from './SignalBadge';
 import './SuburbMap.css';
 
 const METRIC_MODES = [
@@ -188,11 +190,17 @@ export function SuburbMap({
             </div>
             <div className="peek-metric-col">
               <span className="metric-lbl">12m Capital Growth</span>
-              <span className="metric-val text-green">+{activeSuburb.propertyMetrics.growth12mPercent}%</span>
+              <span className="metric-val peek-val-row">
+                <SignalDot level={bandSignal(activeSuburb.propertyMetrics.growth12mPercent, THRESHOLDS.growth12m.green, THRESHOLDS.growth12m.amber)} />
+                +{activeSuburb.propertyMetrics.growth12mPercent}%
+              </span>
             </div>
             <div className="peek-metric-col">
               <span className="metric-lbl">Unit Yield</span>
-              <span className="metric-val">{activeSuburb.propertyMetrics.unitRentalYield}%</span>
+              <span className="metric-val peek-val-row">
+                <SignalDot level={bandSignal(activeSuburb.propertyMetrics.unitRentalYield, THRESHOLDS.unitYield.green, THRESHOLDS.unitYield.amber)} />
+                {activeSuburb.propertyMetrics.unitRentalYield}%
+              </span>
             </div>
           </div>
 
