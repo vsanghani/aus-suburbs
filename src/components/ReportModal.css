@@ -170,6 +170,42 @@
   color: #CBD5E1;
 }
 
+.iq-signal-wrap {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.score-vl-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-note {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #64748B;
+}
+
+.report-character-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  font-size: 12.5px;
+  color: #334155;
+  margin-bottom: 10px;
+}
+
+.report-character-grid ul {
+  margin: 6px 0 0 18px;
+  padding: 0;
+}
+
+.report-character-grid li {
+  margin-bottom: 4px;
+}
+
 .report-section {
   margin-bottom: 24px;
 }

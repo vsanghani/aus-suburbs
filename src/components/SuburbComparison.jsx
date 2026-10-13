@@ -13,6 +13,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { SCORE_METRICS_INFO } from '../data/suburbsData';
+import { scoreSignal, bandSignal, THRESHOLDS } from '../utils/metricSignals';
+import { SignalBadge, SignalDot } from './SignalBadge';
 import './SuburbComparison.css';
 
 export function SuburbComparison({ 
@@ -138,6 +140,9 @@ export function SuburbComparison({
                     <span className="iq-num">{s.lifestyleScores.overallScore}</span>
                     <span className="iq-txt">IQ Score</span>
                   </div>
+                  <div className="compare-signal-wrap">
+                    <SignalBadge level={scoreSignal(s.lifestyleScores.overallScore)} />
+                  </div>
 
                   <button 
                     className="btn btn-ghost btn-sm view-dossier-link"
@@ -188,8 +193,27 @@ export function SuburbComparison({
               const isWinner = getWinner(sub => sub.propertyMetrics.growth12mPercent, true) === s.id;
               return (
                 <div key={s.id} className={`compare-data-cell ${isWinner ? 'cell-highlight' : ''}`}>
-                  <span className="cell-value text-green">+{s.propertyMetrics.growth12mPercent}%</span>
+                  <span className="cell-value cell-with-signal">
+                    <SignalDot level={bandSignal(s.propertyMetrics.growth12mPercent, THRESHOLDS.growth12m.green, THRESHOLDS.growth12m.amber)} />
+                    +{s.propertyMetrics.growth12mPercent}%
+                  </span>
                   {isWinner && <span className="winner-tag"><Trophy size={11} /> Highest Growth</span>}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="compare-row">
+            <div className="metric-label-column">House Rental Yield</div>
+            {compareList.map(s => {
+              const isWinner = getWinner(sub => sub.propertyMetrics.houseRentalYield, true) === s.id;
+              return (
+                <div key={s.id} className={`compare-data-cell ${isWinner ? 'cell-highlight' : ''}`}>
+                  <span className="cell-value cell-with-signal">
+                    <SignalDot level={bandSignal(s.propertyMetrics.houseRentalYield, THRESHOLDS.houseYield.green, THRESHOLDS.houseYield.amber)} />
+                    {s.propertyMetrics.houseRentalYield}%
+                  </span>
+                  {isWinner && <span className="winner-tag"><Trophy size={11} /> Top House Yield</span>}
                 </div>
               );
             })}
@@ -201,7 +225,10 @@ export function SuburbComparison({
               const isWinner = getWinner(sub => sub.propertyMetrics.unitRentalYield, true) === s.id;
               return (
                 <div key={s.id} className={`compare-data-cell ${isWinner ? 'cell-highlight' : ''}`}>
-                  <span className="cell-value">{s.propertyMetrics.unitRentalYield}%</span>
+                  <span className="cell-value cell-with-signal">
+                    <SignalDot level={bandSignal(s.propertyMetrics.unitRentalYield, THRESHOLDS.unitYield.green, THRESHOLDS.unitYield.amber)} />
+                    {s.propertyMetrics.unitRentalYield}%
+                  </span>
                   {isWinner && <span className="winner-tag"><Trophy size={11} /> Top Yield</span>}
                 </div>
               );
@@ -214,7 +241,10 @@ export function SuburbComparison({
               const isWinner = getWinner(sub => sub.propertyMetrics.daysOnMarket, false) === s.id;
               return (
                 <div key={s.id} className={`compare-data-cell ${isWinner ? 'cell-highlight' : ''}`}>
-                  <span className="cell-value">{s.propertyMetrics.daysOnMarket} days</span>
+                  <span className="cell-value cell-with-signal">
+                    <SignalDot level={bandSignal(s.propertyMetrics.daysOnMarket, THRESHOLDS.daysOnMarket.green, THRESHOLDS.daysOnMarket.amber, true)} />
+                    {s.propertyMetrics.daysOnMarket} days
+                  </span>
                   {isWinner && <span className="winner-tag">Fastest Moving</span>}
                 </div>
               );
@@ -239,7 +269,10 @@ export function SuburbComparison({
                   return (
                     <div key={s.id} className={`compare-data-cell ${isWinner ? 'cell-highlight' : ''}`}>
                       <div className="cell-score-bar-group">
-                        <span className="cell-score-num" style={{ color: info.color }}>{score}</span>
+                        <span className="cell-score-num cell-with-signal" style={{ color: info.color }}>
+                          <SignalDot level={scoreSignal(score)} />
+                          {score}
+                        </span>
                         <div className="mini-bar-track">
                           <div 
                             className="mini-bar-fill" 

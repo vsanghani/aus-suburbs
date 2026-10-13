@@ -143,8 +143,12 @@
   border: 1px solid var(--border-accent);
   padding: 6px 12px;
   border-radius: var(--radius-md);
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   width: fit-content;
+}
+
+.compare-signal-wrap {
+  margin-bottom: 12px;
 }
 
 .iq-num {
@@ -207,6 +211,12 @@
 .cell-value {
   font-weight: 700;
   color: var(--text-bright);
+}
+
+.cell-with-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .winner-tag {
