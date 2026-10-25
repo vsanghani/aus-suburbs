@@ -1,0 +1,58 @@
+[
+  {
+    "slug": "composite",
+    "title": "Highest composite",
+    "question": "Which suburbs sit highest on the draft composite?",
+    "unit": "points",
+    "value_label": "Composite"
+  },
+  {
+    "slug": "lowest-personal-offences",
+    "title": "Lowest personal offences",
+    "question": "Where are offences against the person lowest, per 1,000 residents?",
+    "unit": "per 1,000",
+    "value_label": "Rate"
+  },
+  {
+    "slug": "families",
+    "title": "Family services",
+    "question": "Where are childcare, schools, and health services most present?",
+    "unit": null,
+    "value_label": "Family group"
+  },
+  {
+    "slug": "transport",
+    "title": "Public transport",
+    "question": "Where is frequent public transport closest?",
+    "unit": null,
+    "value_label": "Transport group"
+  },
+  {
+    "slug": "schools",
+    "title": "Schools",
+    "question": "Where are schools and early learning most present?",
+    "unit": null,
+    "value_label": "Education group"
+  },
+  {
+    "slug": "rent",
+    "title": "Lower rent",
+    "question": "Where is the median weekly rent lowest?",
+    "unit": "$/week",
+    "value_label": "Median rent"
+  },
+  {
+    "slug": "buy",
+    "title": "Lower sale prices",
+    "question": "Where is the median house price lowest?",
+    "unit": "$",
+    "value_label": "Median price"
+  },
+  {
+    "slug": "canopy",
+    "title": "Tree canopy",
+    "question": "Where does canopy cover the largest share of the suburb?",
+    "unit": "%",
+    "value_label": "Canopy"
+  }
+]
