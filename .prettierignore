@@ -1,0 +1,9 @@
+dist
+node_modules
+coverage
+playwright-report
+test-results
+contracts/openapi.json
+src/api/schema.d.ts
+package-lock.json
+backend/.venv

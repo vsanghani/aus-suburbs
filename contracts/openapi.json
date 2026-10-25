@@ -1,0 +1,3351 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Places API",
+    "description": "Versioned contract for the suburb record. Routes return empty payloads on purpose and do not ship suburb data.",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/api/v1/search": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Search",
+        "operationId": "search_api_v1_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-z]{2,3}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 25,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/suburbs/{state}/{slug}": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Suburb",
+        "operationId": "suburb_api_v1_suburbs__state___slug__get",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z]{2,3}$",
+              "title": "State"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuburbDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/councils": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Councils",
+        "operationId": "councils_api_v1_councils_get",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-z]{2,3}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouncilListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/councils/{state}/{slug}": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Council",
+        "operationId": "council_api_v1_councils__state___slug__get",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z]{2,3}$",
+              "title": "State"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouncilDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/states/{code}": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "State Detail",
+        "operationId": "state_detail_api_v1_states__code__get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z]{2,3}$",
+              "title": "Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rankings": {
+      "get": {
+        "tags": [
+          "Lists"
+        ],
+        "summary": "Rankings",
+        "operationId": "rankings_api_v1_rankings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RankingListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rankings/{slug}": {
+      "get": {
+        "tags": [
+          "Lists"
+        ],
+        "summary": "Ranking Detail",
+        "operationId": "ranking_detail_api_v1_rankings__slug__get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-z]{2,3}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Region"
+            }
+          },
+          {
+            "name": "council",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Council"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RankingResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/compare": {
+      "get": {
+        "tags": [
+          "Compare"
+        ],
+        "summary": "Compare",
+        "operationId": "compare_api_v1_compare_get",
+        "parameters": [
+          {
+            "name": "p",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "P"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match": {
+      "get": {
+        "tags": [
+          "Match"
+        ],
+        "summary": "Match",
+        "operationId": "match_api_v1_match_get",
+        "parameters": [
+          {
+            "name": "budget",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100,
+              "minimum": 0,
+              "default": 50,
+              "title": "Budget"
+            }
+          },
+          {
+            "name": "commute",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100,
+              "minimum": 0,
+              "default": 50,
+              "title": "Commute"
+            }
+          },
+          {
+            "name": "schools",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100,
+              "minimum": 0,
+              "default": 50,
+              "title": "Schools"
+            }
+          },
+          {
+            "name": "safety",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100,
+              "minimum": 0,
+              "default": 50,
+              "title": "Safety"
+            }
+          },
+          {
+            "name": "quiet",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100,
+              "minimum": 0,
+              "default": 50,
+              "title": "Quiet"
+            }
+          },
+          {
+            "name": "family",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100,
+              "minimum": 0,
+              "default": 50,
+              "title": "Family"
+            }
+          },
+          {
+            "name": "errands",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100,
+              "minimum": 0,
+              "default": 50,
+              "title": "Errands"
+            }
+          },
+          {
+            "name": "green",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 100,
+              "minimum": 0,
+              "default": 50,
+              "title": "Green"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-z]{2,3}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "name": "budget_weekly",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 20000,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Budget Weekly"
+            }
+          },
+          {
+            "name": "commute_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 120
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Commute To"
+            }
+          },
+          {
+            "name": "needs_schools",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Needs Schools"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/explore": {
+      "get": {
+        "tags": [
+          "Map"
+        ],
+        "summary": "Explore",
+        "operationId": "explore_api_v1_explore_get",
+        "parameters": [
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "score",
+              "title": "Metric"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-z]{2,3}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "name": "layers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "default": "",
+              "title": "Layers"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExploreResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/methodology": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Methodology",
+        "operationId": "methodology_api_v1_methodology_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MethodologyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commute": {
+      "get": {
+        "tags": [
+          "Map"
+        ],
+        "summary": "Commute",
+        "operationId": "commute_api_v1_commute_get",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z]{2,3}$",
+              "title": "State"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommuteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/export": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Export Rows",
+        "operationId": "export_rows_api_v1_export_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CommuteMode": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "transit",
+              "drive",
+              "cycle",
+              "walk"
+            ],
+            "title": "Mode"
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode",
+          "minutes",
+          "note"
+        ],
+        "title": "CommuteMode"
+      },
+      "CommuteResponse": {
+        "properties": {
+          "origin_state": {
+            "type": "string",
+            "title": "Origin State"
+          },
+          "origin_slug": {
+            "type": "string",
+            "title": "Origin Slug"
+          },
+          "destination": {
+            "type": "string",
+            "title": "Destination"
+          },
+          "dataset_connected": {
+            "type": "boolean",
+            "title": "Dataset Connected"
+          },
+          "modes": {
+            "items": {
+              "$ref": "#/components/schemas/CommuteMode"
+            },
+            "type": "array",
+            "title": "Modes"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin_state",
+          "origin_slug",
+          "destination",
+          "dataset_connected",
+          "modes",
+          "notice"
+        ],
+        "title": "CommuteResponse"
+      },
+      "CompareResponse": {
+        "properties": {
+          "requested": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Requested"
+          },
+          "dataset_connected": {
+            "type": "boolean",
+            "title": "Dataset Connected"
+          },
+          "places": {
+            "items": {
+              "$ref": "#/components/schemas/SuburbDetail"
+            },
+            "type": "array",
+            "title": "Places"
+          },
+          "omitted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Omitted"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requested",
+          "dataset_connected",
+          "places",
+          "omitted",
+          "notice"
+        ],
+        "title": "CompareResponse"
+      },
+      "CouncilDetail": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "region_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Name"
+          },
+          "region_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Slug"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          },
+          "suburb_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suburb Count"
+          },
+          "narrative": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Narrative"
+          },
+          "score_detail": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoreDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sections": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SectionPayload"
+            },
+            "type": "object",
+            "title": "Sections"
+          },
+          "suburbs": {
+            "items": {
+              "$ref": "#/components/schemas/SuburbSummary"
+            },
+            "type": "array",
+            "title": "Suburbs"
+          },
+          "dataset_connected": {
+            "type": "boolean",
+            "title": "Dataset Connected"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "slug",
+          "name",
+          "region_name",
+          "region_slug",
+          "score",
+          "tier",
+          "suburb_count",
+          "narrative",
+          "score_detail",
+          "sections",
+          "suburbs",
+          "dataset_connected",
+          "notice"
+        ],
+        "title": "CouncilDetail"
+      },
+      "CouncilListResponse": {
+        "properties": {
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "dataset_connected": {
+            "type": "boolean",
+            "title": "Dataset Connected"
+          },
+          "councils": {
+            "items": {
+              "$ref": "#/components/schemas/CouncilSummary"
+            },
+            "type": "array",
+            "title": "Councils"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "dataset_connected",
+          "councils",
+          "notice"
+        ],
+        "title": "CouncilListResponse"
+      },
+      "CouncilSummary": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "region_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Name"
+          },
+          "region_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Slug"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          },
+          "suburb_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suburb Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "slug",
+          "name",
+          "region_name",
+          "region_slug",
+          "score",
+          "tier",
+          "suburb_count"
+        ],
+        "title": "CouncilSummary"
+      },
+      "DataTable": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/TableColumn"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "rows": {
+            "items": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "group",
+          "columns",
+          "rows"
+        ],
+        "title": "DataTable"
+      },
+      "ExploreResponse": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "layers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Layers"
+          },
+          "dataset_connected": {
+            "type": "boolean",
+            "title": "Dataset Connected"
+          },
+          "feature_collection": {
+            "$ref": "#/components/schemas/FeatureCollection"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "state",
+          "layers",
+          "dataset_connected",
+          "feature_collection",
+          "notice"
+        ],
+        "title": "ExploreResponse"
+      },
+      "ExportResponse": {
+        "properties": {
+          "dataset_connected": {
+            "type": "boolean",
+            "title": "Dataset Connected"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "row_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Row Count"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_connected",
+          "available",
+          "row_count",
+          "notice"
+        ],
+        "title": "ExportResponse"
+      },
+      "FeatureCollection": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "FeatureCollection",
+            "title": "Type"
+          },
+          "features": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Features"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "features"
+        ],
+        "title": "FeatureCollection"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "database": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "unconfigured",
+              "error"
+            ],
+            "title": "Database"
+          },
+          "redis": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "unconfigured",
+              "error"
+            ],
+            "title": "Redis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "environment",
+          "database",
+          "redis"
+        ],
+        "title": "HealthResponse"
+      },
+      "MatchResponse": {
+        "properties": {
+          "weights": {
+            "$ref": "#/components/schemas/Weights"
+          },
+          "normalised": {
+            "$ref": "#/components/schemas/Weights"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "budget_weekly": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Weekly"
+          },
+          "commute_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commute To"
+          },
+          "needs_schools": {
+            "type": "boolean",
+            "title": "Needs Schools"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "dataset_connected": {
+            "type": "boolean",
+            "title": "Dataset Connected"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SuburbSummary"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weights",
+          "normalised",
+          "state",
+          "budget_weekly",
+          "commute_to",
+          "needs_schools",
+          "limit",
+          "dataset_connected",
+          "results",
+          "notice"
+        ],
+        "title": "MatchResponse"
+      },
+      "MethodologyGroup": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "positive",
+              "negative"
+            ],
+            "title": "Direction"
+          },
+          "draft_max_points": {
+            "type": "number",
+            "title": "Draft Max Points"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "direction",
+          "draft_max_points",
+          "summary"
+        ],
+        "title": "MethodologyGroup"
+      },
+      "MethodologyResponse": {
+        "properties": {
+          "score_label": {
+            "type": "string",
+            "title": "Score Label"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "base": {
+            "type": "number",
+            "title": "Base"
+          },
+          "ceiling": {
+            "type": "number",
+            "title": "Ceiling"
+          },
+          "floor": {
+            "type": "number",
+            "title": "Floor"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/MethodologyGroup"
+            },
+            "type": "array",
+            "title": "Groups"
+          },
+          "tiers": {
+            "items": {
+              "$ref": "#/components/schemas/MethodologyTier"
+            },
+            "type": "array",
+            "title": "Tiers"
+          },
+          "weights": {
+            "items": {
+              "$ref": "#/components/schemas/WeightDef"
+            },
+            "type": "array",
+            "title": "Weights"
+          },
+          "caveats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Caveats"
+          },
+          "sources_connected": {
+            "type": "boolean",
+            "title": "Sources Connected"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceRef"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score_label",
+          "status",
+          "base",
+          "ceiling",
+          "floor",
+          "summary",
+          "groups",
+          "tiers",
+          "weights",
+          "caveats",
+          "sources_connected",
+          "sources"
+        ],
+        "title": "MethodologyResponse"
+      },
+      "MethodologyTier": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "minimum": {
+            "type": "number",
+            "title": "Minimum"
+          },
+          "meaning": {
+            "type": "string",
+            "title": "Meaning"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "minimum",
+          "meaning"
+        ],
+        "title": "MethodologyTier"
+      },
+      "MetricValue": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "context_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Label"
+          },
+          "context_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Value"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "group",
+          "value",
+          "unit",
+          "context_label",
+          "context_value",
+          "tier",
+          "note"
+        ],
+        "title": "MetricValue"
+      },
+      "NamedPlace": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector"
+          },
+          "distance_m": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance M"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "group",
+          "kind",
+          "sector",
+          "distance_m",
+          "detail",
+          "latitude",
+          "longitude"
+        ],
+        "title": "NamedPlace"
+      },
+      "Problem": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "Problem"
+      },
+      "RankBadge": {
+        "properties": {
+          "list_slug": {
+            "type": "string",
+            "title": "List Slug"
+          },
+          "list_title": {
+            "type": "string",
+            "title": "List Title"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope"
+          }
+        },
+        "type": "object",
+        "required": [
+          "list_slug",
+          "list_title",
+          "position",
+          "scope"
+        ],
+        "title": "RankBadge"
+      },
+      "RankingFilters": {
+        "properties": {
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "council": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Council"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "region",
+          "council"
+        ],
+        "title": "RankingFilters"
+      },
+      "RankingInfo": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value_label": {
+            "type": "string",
+            "title": "Value Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "title",
+          "question",
+          "unit",
+          "value_label"
+        ],
+        "title": "RankingInfo"
+      },
+      "RankingListResponse": {
+        "properties": {
+          "rankings": {
+            "items": {
+              "$ref": "#/components/schemas/RankingInfo"
+            },
+            "type": "array",
+            "title": "Rankings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rankings"
+        ],
+        "title": "RankingListResponse"
+      },
+      "RankingResponse": {
+        "properties": {
+          "ranking": {
+            "$ref": "#/components/schemas/RankingInfo"
+          },
+          "dataset_connected": {
+            "type": "boolean",
+            "title": "Dataset Connected"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/RankingFilters"
+          },
+          "regions": {
+            "items": {
+              "$ref": "#/components/schemas/RegionSummary"
+            },
+            "type": "array",
+            "title": "Regions"
+          },
+          "councils": {
+            "items": {
+              "$ref": "#/components/schemas/CouncilSummary"
+            },
+            "type": "array",
+            "title": "Councils"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/RankingRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ranking",
+          "dataset_connected",
+          "total",
+          "offset",
+          "limit",
+          "filters",
+          "regions",
+          "councils",
+          "rows",
+          "notice"
+        ],
+        "title": "RankingResponse"
+      },
+      "RankingRow": {
+        "properties": {
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "place": {
+            "$ref": "#/components/schemas/SuburbSummary"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "value_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Label"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "position",
+          "place",
+          "value",
+          "value_label",
+          "context",
+          "tier"
+        ],
+        "title": "RankingRow"
+      },
+      "RegionSummary": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "council_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Council Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "slug",
+          "name",
+          "council_count"
+        ],
+        "title": "RegionSummary"
+      },
+      "ScoreDetail": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          },
+          "base": {
+            "type": "number",
+            "title": "Base"
+          },
+          "drivers": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreDriver"
+            },
+            "type": "array",
+            "title": "Drivers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "tier",
+          "base",
+          "drivers"
+        ],
+        "title": "ScoreDetail"
+      },
+      "ScoreDriver": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "positive",
+              "negative"
+            ],
+            "title": "Direction"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "raw_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Value"
+          },
+          "raw_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Unit"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context"
+          },
+          "chart_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chart Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "direction",
+          "points",
+          "raw_value",
+          "raw_unit",
+          "context",
+          "chart_value"
+        ],
+        "title": "ScoreDriver"
+      },
+      "SearchResponse": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "dataset_connected": {
+            "type": "boolean",
+            "title": "Dataset Connected"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SuburbSummary"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "councils": {
+            "items": {
+              "$ref": "#/components/schemas/CouncilSummary"
+            },
+            "type": "array",
+            "title": "Councils"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "limit",
+          "dataset_connected",
+          "results",
+          "councils",
+          "notice"
+        ],
+        "title": "SearchResponse"
+      },
+      "SectionPayload": {
+        "properties": {
+          "updated": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated"
+          },
+          "narrative": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Narrative"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/MetricValue"
+            },
+            "type": "array",
+            "title": "Metrics"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/TimeSeries"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/components/schemas/DataTable"
+            },
+            "type": "array",
+            "title": "Tables"
+          },
+          "places": {
+            "items": {
+              "$ref": "#/components/schemas/NamedPlace"
+            },
+            "type": "array",
+            "title": "Places"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "updated",
+          "narrative",
+          "source",
+          "metrics",
+          "series",
+          "tables",
+          "places",
+          "notes"
+        ],
+        "title": "SectionPayload"
+      },
+      "SeriesPoint": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "value"
+        ],
+        "title": "SeriesPoint"
+      },
+      "SourceRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "agency": {
+            "type": "string",
+            "title": "Agency"
+          },
+          "published": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published"
+          },
+          "licence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "agency",
+          "published",
+          "licence",
+          "url",
+          "note"
+        ],
+        "title": "SourceRef"
+      },
+      "StateDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "dataset_connected": {
+            "type": "boolean",
+            "title": "Dataset Connected"
+          },
+          "narrative": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Narrative"
+          },
+          "suburb_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suburb Count"
+          },
+          "council_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Council Count"
+          },
+          "regions": {
+            "items": {
+              "$ref": "#/components/schemas/RegionSummary"
+            },
+            "type": "array",
+            "title": "Regions"
+          },
+          "councils": {
+            "items": {
+              "$ref": "#/components/schemas/CouncilSummary"
+            },
+            "type": "array",
+            "title": "Councils"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "dataset_connected",
+          "narrative",
+          "suburb_count",
+          "council_count",
+          "regions",
+          "councils",
+          "notice"
+        ],
+        "title": "StateDetail"
+      },
+      "SuburbDetail": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postcode"
+          },
+          "council_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Council Name"
+          },
+          "council_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Council Slug"
+          },
+          "region_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Name"
+          },
+          "region_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Slug"
+          },
+          "traditional_owners": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traditional Owners"
+          },
+          "population": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          },
+          "blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blurb"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "description_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "score_detail": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoreDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sections": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SectionPayload"
+            },
+            "type": "object",
+            "title": "Sections"
+          },
+          "nearby": {
+            "items": {
+              "$ref": "#/components/schemas/SuburbSummary"
+            },
+            "type": "array",
+            "title": "Nearby"
+          },
+          "ranks": {
+            "items": {
+              "$ref": "#/components/schemas/RankBadge"
+            },
+            "type": "array",
+            "title": "Ranks"
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "slug",
+          "name",
+          "postcode",
+          "council_name",
+          "council_slug",
+          "region_name",
+          "region_slug",
+          "traditional_owners",
+          "population",
+          "latitude",
+          "longitude",
+          "score",
+          "tier",
+          "blurb",
+          "description",
+          "description_source",
+          "score_detail",
+          "sections",
+          "nearby",
+          "ranks",
+          "geometry"
+        ],
+        "title": "SuburbDetail"
+      },
+      "SuburbSummary": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postcode"
+          },
+          "council_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Council Name"
+          },
+          "council_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Council Slug"
+          },
+          "region_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Name"
+          },
+          "region_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region Slug"
+          },
+          "traditional_owners": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Traditional Owners"
+          },
+          "population": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          },
+          "blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blurb"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "slug",
+          "name",
+          "postcode",
+          "council_name",
+          "council_slug",
+          "region_name",
+          "region_slug",
+          "traditional_owners",
+          "population",
+          "latitude",
+          "longitude",
+          "score",
+          "tier",
+          "blurb"
+        ],
+        "title": "SuburbSummary"
+      },
+      "TableColumn": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "TableColumn"
+      },
+      "TimeSeries": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "reference_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Label"
+          },
+          "reference_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Value"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "narrative": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Narrative"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "unit",
+          "group",
+          "reference_label",
+          "reference_value",
+          "points",
+          "narrative"
+        ],
+        "title": "TimeSeries"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WeightDef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "help": {
+            "type": "string",
+            "title": "Help"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "help"
+        ],
+        "title": "WeightDef"
+      },
+      "Weights": {
+        "properties": {
+          "budget": {
+            "type": "number",
+            "title": "Budget"
+          },
+          "commute": {
+            "type": "number",
+            "title": "Commute"
+          },
+          "schools": {
+            "type": "number",
+            "title": "Schools"
+          },
+          "safety": {
+            "type": "number",
+            "title": "Safety"
+          },
+          "quiet": {
+            "type": "number",
+            "title": "Quiet"
+          },
+          "family": {
+            "type": "number",
+            "title": "Family"
+          },
+          "errands": {
+            "type": "number",
+            "title": "Errands"
+          },
+          "green": {
+            "type": "number",
+            "title": "Green"
+          }
+        },
+        "type": "object",
+        "required": [
+          "budget",
+          "commute",
+          "schools",
+          "safety",
+          "quiet",
+          "family",
+          "errands",
+          "green"
+        ],
+        "title": "Weights"
+      }
+    }
+  }
+}
