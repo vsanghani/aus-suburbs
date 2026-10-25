@@ -1,0 +1,50 @@
+[
+  {
+    "code": "nsw",
+    "name": "New South Wales",
+    "centre": [146.9, -32.2],
+    "zoom": 5.4
+  },
+  {
+    "code": "vic",
+    "name": "Victoria",
+    "centre": [145.0, -36.8],
+    "zoom": 6.2
+  },
+  {
+    "code": "qld",
+    "name": "Queensland",
+    "centre": [145.5, -22.5],
+    "zoom": 4.8
+  },
+  {
+    "code": "sa",
+    "name": "South Australia",
+    "centre": [135.5, -30.5],
+    "zoom": 5.2
+  },
+  {
+    "code": "wa",
+    "name": "Western Australia",
+    "centre": [122.0, -25.5],
+    "zoom": 4.6
+  },
+  {
+    "code": "tas",
+    "name": "Tasmania",
+    "centre": [146.6, -42.0],
+    "zoom": 6.4
+  },
+  {
+    "code": "nt",
+    "name": "Northern Territory",
+    "centre": [133.5, -19.5],
+    "zoom": 5
+  },
+  {
+    "code": "act",
+    "name": "Australian Capital Territory",
+    "centre": [149.1, -35.4],
+    "zoom": 9
+  }
+]

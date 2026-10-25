@@ -1,426 +1,188 @@
-# SuburbIQ 🇦🇺 — Engineering Handbook & System Topology
+# Suburb record
 
-> **Internal Developer & Systems Documentation**  
-> *Hyper-Local Australian Suburb, Demographic & Property Intelligence Platform*
+A national shell for an Australian suburb record. Search, a map, a long suburb page, councils, ranked lists, a four-place compare, and a match page with personal weights. The product name lives in [`src/config/site.ts`](src/config/site.ts). The npm package name is the only other place it is set.
 
----
+No suburb rows, geometries, or scraped tables are included. The API returns empty payloads with `dataset_connected: false`. The interface treats that as “not loaded”, which is different from a real zero.
 
-## 📑 Table of Contents
-1. [Executive Summary & Domain Overview](#-executive-summary--domain-overview)
-2. [End-to-End System Topology & Architecture](#-end-to-end-system-topology--architecture)
-3. [Repository File & Directory Structure](#-repository-file--directory-structure)
-4. [Frontend Component Architecture & Data Flow](#-frontend-component-architecture--data-flow)
-5. [Backend Architecture & Data Ingestion Pipeline](#-backend-architecture--data-ingestion-pipeline)
-6. [Database Schema & Spatial Storage](#-database-schema--spatial-storage)
-7. [Proprietary Scoring Algorithm (SuburbIQ Index)](#-proprietary-scoring-algorithm-suburbiq-index)
-8. [Local Development & Environment Setup](#-local-development--environment-setup)
-9. [Production Deployment & Infrastructure](#-production-deployment--infrastructure)
-10. [Roadmap & Engineering Milestones](#-roadmap--engineering-milestones)
+## Stack
 
----
+Vite, React, TypeScript, and React Router on the frontend. MapLibre GL for maps. Plain CSS with the tokens in `src/styles/tokens.css`. Vitest and Playwright. ESLint and Prettier.
 
-## 📌 Executive Summary & Domain Overview
+FastAPI under `backend/` for the contract. Settings come from the environment. Alembic is initialised with an empty migration. Docker Compose runs PostGIS, Redis, the API, and a static build of the site.
 
-While traditional real estate portals (e.g., Domain, RealEstate.com.au) operate as listing advertising channels, **SuburbIQ** (inspired by the analytical foundations of Microburbs) provides **hyper-local spatial, demographic, and lifestyle intelligence**.
+Vite rather than a pre-rendered framework: there are no suburb pages to bake yet. Pre-rendering can wait until a dataset exists. The section registry and the OpenAPI document are the parts that should stay stable while that work happens.
 
-The core premise is to help homebuyers, buyers agents, property developers, and institutional investors analyze Australian suburbs through empirical metrics:
-- **Micro-Demographics**: ABS Census breakdown down to SA1/SA2 meshblocks (household income distributions, education levels, household family types, housing tenure).
-- **Liveability & Lifestyle Indices**: Proprietary 0–100 scores for Vibe/Culture, Family Suitability, Transit Connectivity, Affluence, Greenery/Quiet, and Safety.
-- **Amenities Catchments**: ACARA ICSEA school performance rankings, public transit corridor frequencies (GTFS), dining/cafe density, and open parklands.
-- **Property Economics**: Median house and unit valuations, 12-month capital growth, rental yields, auction clearance rates, and days on market.
+## Run it
 
----
-
-## 🏗️ End-to-End System Topology & Architecture
-
-The following diagram outlines the high-level production topology, data ingestion pipeline, and runtime delivery model:
-
-```mermaid
-flowchart TD
-    subgraph Clients["Client Access Layer"]
-        Browser["Desktop & Mobile Browsers (React 19 SPA)"]
-        PDF["Executive PDF Exporter (Print Engine)"]
-    end
-
-    subgraph Edge["CDN & Edge Caching"]
-        Cloudflare["Cloudflare Edge CDN / WAF"]
-        TileCache["Tile Caching Proxy (CartoDB / OpenStreetMap)"]
-    end
-
-    subgraph FrontendApp["Frontend Application (Current Repo)"]
-        ViteSPA["SuburbIQ SPA (React 19 + Vanilla CSS)"]
-        LMap["Leaflet Map Engine (Geospatial Pins & Overlays)"]
-    end
-
-    subgraph Gateway["API Gateway & Reverse Proxy"]
-        Nginx["NGINX / Kong API Gateway"]
-    end
-
-    subgraph BackendServices["Backend Microservices Cluster"]
-        SearchSvc["Spatial & Suburb Search Service (FastAPI / Go)"]
-        ScoringEngine["SuburbIQ Scoring Engine (Python / NumPy)"]
-        ReportSvc["Headless Report Generator (Puppeteer / Chromium)"]
-    end
-
-    subgraph DataTier["Data Persistence Tier"]
-        Postgres[("PostgreSQL 16 + PostGIS (Spatial & Census)")]
-        RedisCache[("Redis 7 (Hot Suburb & Search Cache)")]
-        SearchIndex[("Meilisearch / Typesense (Fuzzy Postcode Search)")]
-    end
-
-    subgraph DataPipelines["Data Ingestion & ETL Pipeline"]
-        ABSCensus["ABS Census 2021/2026 TableBuilder API"]
-        PropData["CoreLogic / Valuer-General Property Records"]
-        TransitGTFS["Open Transport GTFS (NSW / PTV / Translink)"]
-        SchoolACARA["ACARA MySchool Dataset"]
-        CrimeData["State Police & Crime Statistics (BOCSAR / CSV)"]
-        ETLWorker["Airflow / Dagster Periodic ETL Workers"]
-    end
-
-    Browser --> Cloudflare
-    Cloudflare --> ViteSPA
-    ViteSPA --> TileCache
-    ViteSPA --> Gateway
-    Gateway --> SearchSvc
-    Gateway --> ScoringEngine
-    Gateway --> ReportSvc
-
-    SearchSvc --> RedisCache
-    SearchSvc --> SearchIndex
-    SearchSvc --> Postgres
-
-    ScoringEngine --> Postgres
-    ScoringEngine --> RedisCache
-
-    ETLWorker --> ABSCensus
-    ETLWorker --> PropData
-    ETLWorker --> TransitGTFS
-    ETLWorker --> SchoolACARA
-    ETLWorker --> CrimeData
-    ETLWorker --> Postgres
-```
-
----
-
-## 📂 Repository File & Directory Structure
-
-```
-aus-suburbs/
-├── .gitignore                     # Git ignore rules for node_modules, build artifacts, and env files
-├── .oxlintrc.json                 # Oxlint high-performance linter configuration
-├── index.html                     # HTML root entrypoint (fonts, Leaflet stylesheets, meta tags)
-├── package.json                   # Project manifest, scripts, and runtime dependencies
-├── package-lock.json              # Deterministic npm dependency lockfile
-├── README.md                      # Comprehensive developer handbook and systems topology
-├── vite.config.js                 # Vite bundler configuration with React plugin
-├── public/                        # Static assets served untouched at root
-│   ├── favicon.svg                # Emerald compass brand SVG favicon
-│   └── icons.svg                  # SVG sprite icons
-└── src/                           # Frontend application source directory
-    ├── main.jsx                   # React 19 bootstrap and DOM mount entrypoint
-    ├── index.css                  # Global design tokens, CSS variables, typography, reset rules
-    ├── App.jsx                    # Top-level application coordinator (navigation state & view routing)
-    ├── App.css                    # Layout container styles and responsive platform footer
-    ├── assets/                    # Bundled graphics, icons, and hero visuals
-    │   ├── hero.png
-    │   ├── react.svg
-    │   └── vite.svg
-    ├── data/                      # Client-side data models and fallback seed intelligence
-    │   └── suburbsData.js         # Comprehensive demographic, property, and score dataset (23 enclaves)
-    └── components/                # Modular UI component suite
-        ├── Navbar.jsx             # Top sticky navbar with global search autocomplete and region filters
-        ├── Navbar.css             # Search dropdown and glassmorphic header styling
-        ├── HeroExplore.jsx        # Landing hero banner, intelligence stats ticker, and suburb card grid
-        ├── HeroExplore.css        # Hero styling and responsive grid layouts
-        ├── SuburbMap.jsx          # Interactive Leaflet map with metric heatmap switcher and pin badges
-        ├── SuburbMap.css          # Map controls, custom HTML marker pins, and floating peek card
-        ├── SuburbDossier.jsx      # Deep-dive "Microburb" modal (lifestyle radar, ABS demographics, schools)
-        ├── SuburbDossier.css      # Dossier modal tabs, demographic comparison bars, and pocket cards
-        ├── SuburbComparison.jsx   # Side-by-side 3-suburb comparison matrix with auto-calculated winner tags
-        ├── SuburbComparison.css   # Comparison showdown table and cell highlight styling
-        ├── SuburbMatchmaker.jsx   # Interactive buyer criteria sliders (budget, vibe, yield, distance)
-        ├── SuburbMatchmaker.css   # Filter sidebar and ranked affinity match cards styling
-        ├── ScorecardIndex.jsx     # National master league table with multi-column sorting and filtering
-        ├── ScorecardIndex.css     # Sortable table styling and metric pill tags
-        ├── ReportModal.jsx        # Printable executive suburb briefing modal with print-to-PDF formatting
-        └── ReportModal.css        # Clean print stylesheet (@media print rules)
-```
-
----
-
-## 💻 Frontend Component Architecture & Data Flow
-
-### 1. State Management Architecture (`App.jsx`)
-The frontend is structured as a reactive Single Page Application (SPA). To maintain zero runtime overhead and fast interactions, application state is managed cleanly using React 19 primitives:
-
-- `activeTab`: Switches between primary modes (`explore`, `compare`, `matchmaker`, `scores`).
-- `selectedCity`: Regional filtering (`all`, `NSW`, `VIC`, `QLD`, `WA`, `SA`, `ACT`).
-- `activeSuburb`: Currently highlighted suburb object for map camera centering.
-- `dossierSuburb`: Triggers the high-detail Suburb Dossier modal.
-- `compareList`: Array of up to 3 suburbs for head-to-head comparison showdown.
-- `reportSuburb`: Triggers the print-ready Executive Briefing Document modal.
-
-### 2. Component Hierarchy & Interactions
-
-```
-App.jsx (Root Coordinator)
-│
-├── Navbar.jsx
-│   ├── Search Input (Instant prefix matching on Name / Postcode / LGA)
-│   ├── Navigation Tabs (Map & Intel | Compare | Matchmaker | Scorecard)
-│   └── Metro Region Filter Bar (All Australia | Sydney | Melbourne | Brisbane...)
-│
-├── VIEW: explore (Default)
-│   └── HeroExplore.jsx
-│       ├── Header & Stats Ticker
-│       ├── SuburbMap.jsx (Leaflet spatial map + CartoDB tiles)
-│       │   ├── Metric Heatmap Dimension Toggles (Overall IQ, Vibe, Family, Transit, Price, Yield)
-│       │   ├── Custom HTML DivIcon Pins
-│       │   └── Floating Suburb Quick Peek Card
-│       └── Suburb Cards Grid (Responsive cards with quick scores & dossier CTAs)
-│
-├── VIEW: compare
-│   └── SuburbComparison.jsx
-│       ├── Suburb Selection Controls (Add up to 3 suburbs)
-│       ├── Property Market Head-to-Head Table
-│       ├── Lifestyle Scores Comparison with Category Leader Ribbons
-│       └── Census Micro-Demographics Showdown
-│
-├── VIEW: matchmaker
-│   └── SuburbMatchmaker.jsx
-│       ├── Interactive Criteria Sliders (Budget, Property Type, Min Vibe, Min Family, Max CBD Dist, Min Yield)
-│       └── Real-time Match Algorithm & Affinity Ranking Cards
-│
-├── VIEW: scores
-│   └── ScorecardIndex.jsx
-│       ├── Live Search Filter
-│       └── Sortable Master League Table across all financial & lifestyle metrics
-│
-├── MODAL: SuburbDossier.jsx (Triggered from Map, Cards, or Search)
-│   ├── Hero & IQ Ring
-│   ├── Property Market Fundamentals Strip
-│   ├── Tab 1: Lifestyle Scores Matrix (Benchmark comparisons against state averages)
-│   ├── Tab 2: Micro-Demographics (Weekly income gauge, household structure, tenure mix, ancestries)
-│   ├── Tab 3: Schools & Amenities (ICSEA school catchments, transit hubs, cafe density)
-│   └── Tab 4: Pocket Character (Strengths, cautions, buyer archetypes, future projects)
-│
-└── MODAL: ReportModal.jsx (Print & PDF Export)
-    └── Printable Executive Suburb Intelligence Brief
-```
-
-### 3. Styling & Token Architecture (`index.css`)
-SuburbIQ uses a bespoke Vanilla CSS design system built on CSS variables:
-- **Base Background**: `--bg-primary: #090D16` (Deep Midnight Slate)
-- **Elevated Surfaces**: `--bg-surface: #0F172A`, `--bg-card: #131E35`
-- **Accents**:
-  - Emerald: `--accent-emerald: #10B981` (Primary brand & growth)
-  - Cyan: `--accent-cyan: #06B6D4` (Transit & safety)
-  - Indigo/Purple: `--accent-purple: #8B5CF6` (Vibe & nightlife)
-  - Amber: `--accent-amber: #F59E0B` (Affluence & cafes)
-- **Glassmorphism**: `.glass-panel` utilizing `backdrop-filter: blur(16px)` and 1px translucent borders.
-
----
-
-## ⚙️ Backend Architecture & Data Ingestion Pipeline
-
-To scale SuburbIQ across all 15,000+ Australian suburbs, localities, and statistical areas, the planned backend microservices architecture operates as follows:
-
-### 1. Ingestion Microservices (ETL Workers)
-Executed via scheduled orchestrators (Dagster / Apache Airflow):
-
-| Data Domain | Source Provider | Update Cadence | Key Ingested Attributes |
-| :--- | :--- | :--- | :--- |
-| **Census Demographics** | Australian Bureau of Statistics (ABS) TableBuilder | Annual / Quinquennial | Median weekly income, age distributions, housing tenure (rent/mortgage/outright), household family types, top ancestries. |
-| **Property Valuation & Sales** | Valuer-General / CoreLogic / Domain API | Daily / Weekly | Settled sales, median house/unit values, 12m growth %, median weekly rents, rental yields, days on market, auction clearance rates. |
-| **Public Transit & Commute** | Open Transport GTFS (NSW OpenData, Data VIC, Translink) | Monthly | Station positions, transit line types (heavy rail, metro, ferry, light rail), scheduled departures per hour, peak CBD transit times. |
-| **Education & School Catchments** | ACARA (MySchool) & State Education Depts | Quarterly | Primary/Secondary schools, public/private/selective status, ICSEA percentile scores, NAPLAN aggregates, school catchment polygons. |
-| **Crime & Community Safety** | State Crime Registers (NSW BOCSAR, Crime Statistics VIC) | Quarterly | Recorded offenses per 100k population, property crime rates, violent crime rates, safety trend direction. |
-| **Amenities & Points of Interest** | OpenStreetMap (OSM) / Geocoded Business Registers | Monthly | Supermarkets, hospitals, playgrounds, cafes/eateries count per km², green canopy percentage from satellite imagery. |
-
----
-
-## 🗄️ Database Schema & Spatial Storage
-
-The primary transactional and analytical store uses **PostgreSQL 16 with PostGIS** for geographic geometry handling.
-
-### Core Relational & Geospatial Entities
-
-```sql
--- Suburb Core Geometry & Identifiers
-CREATE TABLE suburbs (
-    id VARCHAR(64) PRIMARY KEY,
-    name VARCHAR(128) NOT NULL,
-    state VARCHAR(3) NOT NULL,
-    postcode VARCHAR(4) NOT NULL,
-    lga_name VARCHAR(128) NOT NULL,
-    centroid GEOMETRY(Point, 4326) NOT NULL,
-    boundary_polygon GEOMETRY(MultiPolygon, 4326),
-    distance_to_cbd_km NUMERIC(5,2) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Real-time & Historical Property Market Aggregate
-CREATE TABLE property_metrics (
-    suburb_id VARCHAR(64) REFERENCES suburbs(id),
-    median_house_price NUMERIC(12,2),
-    median_unit_price NUMERIC(12,2),
-    growth_12m_percent NUMERIC(5,2),
-    house_rental_yield NUMERIC(4,2),
-    unit_rental_yield NUMERIC(4,2),
-    median_weekly_rent_house INT,
-    median_weekly_rent_unit INT,
-    days_on_market INT,
-    clearance_rate_percent INT,
-    effective_date DATE NOT NULL,
-    PRIMARY KEY (suburb_id, effective_date)
-);
-
--- ABS Census Micro-Demographics
-CREATE TABLE demographics (
-    suburb_id VARCHAR(64) REFERENCES suburbs(id),
-    census_year INT NOT NULL,
-    population INT NOT NULL,
-    median_age INT NOT NULL,
-    weekly_household_income INT NOT NULL,
-    state_avg_weekly_income INT NOT NULL,
-    families_with_kids_pct NUMERIC(4,1),
-    couples_no_kids_pct NUMERIC(4,1),
-    single_living_pct NUMERIC(4,1),
-    renting_pct NUMERIC(4,1),
-    mortgage_pct NUMERIC(4,1),
-    owned_outright_pct NUMERIC(4,1),
-    tertiary_educated_pct NUMERIC(4,1),
-    employed_professionals_pct NUMERIC(4,1),
-    top_ancestries JSONB,
-    PRIMARY KEY (suburb_id, census_year)
-);
-
--- Proprietary Calculated Scores
-CREATE TABLE lifestyle_scores (
-    suburb_id VARCHAR(64) REFERENCES suburbs(id) PRIMARY KEY,
-    vibe_culture INT CHECK (vibe_culture BETWEEN 0 AND 100),
-    family_living INT CHECK (family_living BETWEEN 0 AND 100),
-    tranquility INT CHECK (tranquility BETWEEN 0 AND 100),
-    transit_walk INT CHECK (transit_walk BETWEEN 0 AND 100),
-    affluence_economic INT CHECK (affluence_economic BETWEEN 0 AND 100),
-    safety_community INT CHECK (safety_community BETWEEN 0 AND 100),
-    overall_iq_score INT CHECK (overall_iq_score BETWEEN 0 AND 100),
-    calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
----
-
-## 🧮 Proprietary Scoring Algorithm (SuburbIQ Index)
-
-Each lifestyle score is normalized onto a **0–100 percentile curve** relative to all suburbs in the metropolitan area:
-
-$$\text{Normalized Score} = \min\left(100, \max\left(0, \left( \frac{X - \mu}{\sigma} \times 15 \right) + 75 \right)\right)$$
-
-### Dimension Formulations:
-1. **Vibe & Culture Index**:
-   - $40\%$ Cafe & dining venue density per $\text{km}^2$
-   - $30\%$ Nightlife, bars, live music, and cultural POI count
-   - $30\%$ Proportion of young adult population (ages 20–39)
-2. **Family Living Index**:
-   - $40\%$ Average ICSEA school performance within catchment
-   - $30\%$ Playground, sports field, and childcare center proximity
-   - $30\%$ Low violent and property crime incidence
-3. **Transit & Walkability**:
-   - $50\%$ Peak scheduled departures per hour (heavy rail / metro / light rail / ferry)
-   - $30\%$ Walk Score & pedestrian path connectivity
-   - $20\%$ Direct commute time to central business district
-4. **Affluence & Economic Power**:
-   - $50\%$ Median weekly household income relative to state benchmark
-   - $30\%$ Ratio of managerial and professional workforce
-   - $20\%$ Proportion of unencumbered home ownership
-5. **Safety & Community Cohesion**:
-   - Inverted crime incident rate per 1,000 residents weighted by offense severity (crimes against the person weighted $3\times$ vs property offenses).
-6. **Overall SuburbIQ Index**:
-   - Balanced weighted composite reflecting aggregate liveability, infrastructure, and resilience.
-
----
-
-## 💻 Local Development & Environment Setup
-
-### Prerequisites
-- **Node.js**: v20.x or higher (tested on Node v26)
-- **npm**: v10.x or higher
-
-### 1. Installation
-Clone the repository and install frontend dependencies:
+Node 22 or newer, Python 3.12, and Docker if you want the databases.
 
 ```bash
-git clone https://github.com/vsanghani/aus-suburbs.git
-cd aus-suburbs
+python3 -m venv backend/.venv
+backend/.venv/bin/pip install -e "./backend[dev]"
 npm install
+cp .env.example .env
 ```
 
-### 2. Available Scripts
+In one terminal:
 
-| Command | Action |
-| :--- | :--- |
-| `npm run dev` | Boots local Vite development server with Hot Module Reloading (HMR) at `http://localhost:5173/` |
-| `npm run build` | Compiles production assets into `dist/` with tree shaking and CSS minimization |
-| `npm run preview` | Spins up a local static server serving the production `dist/` bundle |
-| `npm run lint` | Runs Oxlint linter across the repository |
-
-### 3. Environment Variables (`.env.local`)
-Create a `.env.local` file in the project root to configure external API and tile sources (optional in local mock mode):
-
-```env
-# Optional API endpoint for backend services
-VITE_API_BASE_URL=http://localhost:8000/api/v1
-
-# Optional Map Tile Provider (defaults to CartoDB Voyager)
-VITE_MAP_TILE_URL=https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png
+```bash
+make api
 ```
 
----
+In another:
 
-## ☁️ Production Deployment & Infrastructure
-
-### 1. Frontend SPA Deployment
-The compiled frontend bundle (`dist/`) is completely static and can be deployed to:
-- **Cloudflare Pages / AWS S3 + CloudFront / Vercel**
-- Configure fallback routing so all non-asset requests redirect to `index.html` (SPA single-entry routing).
-
-### 2. Docker Containerization
-For containerized deployments:
-
-```dockerfile
-# Stage 1: Build static assets
-FROM node:22-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-# Stage 2: Serve via NGINX unprivileged
-FROM nginx:alpine-slim
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+```bash
+npm run dev
 ```
 
----
+The dev server proxies `/api` and `/health` to `http://127.0.0.1:8000`. Leave `VITE_API_BASE` empty for that. Set it to an absolute origin when the API is hosted elsewhere.
 
-## 🗺️ Roadmap & Engineering Milestones
+`make api` loads `.env` if it exists, then starts uvicorn from `backend/`. Alembic and the catalogue path do not depend on the working directory: the default contracts directory is resolved from the package file.
 
-- [x] **Milestone 1**: Foundation SPA architecture, design tokens, Leaflet map engine, and mock seed dataset.
-- [x] **Milestone 2**: 3-way head-to-head comparison tool with dynamic winner calculation.
-- [x] **Milestone 3**: Interactive buyer matchmaker with real-time affinity scoring.
-- [x] **Milestone 4**: National league table with multi-column sorting and filtering.
-- [x] **Milestone 5**: Executive printable/PDF briefing generation.
-- [ ] **Milestone 6**: Ingestion integration with live ABS TableBuilder API and state cadastral polygon layers (GeoJSON boundaries).
-- [ ] **Milestone 7**: Historical 10-year capital appreciation charts using SVG/Chart visualization.
-- [ ] **Milestone 8**: Street-level micro-meshblock granularity (sub-pocket analysis within suburbs).
-- [ ] **Milestone 9**: Climate & natural hazard risk overlays (bushfire, flood, coastal erosion overlays).
+Full stack, including PostGIS and Redis:
 
----
+```bash
+docker compose up --build
+```
 
-## 👥 Internal Engineering Contacts & Maintenance
-For questions regarding the frontend components, scoring logic, or data ingestion pipelines, contact the engineering team or create a pull request on the `feature-front` branch.
+The site is on port 8080 and the API on port 8000. Compose does not read `.env`.
+
+## Scripts
+
+| Command            | What it does                                               |
+| ------------------ | ---------------------------------------------------------- |
+| `npm run dev`      | Vite dev server                                            |
+| `npm test`         | Vitest                                                     |
+| `npm run lint`     | ESLint and Prettier                                        |
+| `npm run build`    | Typecheck and production build                             |
+| `npm run test:e2e` | Build, then Playwright smoke tests                         |
+| `make test`        | Frontend tests and pytest                                  |
+| `make lint`        | Frontend lint and Ruff                                     |
+| `make openapi`     | Rewrite `contracts/openapi.json` and `src/api/schema.d.ts` |
+| `make compose`     | `docker compose up --build`                                |
+
+Backend checks, from `backend/` with the venv active: `ruff check .`, `ruff format --check .`, `pytest`.
+
+## Layout
+
+```
+src/config/site.ts          display name
+src/styles/tokens.css       colour, type, space
+src/metrics/registry.ts     suburb sections
+src/api/types.ts            TypeScript contract
+src/api/client.ts           fetch wrappers
+contracts/formula.json      draft composite, shared
+contracts/rankings.json     list questions, shared
+contracts/states.json       state names and map centres
+contracts/openapi.json      generated OpenAPI
+backend/app/api/v1.py       empty /api/v1 routes
+backend/alembic/            empty initial migration
+docs/design.md              palette, type, space
+```
+
+## Add a metric section
+
+Add one object to `registry` in `src/metrics/registry.ts`. Omit `kind` and the generic renderer draws it.
+
+```ts
+{
+  id: "coast",
+  nav: "Coast",
+  kicker: "18 — Shore",
+  title: "Coast",
+  lede: "Distance to the shore, and whether a coastal overlay covers the suburb.",
+  slots: [
+    { id: "shore-distance", label: "Distance to shore", unit: "m", map: true },
+  ],
+}
+```
+
+That entry adds a sticky-nav link, a section, empty rows, and a source footer. `map: true` also adds the slot to the explorer’s metric menu.
+
+Use `tabs`, `series`, `tables`, or `placeGroups` when the section needs them. Set `kind` only for the four built-in templates: `score`, `metrics` (the default), `commute`, and `nearby`. A new template is a component plus a `kind` branch in `MetricSection`. A new metric does not need one.
+
+The API already accepts any section id inside `SuburbDetail.sections`. The data engineer fills a `SectionPayload` whose `metrics[].id` matches the slot ids. Unknown metric ids still render; the generic block appends them under the configured rows.
+
+## The typed contract
+
+`backend/app/schemas.py` is the source of the HTTP shapes. FastAPI publishes them at `/openapi.json`. `make openapi` writes `contracts/openapi.json` and generates `src/api/schema.d.ts`. The frontend calls the API through `src/api/types.ts`, which mirrors those schemas field for field, in snake_case. Pytest fails if the committed OpenAPI file drifts from the app.
+
+Collection responses include `dataset_connected`. While it is false, the UI says the dataset is not connected. It does not say the query returned zero. `total: null` on a ranking means the same thing. A later implementation sets `dataset_connected: true` and then a zero is a real zero.
+
+Single resources that are absent (`/suburbs/{state}/{slug}`, `/councils/{state}/{slug}`, an unknown list) return 404 with `{ "detail": "..." }`. The page still renders its sections so the shape is visible.
+
+Useful routes:
+
+| Method | Path                              | Empty behaviour                                                         |
+| ------ | --------------------------------- | ----------------------------------------------------------------------- |
+| GET    | `/health`                         | Process up. Database and Redis report `unconfigured`, `ok`, or `error`. |
+| GET    | `/api/v1/search`                  | No matches. `dataset_connected: false`.                                 |
+| GET    | `/api/v1/suburbs/{state}/{slug}`  | 404.                                                                    |
+| GET    | `/api/v1/councils`                | Empty list.                                                             |
+| GET    | `/api/v1/councils/{state}/{slug}` | 404.                                                                    |
+| GET    | `/api/v1/states/{code}`           | State name, no councils.                                                |
+| GET    | `/api/v1/rankings`                | The questions from `contracts/rankings.json`.                           |
+| GET    | `/api/v1/rankings/{slug}`         | No rows. `total: null`.                                                 |
+| GET    | `/api/v1/compare?p=vic:example`   | At most four tokens. No place bodies.                                   |
+| GET    | `/api/v1/match`                   | Echoes and normalises weights. No results.                              |
+| GET    | `/api/v1/explore`                 | Empty FeatureCollection.                                                |
+| GET    | `/api/v1/methodology`             | The draft formula. `sources_connected: false`.                          |
+| GET    | `/api/v1/commute`                 | Four modes, `minutes: null`.                                            |
+| GET    | `/api/v1/export`                  | Not available.                                                          |
+
+State codes are `nsw`, `vic`, `qld`, `sa`, `wa`, `tas`, `nt`, `act`.
+
+## For the data engineer
+
+Do not seed suburbs into this repo to “make the UI work”. Wire tables, then change the route handlers in `backend/app/api/v1.py` to query them.
+
+- The first real Alembic revision should enable PostGIS and create the tables. `0001_empty` is a placeholder and must stay empty of domain tables.
+- `dataset_connected` flips to true only when that query ran.
+- Missing inputs are null, not zero. The composite skips a null driver.
+- `contracts/formula.json` is the draft: base 50, the group ceilings, the tier words, and the weight ids. Replace the ceilings when you calibrate them, and keep the file and the API in step. The tier word is the highest tier whose `minimum` is less than or equal to the value.
+- `ScoreDriver.chart_value` is an optional 0–100 position for the compare chart. `points` stay in the composite’s own units.
+- Section payloads use the ids in `src/metrics/registry.ts`. A housing rent figure is `metrics[].id = "median-rent"` with `group: "rent"`.
+- `contracts/rankings.json` is the list of questions. A ranking row’s `value` is the raw number the question names (rent, rate, canopy), and `place.score` is the composite when the list is the composite list.
+- Crime rates need a plain caveat in `notes`. Footfall inflates counts in busy centres.
+- Traditional owners are a string from a source, or null. Do not infer them.
+- Geometries belong on `SuburbDetail.geometry` and on `GET /api/v1/explore` as a FeatureCollection. The explorer sends `metric` and `layers`.
+- Commute minutes stay null until a router is actually called.
+
+Postgres in Compose is `postgresql+psycopg://places:places@db:5432/places` inside the network, and `@localhost` from the host. Redis is `redis://redis:6379/0`.
+
+## For the frontend engineer
+
+The pages already handle loading, not-connected, empty, not-found, and transport errors. When a payload arrives, `MetricsBlock` merges it onto the registry slots by id and appends metrics the registry does not know.
+
+- Keep the display name in `src/config/site.ts`.
+- Prefer a registry entry over a new component.
+- Do not render a sample suburb in production. There is no fixture flag.
+- `useApi` aborts on unmount. Encode every input in the key.
+- Compare links are `/compare?p=vic:slug&p=nsw:slug` (max four). Match links are the weight query string.
+- MapLibre is imported from `MapCanvas` only, so the home bundle does not include it.
+- Colours and type are documented in `docs/design.md`. New UI should use the tokens.
+
+## Deploy the frontend
+
+The build output is `dist/`. It is a single-page app: unknown paths must serve `index.html`.
+
+**Vercel.** Framework preset Vite, output `dist`. `vercel.json` already rewrites every path to `index.html`. Set `VITE_API_BASE` to the API origin. Do not host the FastAPI app as a Vercel function in this skeleton.
+
+**Cloudflare Pages.** Build command `npm run build`, output directory `dist`. `public/_redirects` is copied into the build and sends unknown paths to `index.html` with status 200. Set `VITE_API_BASE` the same way. This is a static Pages project, not a Worker.
+
+The API is a container. Compose is the local shape; the same image runs anywhere that can host a container next to PostGIS and Redis.
+
+## Tests
+
+Frontend unit tests cover the registry, tier words, weight maths, compare tokens, and the empty housing rows. Playwright smoke tests load the home page, a suburb path, compare, the explorer, a ranking, the match sliders, and the dark theme, against a mocked empty API.
+
+Backend tests hit every route with `TestClient` and check that the committed OpenAPI document matches the app. They do not need Postgres.
+
+## Decisions worth a look
+
+- The draft ceilings in `contracts/formula.json` are round numbers so the sum is visible. They are not calibrated.
+- The OpenAPI title is “Places API”, so a rename of the product does not touch the backend.
+- Database role and database name are `places`, for the same reason.
+- Methodology copy is served by the API from `contracts/formula.json`. The score skeleton on a suburb page also imports that file, so the driver labels render before the methodology request returns.
+- Suburb pages are client-rendered. Pre-rendering is deferred until there are real paths to render.
+- There is no dev fixture of fake suburbs.

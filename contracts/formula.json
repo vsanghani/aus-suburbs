@@ -1,0 +1,163 @@
+{
+  "score_label": "Composite",
+  "status": "draft",
+  "base": 50,
+  "ceiling": 100,
+  "floor": 0,
+  "summary": "The composite starts at a midpoint of 50. Draft ceilings are added for access and subtracted for offences and mapped hazards, then clamped between 0 and 100. An input that has not been loaded is skipped. It is not treated as zero.",
+  "groups": [
+    {
+      "id": "transport",
+      "label": "Public transport",
+      "direction": "positive",
+      "draft_max_points": 8,
+      "summary": "Stops and service level within a short walk."
+    },
+    {
+      "id": "education",
+      "label": "Schools and early learning",
+      "direction": "positive",
+      "draft_max_points": 8,
+      "summary": "Schools, early learning, and NAPLAN where it is published."
+    },
+    {
+      "id": "errands",
+      "label": "Everyday shops and services",
+      "direction": "positive",
+      "draft_max_points": 6,
+      "summary": "Groceries, pharmacy, and everyday retail."
+    },
+    {
+      "id": "health",
+      "label": "Health services",
+      "direction": "positive",
+      "draft_max_points": 5,
+      "summary": "Hospital, GP, and pharmacy access. GP lists are often missing from open data."
+    },
+    {
+      "id": "parks",
+      "label": "Parks and canopy",
+      "direction": "positive",
+      "draft_max_points": 4,
+      "summary": "Parks, sport, and tree canopy."
+    },
+    {
+      "id": "emergency",
+      "label": "Emergency response",
+      "direction": "positive",
+      "draft_max_points": 4,
+      "summary": "Police, ambulance, and fire response nearby."
+    },
+    {
+      "id": "person-offences",
+      "label": "Offences against the person",
+      "direction": "negative",
+      "draft_max_points": 12,
+      "summary": "Reported offences against the person, per 1,000 residents."
+    },
+    {
+      "id": "property-offences",
+      "label": "Property offences",
+      "direction": "negative",
+      "draft_max_points": 8,
+      "summary": "Reported property offences, per 1,000 residents."
+    },
+    {
+      "id": "deception",
+      "label": "Deception offences",
+      "direction": "negative",
+      "draft_max_points": 4,
+      "summary": "Deception offences. These often track commerce more than streets."
+    },
+    {
+      "id": "hazards",
+      "label": "Flood and fire overlays",
+      "direction": "negative",
+      "draft_max_points": 8,
+      "summary": "Share of the suburb under flood or bushfire planning overlays."
+    }
+  ],
+  "tiers": [
+    {
+      "id": "clear",
+      "label": "Clear",
+      "minimum": 80,
+      "meaning": "Well above the midpoint on the inputs that are loaded."
+    },
+    {
+      "id": "steady",
+      "label": "Steady",
+      "minimum": 65,
+      "meaning": "Above the midpoint, with no claim of excellence."
+    },
+    {
+      "id": "mixed",
+      "label": "Mixed",
+      "minimum": 50,
+      "meaning": "Around the midpoint of the draft scale."
+    },
+    {
+      "id": "thin",
+      "label": "Thin",
+      "minimum": 35,
+      "meaning": "Below the midpoint on the inputs that are loaded."
+    },
+    {
+      "id": "sparse",
+      "label": "Sparse",
+      "minimum": 0,
+      "meaning": "Near the bottom of the draft scale."
+    }
+  ],
+  "weights": [
+    {
+      "id": "budget",
+      "label": "Housing cost",
+      "help": "More influence for rent and sale prices."
+    },
+    {
+      "id": "commute",
+      "label": "Commute",
+      "help": "More influence for transport access."
+    },
+    {
+      "id": "schools",
+      "label": "Schools",
+      "help": "More influence for schools and early learning."
+    },
+    {
+      "id": "safety",
+      "label": "Safety",
+      "help": "More influence for offence rates."
+    },
+    {
+      "id": "quiet",
+      "label": "Quiet",
+      "help": "More influence for noise and traffic exposure."
+    },
+    {
+      "id": "family",
+      "label": "Family services",
+      "help": "More influence for childcare and health."
+    },
+    {
+      "id": "errands",
+      "label": "Everyday errands",
+      "help": "More influence for shops and services."
+    },
+    {
+      "id": "green",
+      "label": "Green space",
+      "help": "More influence for parks and canopy."
+    }
+  ],
+  "caveats": [
+    "The weights are round numbers chosen so the arithmetic is visible. They are not fitted to sales, surveys, or claims.",
+    "An empty input is skipped, not treated as zero. A suburb with only a crime figure is not scored as if it had no schools.",
+    "Offence rates follow where people gather as well as where people live. A busy centre can look worse than a quiet street.",
+    "The composite is a reading aid. It is not a ranking of virtue, and it is not advice about where to live.",
+    "Personal weights on the match page are a second draft. They re-rank the same inputs once scores exist. They do not create new data."
+  ],
+  "sources_connected": false,
+  "sources": []
+}
