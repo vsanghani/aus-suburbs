@@ -881,9 +881,11 @@ input[type="range"]::-moz-range-thumb {
   background: var(--clay);
 }
 
-.map-canvas {
+.map-frame > .map-canvas {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .map-note {

@@ -120,7 +120,7 @@ test("home, suburb, compare, and explore render empty states", async ({ page }) 
   await expect(page.getByText("Not on file")).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Page sections" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Housing" })).toBeVisible();
-  await expect(page.getByText("Median weekly rent")).toBeVisible();
+  await expect(page.getByText("Median weekly rent", { exact: true })).toBeVisible();
 
   await page.goto("/compare");
   await expect(page.getByRole("heading", { name: "Compare" })).toBeVisible();

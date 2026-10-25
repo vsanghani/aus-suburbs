@@ -7,6 +7,7 @@ import { currentTheme, type ThemeName } from "../lib/theme";
 type MapHandle = {
   remove: () => void;
   isStyleLoaded: () => boolean;
+  resize: () => void;
   jumpTo: (options: { center: [number, number]; zoom: number }) => void;
   getSource: (id: string) => { setData: (data: unknown) => void } | undefined;
   addSource: (id: string, source: unknown) => void;
@@ -60,13 +61,20 @@ export function MapCanvas({
     if (!container) return undefined;
     let disposed = false;
     let map: MapHandle | undefined;
-    void Promise.all([import("maplibre-gl"), import("maplibre-gl/dist/maplibre-gl.css")])
-      .then(([mod]) => {
+    void Promise.all([
+      import("maplibre-gl"),
+      import("maplibre-gl/dist/maplibre-gl.css"),
+      import("maplibre-gl/dist/maplibre-gl-worker.mjs?url"),
+    ])
+      .then(([mod, , worker]) => {
         if (disposed) return;
         const maplibre = mod as unknown as {
           Map: new (options: Record<string, unknown>) => MapHandle;
           NavigationControl: new (options: { showCompass: boolean }) => unknown;
+          setWorkerUrl: (url: string) => void;
         };
+        // The bundled library looks for a sibling worker file that Vite does not emit.
+        maplibre.setWorkerUrl(worker.default);
         map = new maplibre.Map({
           container,
           style: theme === "dark" ? MAP_STYLE.dark : MAP_STYLE.light,
@@ -81,7 +89,9 @@ export function MapCanvas({
           "top-right",
         );
         map.once("load", () => {
-          if (!disposed) setOutcome({ theme, value: "ready" });
+          if (disposed) return;
+          map?.resize();
+          setOutcome({ theme, value: "ready" });
         });
         map.on("click", (event) => {
           pickRef.current?.([event.lngLat.lng, event.lngLat.lat]);
