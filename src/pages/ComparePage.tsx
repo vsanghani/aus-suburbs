@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { fetchCompare } from "../api/client";
 import type { SuburbDetail } from "../api/types";
 import { useApi } from "../api/useApi";
@@ -8,13 +8,12 @@ import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
 import { FORMULA } from "../config/formula";
 import { formatValue, humaniseSlug } from "../lib/format";
 import { parsePlaceTokens, splitToken, suburbPath } from "../lib/places";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Head } from "../seo/Head";
 import { registry } from "../metrics/registry";
 
 export function ComparePage() {
   const [params, setParams] = useSearchParams();
   const tokens = parsePlaceTokens(params);
-  useDocumentTitle("Compare");
   const key = tokens.join("|");
   const query = useApi(`compare:${key}`, (signal) => fetchCompare(tokens, signal));
 
@@ -38,6 +37,11 @@ export function ComparePage() {
 
   return (
     <main className="page" id="content">
+      <Head
+        title="Compare"
+        description="Up to four suburbs, the same rows. Nothing is blended into a winner."
+        path={comparePath(tokens)}
+      />
       <PageIntro
         kicker="Side by side"
         title="Compare"
@@ -66,7 +70,12 @@ export function ComparePage() {
               <span>Seat {index + 1}</span>
               <strong>{loaded?.name ?? humaniseSlug(slug)}</strong>
               <small>{loaded ? state.toUpperCase() : "Not on file"}</small>
-              <button type="button" className="button-line" onClick={() => removePlace(token)}>
+              <button
+                type="button"
+                className="button-line"
+                onClick={() => removePlace(token)}
+                aria-label={`Remove ${loaded?.name ?? humaniseSlug(slug)}`}
+              >
                 Remove
               </button>
             </div>
@@ -86,82 +95,143 @@ export function ComparePage() {
           emptyBody="The places returned no figures."
         />
       ) : null}
-      <table className="data">
-        <caption>
-          {tokens.length === 0
-            ? "The table gains a column for each place you add."
-            : "Rows stay blank until each place is on file."}
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Figure</th>
-            {tokens.map((token) => {
-              const { state, slug } = splitToken(token);
-              return (
-                <th key={token} scope="col">
-                  <a href={suburbPath(state, slug)}>{humaniseSlug(slug)}</a>
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">{FORMULA.score_label}</th>
-            {tokens.map((token) => (
-              <td key={token} className="num">
-                {cellScore(places, token)}
-              </td>
-            ))}
-          </tr>
-        </tbody>
-        {registry
-          .filter((section) => (section.slots?.length ?? 0) > 0)
-          .map((section) => (
-            <tbody key={section.id}>
-              <tr className="group-row">
-                <th colSpan={tokens.length + 1} scope="colgroup">
-                  {section.title}
-                </th>
-              </tr>
-              {(section.slots ?? []).map((slot) => (
-                <tr key={slot.id}>
-                  <th scope="row">{slot.label}</th>
-                  {tokens.map((token) => (
-                    <td key={token} className="num">
-                      {cellMetric(places, token, section.id, slot.id, slot.unit)}
-                    </td>
-                  ))}
-                </tr>
+      <div className="table-scroll">
+        <table className="data">
+          <caption>
+            {tokens.length === 0
+              ? "The table gains a column for each place you add."
+              : "Rows stay blank until each place is on file."}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Figure</th>
+              {tokens.map((token) => {
+                const { state, slug } = splitToken(token);
+                return (
+                  <th key={token} scope="col">
+                    <Link to={suburbPath(state, slug)}>{humaniseSlug(slug)}</Link>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">{FORMULA.score_label}</th>
+              {tokens.map((token) => (
+                <td key={token} className="num">
+                  {cellScore(places, token)}
+                </td>
               ))}
-            </tbody>
-          ))}
-      </table>
-      <figure className="chart">
-        <svg viewBox="0 0 200 200" role="img" aria-label="Comparison chart with no scores">
-          {FORMULA.groups.map((group, index) => {
-            const angle = (Math.PI * 2 * index) / FORMULA.groups.length - Math.PI / 2;
-            const x = 100 + Math.cos(angle) * 70;
-            const y = 100 + Math.sin(angle) * 70;
-            return (
-              <line
-                key={group.id}
-                x1="100"
-                y1="100"
-                x2={x}
-                y2={y}
-                stroke="currentColor"
-                strokeWidth="1"
-              />
-            );
-          })}
-          <circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" strokeWidth="1" />
-        </svg>
-        <figcaption>
-          The chart needs two places with a 0–100 chart value on each driver. None are loaded.
-        </figcaption>
-      </figure>
+            </tr>
+          </tbody>
+          {registry
+            .filter((section) => (section.slots?.length ?? 0) > 0)
+            .map((section) => (
+              <tbody key={section.id}>
+                <tr className="group-row">
+                  <th colSpan={tokens.length + 1} scope="colgroup">
+                    {section.title}
+                  </th>
+                </tr>
+                {(section.slots ?? []).map((slot) => (
+                  <tr key={slot.id}>
+                    <th scope="row">{slot.label}</th>
+                    {tokens.map((token) => (
+                      <td key={token} className="num">
+                        {cellMetric(places, token, section.id, slot.id, slot.unit)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            ))}
+        </table>
+      </div>
+      <CompareChart places={places} tokens={tokens} />
     </main>
+  );
+}
+
+function comparePath(tokens: string[]): string {
+  if (tokens.length === 0) return "/compare";
+  const params = new URLSearchParams();
+  for (const token of tokens) params.append("p", token);
+  return `/compare?${params.toString()}`;
+}
+
+const CHART_STROKES = ["var(--terracotta)", "var(--ochre)", "var(--sage)", "var(--ink)"];
+
+function CompareChart({ places, tokens }: { places: SuburbDetail[]; tokens: string[] }) {
+  const groups = FORMULA.groups;
+  const series = tokens
+    .map((token, index) => {
+      const place = placeFor(places, token);
+      const drivers = place?.score_detail?.drivers ?? [];
+      const values = groups.map((group) => {
+        const driver = drivers.find((item) => item.id === group.id);
+        return typeof driver?.chart_value === "number" ? driver.chart_value : null;
+      });
+      const complete = values.every((value) => value != null);
+      return {
+        token,
+        index,
+        values,
+        complete,
+        name: place?.name ?? humaniseSlug(splitToken(token).slug),
+      };
+    })
+    .filter((item) => item.complete);
+  const spokes = groups.map((group, index) => {
+    const angle = (Math.PI * 2 * index) / groups.length - Math.PI / 2;
+    return {
+      id: group.id,
+      x: 100 + Math.cos(angle) * 70,
+      y: 100 + Math.sin(angle) * 70,
+    };
+  });
+  const label =
+    series.length === 0
+      ? "Comparison chart with no scores"
+      : `Comparison chart for ${series.map((item) => item.name).join(", ")}`;
+  return (
+    <figure className="chart">
+      <svg viewBox="0 0 200 200" role="img" aria-label={label}>
+        {spokes.map((spoke) => (
+          <line
+            key={spoke.id}
+            x1="100"
+            y1="100"
+            x2={spoke.x}
+            y2={spoke.y}
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+        ))}
+        <circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" strokeWidth="1" />
+        {series.map((item) => {
+          const points = item.values.map((value, index) => {
+            const angle = (Math.PI * 2 * index) / groups.length - Math.PI / 2;
+            const radius = ((value ?? 0) / 100) * 70;
+            return `${100 + Math.cos(angle) * radius},${100 + Math.sin(angle) * radius}`;
+          });
+          return (
+            <polygon
+              key={item.token}
+              points={points.join(" ")}
+              fill="none"
+              stroke={CHART_STROKES[item.index] ?? "currentColor"}
+              strokeWidth="1.5"
+            />
+          );
+        })}
+      </svg>
+      <figcaption>
+        {series.length === 0
+          ? "No chart values are loaded. A place needs a 0–100 chart value on every driver."
+          : "Chart values are 0–100 positions supplied with the composite. They are not the points themselves."}
+      </figcaption>
+    </figure>
   );
 }
 

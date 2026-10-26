@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { ScoreDetail } from "../api/types";
 import { FORMULA } from "../config/formula";
 import { formatNumber, formatSigned } from "../lib/format";
@@ -36,7 +37,7 @@ export function ScoreBlock({ score }: { score: ScoreDetail | null }) {
               </span>
               <span>
                 {group.label}
-                <small style={{ display: "block", color: "var(--faint)" }}>
+                <small className="cell-note">
                   Draft ceiling {formatNumber(group.draft_max_points)}
                   {driver?.context ? ` · ${driver.context}` : ""}
                 </small>
@@ -49,7 +50,7 @@ export function ScoreBlock({ score }: { score: ScoreDetail | null }) {
         })}
       </ol>
       <p>
-        <a href="/methodology">How the composite is drafted</a>
+        <Link to="/methodology">How the composite is drafted</Link>
       </p>
     </div>
   );

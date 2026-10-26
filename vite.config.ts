@@ -10,6 +10,9 @@ export default defineConfig({
   plugins: [react()],
   server: { proxy },
   preview: { proxy },
+  ssr: {
+    noExternal: true,
+  },
   test: {
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",

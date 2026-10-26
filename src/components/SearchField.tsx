@@ -1,5 +1,5 @@
 import { useEffect, useId, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ApiError, fetchSearch } from "../api/client";
 import type { CouncilSummary, SuburbSummary } from "../api/types";
 import { councilPath, suburbPath } from "../lib/places";
@@ -84,6 +84,8 @@ export function SearchField({
           value={value}
           autoFocus={autoFocus}
           autoComplete="off"
+          enterKeyHint="search"
+          spellCheck={false}
           onChange={(event) => setValue(event.target.value)}
         />
         <button type="submit">Search</button>
@@ -101,19 +103,19 @@ export function SearchField({
                   <span>{place.state.toUpperCase()}</span>
                 </button>
               ) : (
-                <a href={suburbPath(place.state, place.slug)}>
+                <Link to={suburbPath(place.state, place.slug)}>
                   <span>{place.name}</span>
                   <span>{place.state.toUpperCase()}</span>
-                </a>
+                </Link>
               )}
             </li>
           ))}
           {councils.map((council) => (
             <li key={`c-${council.state}-${council.slug}`}>
-              <a href={councilPath(council.state, council.slug)}>
+              <Link to={councilPath(council.state, council.slug)}>
                 <span>{council.name}</span>
                 <span>Council</span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

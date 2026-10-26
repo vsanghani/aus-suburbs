@@ -21,6 +21,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/suburbs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Suburb Index
+         * @description Pages of suburbs for the sitemap. Returns nothing until a dataset is connected.
+         */
+        get: operations["suburb_index_api_v1_suburbs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/suburbs/{state}/{slug}": {
         parameters: {
             query?: never;
@@ -793,6 +813,23 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** SuburbListResponse */
+        SuburbListResponse: {
+            /** State */
+            state: string | null;
+            /** Dataset Connected */
+            dataset_connected: boolean;
+            /** Total */
+            total: number | null;
+            /** Offset */
+            offset: number;
+            /** Limit */
+            limit: number;
+            /** Suburbs */
+            suburbs: components["schemas"]["SuburbSummary"][];
+            /** Notice */
+            notice: string;
+        };
         /** SuburbSummary */
         SuburbSummary: {
             /** State */
@@ -922,6 +959,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suburb_index_api_v1_suburbs_get: {
+        parameters: {
+            query?: {
+                state?: string | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuburbListResponse"];
                 };
             };
             /** @description Validation Error */

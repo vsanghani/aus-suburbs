@@ -5,7 +5,7 @@ import { ErrorState, LoadingState } from "../components/States";
 import { findState } from "../config/geography";
 import { formatNumber, humaniseSlug } from "../lib/format";
 import { suburbPath } from "../lib/places";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Head } from "../seo/Head";
 import { councilSections } from "../metrics/councilRegistry";
 
 export function CouncilPage() {
@@ -17,11 +17,21 @@ export function CouncilPage() {
   const notOnFile =
     query.status === "error" && query.error instanceof ApiError && query.error.status === 404;
   const title = place?.name ?? humaniseSlug(slug);
-  useDocumentTitle(title);
   const stateName = findState(state)?.name;
 
   return (
     <main className="page" id="content">
+      <Head
+        title={stateName ? `${title}, ${stateName}` : title}
+        description={
+          notOnFile
+            ? `No council is on file for ${title}.`
+            : `Council record for ${title}. Suburbs and figures appear when a dataset is connected.`
+        }
+        path={`/councils/${state}/${slug}`}
+        status={notOnFile ? 404 : 200}
+        robots={notOnFile ? "noindex" : undefined}
+      />
       <p className="kicker">
         {notOnFile ? "Not on file" : "Council"}
         {stateName ? ` · ${stateName}` : ""}
@@ -44,39 +54,41 @@ export function CouncilPage() {
           <h2>{section.title}</h2>
           <p className="lede">{section.lede}</p>
           {section.id === "suburbs" ? (
-            <table className="data">
-              <caption>
-                {place?.dataset_connected
-                  ? "Suburbs on file."
-                  : "No suburbs are loaded for this council."}
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Suburb</th>
-                  <th scope="col">Postcode</th>
-                  <th scope="col">Composite</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(place?.suburbs.length ?? 0) === 0 ? (
+            <div className="table-scroll">
+              <table className="data">
+                <caption>
+                  {place?.dataset_connected
+                    ? "Suburbs on file."
+                    : "No suburbs are loaded for this council."}
+                </caption>
+                <thead>
                   <tr>
-                    <td colSpan={3}>No suburbs are loaded.</td>
+                    <th scope="col">Suburb</th>
+                    <th scope="col">Postcode</th>
+                    <th scope="col">Composite</th>
                   </tr>
-                ) : (
-                  place?.suburbs.map((suburb) => (
-                    <tr key={suburb.slug}>
-                      <td>
-                        <Link to={suburbPath(suburb.state, suburb.slug)}>{suburb.name}</Link>
-                      </td>
-                      <td>{suburb.postcode ?? "—"}</td>
-                      <td className="num">
-                        {suburb.score == null ? "—" : formatNumber(suburb.score)}
-                      </td>
+                </thead>
+                <tbody>
+                  {(place?.suburbs.length ?? 0) === 0 ? (
+                    <tr>
+                      <td colSpan={3}>No suburbs are loaded.</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    place?.suburbs.map((suburb) => (
+                      <tr key={suburb.slug}>
+                        <td>
+                          <Link to={suburbPath(suburb.state, suburb.slug)}>{suburb.name}</Link>
+                        </td>
+                        <td>{suburb.postcode ?? "—"}</td>
+                        <td className="num">
+                          {suburb.score == null ? "—" : formatNumber(suburb.score)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="empty-line">No figures are on file for this section.</p>
           )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState, useSyncExternalStore } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, fetchSuburb } from "../api/client";
 import { useApi } from "../api/useApi";
@@ -6,24 +6,40 @@ import { MetricSection } from "../components/MetricSection";
 import { SectionNav } from "../components/SectionNav";
 import { ErrorState, LoadingState } from "../components/States";
 import { findState } from "../config/geography";
+import { siteOrigin } from "../config/site";
 import { formatNumber, humaniseSlug } from "../lib/format";
-import { isKeptPlace, toggleKept } from "../lib/shortlist";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { subscribeShortlist, toggleKept, shortlistSnapshot } from "../lib/shortlist";
 import { registry } from "../metrics/registry";
+import { suburbCopy } from "../seo/copy";
+import { OriginContext, RouteDataContext } from "../seo/context";
+import { Head } from "../seo/Head";
+import { placeJsonLd } from "../seo/jsonld";
+import { suburbSeed } from "../seo/routeData";
 
 export function SuburbPage() {
   const params = useParams();
   const state = (params.state ?? "").toLowerCase();
   const slug = (params.slug ?? "").toLowerCase();
-  const query = useApi(`${state}:${slug}`, (signal) => fetchSuburb(state, slug, signal));
+  const key = `${state}:${slug}`;
+  const routeData = useContext(RouteDataContext);
+  const origin = useContext(OriginContext) ?? siteOrigin();
+  const query = useApi(
+    key,
+    (signal) => fetchSuburb(state, slug, signal),
+    suburbSeed(routeData.suburb, key),
+  );
   const place = query.status === "ready" ? query.data : null;
   const notOnFile =
     query.status === "error" && query.error instanceof ApiError && query.error.status === 404;
-  const title = place?.name ?? humaniseSlug(slug);
-  useDocumentTitle(title);
+  const copy = suburbCopy(state, slug, place, notOnFile);
   const [copied, setCopied] = useState(false);
-  const [kept, setKept] = useState(() => isKeptPlace(state, slug));
+  const kept = useSyncExternalStore(
+    subscribeShortlist,
+    () => shortlistSnapshot().some((item) => item.state === state && item.slug === slug),
+    () => false,
+  );
   const stateName = findState(state)?.name;
+  const transportError = query.status === "error" && !notOnFile;
 
   async function copyLink() {
     try {
@@ -36,22 +52,29 @@ export function SuburbPage() {
 
   function keep() {
     if (!place) return;
-    const next = toggleKept({
+    toggleKept({
       state: place.state,
       slug: place.slug,
       name: place.name,
       savedAt: new Date().toISOString(),
     });
-    setKept(next.some((item) => item.state === place.state && item.slug === place.slug));
   }
 
   return (
     <main className="page" id="content">
+      <Head
+        title={copy.title}
+        description={copy.description}
+        path={copy.path}
+        status={notOnFile ? 404 : transportError ? 503 : 200}
+        robots={notOnFile ? "noindex" : undefined}
+        jsonLd={place ? placeJsonLd(place, copy.path, origin) : null}
+      />
       <p className="kicker">
         {query.status === "loading" ? "Fetching" : notOnFile ? "Not on file" : "Suburb"}
-        {stateName ? ` · ${stateName}` : ` · ${state}`}
+        {stateName ? ` · ${stateName}` : state ? ` · ${state.toUpperCase()}` : ""}
       </p>
-      <h1>{title}</h1>
+      <h1>{place?.name ?? humaniseSlug(slug)}</h1>
       {notOnFile ? (
         <p className="lede">
           {(query.error instanceof ApiError
@@ -63,9 +86,7 @@ export function SuburbPage() {
         <p className="lede">{place?.blurb ?? "No summary is attached."}</p>
       )}
       {query.status === "loading" ? <LoadingState /> : null}
-      {query.status === "error" && !notOnFile ? (
-        <ErrorState error={query.error} onRetry={query.retry} />
-      ) : null}
+      {transportError ? <ErrorState error={query.error} onRetry={query.retry} /> : null}
       <p className="meta-line">
         <span>Postcode {place?.postcode ?? "not recorded"}</span>
         <span>
@@ -85,7 +106,7 @@ export function SuburbPage() {
       </p>
       <p>{place?.description ?? "No description is attached."}</p>
       {place && place.ranks.length > 0 ? (
-        <ul>
+        <ul className="rank-list">
           {place.ranks.map((rank) => (
             <li key={rank.list_slug}>
               <Link to={`/rankings/${rank.list_slug}`}>
@@ -106,7 +127,10 @@ export function SuburbPage() {
         <button type="button" className="button-line" onClick={keep} disabled={!place}>
           {kept ? "Kept on this browser" : "Keep"}
         </button>
-        {!place ? <span>You can keep a place once it is on file.</span> : null}
+        <span className="status-line" role="status">
+          {copied ? "The address is on the clipboard." : ""}
+          {!place && !copied ? "You can keep a place once it is on file." : ""}
+        </span>
       </div>
       <SectionNav score={place?.score ?? null} />
       {registry.map((section) => (

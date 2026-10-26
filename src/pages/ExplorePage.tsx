@@ -3,10 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import { fetchExplore } from "../api/client";
 import { useApi } from "../api/useApi";
 import { FilterPills } from "../components/FilterPills";
-import { MapCanvas } from "../components/MapCanvas";
+import { ClientMap } from "../components/ClientMap";
 import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
 import { STATES, stateView } from "../config/geography";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Head } from "../seo/Head";
 import { mapMetrics } from "../metrics/registry";
 
 const LAYERS = [
@@ -21,7 +21,6 @@ const LAYERS = [
 
 export function ExplorePage() {
   const [params] = useSearchParams();
-  useDocumentTitle("Explore");
   const metrics = useMemo(() => mapMetrics(), []);
   const [metric, setMetric] = useState(params.get("metric") ?? "score");
   const [stateCode, setStateCode] = useState(params.get("state") ?? "all");
@@ -50,6 +49,11 @@ export function ExplorePage() {
 
   return (
     <main className="explore" id="content">
+      <Head
+        title="Explore"
+        description="A map of suburb boundaries and overlays. Geometries appear when a dataset is connected."
+        path="/explore"
+      />
       <div className="explore-panel">
         <p className="kicker">Map</p>
         <h1>Explore</h1>
@@ -125,9 +129,12 @@ export function ExplorePage() {
           </p>
         ) : null}
       </div>
-      <MapCanvas
+      <ClientMap
         centre={view.centre}
         zoom={view.zoom}
+        label={
+          radiusOn ? "Map of Australia. Click the map to place the radius." : "Map of Australia"
+        }
         collection={query.status === "ready" ? query.data.feature_collection : null}
         circle={radiusOn && picked ? { centre: picked, radiusKm } : null}
         onPick={radiusOn ? setPicked : undefined}

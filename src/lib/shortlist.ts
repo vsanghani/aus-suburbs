@@ -1,5 +1,8 @@
 const KEY = "suburb-record.shortlist.v1";
 const EVENT = "shortlist-change";
+const EMPTY: KeptPlace[] = [];
+let cachedRaw: string | null = null;
+let cachedList: KeptPlace[] = EMPTY;
 
 export type KeptPlace = {
   state: string;
@@ -20,15 +23,29 @@ function isKept(value: unknown): value is KeptPlace {
 }
 
 export function readShortlist(): KeptPlace[] {
+  return shortlistSnapshot();
+}
+
+/** Stable snapshot for useSyncExternalStore. Server render uses an empty list. */
+export function shortlistSnapshot(): KeptPlace[] {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
+    if (raw === cachedRaw) return cachedList;
+    cachedRaw = raw;
+    if (!raw) {
+      cachedList = EMPTY;
+      return cachedList;
+    }
     const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isKept);
+    cachedList = Array.isArray(parsed) ? parsed.filter(isKept) : EMPTY;
+    return cachedList;
   } catch {
-    return [];
+    return EMPTY;
   }
+}
+
+export function serverShortlist(): KeptPlace[] {
+  return EMPTY;
 }
 
 export function writeShortlist(places: KeptPlace[]): void {

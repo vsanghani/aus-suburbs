@@ -140,6 +140,28 @@ test("dark theme stays on after reload", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 
+test("suburb HTML is rendered before javascript, and the sitemap stays empty of places", async ({
+  request,
+}) => {
+  const suburb = await request.get("/suburbs/vic/richmond");
+  const html = await suburb.text();
+  expect(html).toContain("<h1");
+  expect(html).toContain("Richmond");
+  expect(html).toContain("Victoria");
+  expect(html).toContain('rel="canonical" href="http://127.0.0.1:4173/suburbs/vic/richmond"');
+  expect(html).toContain('property="og:title"');
+  expect(html).toContain('name="twitter:card"');
+  expect(html).not.toContain("application/ld+json");
+
+  const sitemap = await request.get("/sitemap.xml");
+  const xml = await sitemap.text();
+  expect(xml).toContain("http://127.0.0.1:4173/rankings/rent");
+  expect(xml).not.toContain("/suburbs/");
+
+  const robots = await request.get("/robots.txt");
+  expect(await robots.text()).toContain("Sitemap: http://127.0.0.1:4173/sitemap.xml");
+});
+
 test("match sliders and a ranking list explain the empty record", async ({ page }) => {
   await page.goto("/match");
   await expect(page.getByRole("heading", { name: "Match" })).toBeVisible();

@@ -3,15 +3,15 @@ import { SearchField } from "../components/SearchField";
 import { RANKINGS } from "../config/rankings";
 import { STATES } from "../config/geography";
 import { site } from "../config/site";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Head } from "../seo/Head";
 import { registry } from "../metrics/registry";
 
 const contents = registry.filter((section) => section.kind !== "score");
 
 export function HomePage() {
-  useDocumentTitle();
   return (
     <main className="page home" id="content">
+      <Head title={site.name} description={site.description} path="/" />
       <p className="kicker">Australia · public datasets</p>
       <h1 className="home-h1">{site.name}</h1>
       <p className="lede">A public record of Australian suburbs.</p>

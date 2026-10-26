@@ -1,22 +1,33 @@
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Link } from "react-router-dom";
 import { PageIntro } from "../components/PageIntro";
-import { readShortlist, writeShortlist, type KeptPlace } from "../lib/shortlist";
+import {
+  serverShortlist,
+  shortlistSnapshot,
+  subscribeShortlist,
+  writeShortlist,
+  type KeptPlace,
+} from "../lib/shortlist";
 import { suburbPath } from "../lib/places";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Head } from "../seo/Head";
 
 export function ShortlistPage() {
-  useDocumentTitle("Kept");
-  const [places, setPlaces] = useState<KeptPlace[]>(() => readShortlist());
+  const places = useSyncExternalStore(subscribeShortlist, shortlistSnapshot, serverShortlist);
 
   function remove(place: KeptPlace) {
-    const next = places.filter((item) => !(item.state === place.state && item.slug === place.slug));
-    writeShortlist(next);
-    setPlaces(next);
+    writeShortlist(
+      places.filter((item) => !(item.state === place.state && item.slug === place.slug)),
+    );
   }
 
   return (
     <main className="page" id="content">
+      <Head
+        title="Kept"
+        description="Places kept in this browser. They are not an account and they are not synced."
+        path="/shortlist"
+        robots="noindex"
+      />
       <PageIntro
         kicker="This browser"
         title="Kept"

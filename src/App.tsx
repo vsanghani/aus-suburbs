@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
@@ -19,7 +19,7 @@ import { SuburbPage } from "./pages/SuburbPage";
 
 export function App() {
   return (
-    <BrowserRouter>
+    <>
       <a className="skip-link" href="#content">
         Skip to content
       </a>
@@ -37,13 +37,13 @@ export function App() {
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/match" element={<MatchPage />} />
           <Route path="/methodology" element={<MethodologyPage />} />
-          <Route path="/sources" element={<MethodologyPage startAtSources />} />
+          <Route path="/sources" element={<Navigate to="/methodology#sources" replace />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/shortlist" element={<ShortlistPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </RouteErrorBoundary>
       <SiteFooter />
-    </BrowserRouter>
+    </>
   );
 }

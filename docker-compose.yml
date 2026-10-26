@@ -60,8 +60,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      VITE_SITE_ORIGIN: http://localhost:8080
+      SSR_API_BASE: http://api:8000
     ports:
-      - "8080:80"
+      - "8080:8080"
     depends_on:
       - api
 
