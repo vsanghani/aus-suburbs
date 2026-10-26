@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, fetchSuburb } from "../api/client";
 import { useApi } from "../api/useApi";
@@ -7,7 +7,7 @@ import { SectionNav } from "../components/SectionNav";
 import { ErrorState, LoadingState } from "../components/States";
 import { findState } from "../config/geography";
 import { formatNumber, humaniseSlug } from "../lib/format";
-import { isKeptPlace, toggleKept } from "../lib/shortlist";
+import { isKeptPlace, subscribeShortlist, toggleKept } from "../lib/shortlist";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { registry } from "../metrics/registry";
 
@@ -21,16 +21,25 @@ export function SuburbPage() {
     query.status === "error" && query.error instanceof ApiError && query.error.status === 404;
   const title = place?.name ?? humaniseSlug(slug);
   useDocumentTitle(title);
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [kept, setKept] = useState(() => isKeptPlace(state, slug));
+  const placeKey = `${state}:${slug}`;
+  const [trackedPlace, setTrackedPlace] = useState(placeKey);
+  if (trackedPlace !== placeKey) {
+    setTrackedPlace(placeKey);
+    setKept(isKeptPlace(state, slug));
+    setCopyState("idle");
+  }
   const stateName = findState(state)?.name;
+
+  useEffect(() => subscribeShortlist(() => setKept(isKeptPlace(state, slug))), [state, slug]);
 
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
+      setCopyState("copied");
     } catch {
-      setCopied(false);
+      setCopyState("failed");
     }
   }
 
@@ -66,47 +75,69 @@ export function SuburbPage() {
       {query.status === "error" && !notOnFile ? (
         <ErrorState error={query.error} onRetry={query.retry} />
       ) : null}
-      <p className="meta-line">
-        <span>Postcode {place?.postcode ?? "not recorded"}</span>
-        <span>
-          Council{" "}
-          {place?.council_slug ? (
-            <Link to={`/councils/${place.state}/${place.council_slug}`}>
-              {place.council_name ?? place.council_slug}
-            </Link>
-          ) : (
-            "not recorded"
-          )}
-        </span>
-        <span>
-          Population {place?.population == null ? "not recorded" : formatNumber(place.population)}
-        </span>
-        <span>Traditional owners {place?.traditional_owners ?? "not recorded"}</span>
-      </p>
+      <dl className="meta-line">
+        <div>
+          <dt>Postcode</dt>
+          <dd>{place?.postcode ?? "not recorded"}</dd>
+        </div>
+        <div>
+          <dt>Council</dt>
+          <dd>
+            {place?.council_slug ? (
+              <Link to={`/councils/${place.state}/${place.council_slug}`}>
+                {place.council_name ?? place.council_slug}
+              </Link>
+            ) : (
+              "not recorded"
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>Population</dt>
+          <dd>{place?.population == null ? "not recorded" : formatNumber(place.population)}</dd>
+        </div>
+        <div>
+          <dt>Traditional owners</dt>
+          <dd>{place?.traditional_owners ?? "not recorded"}</dd>
+        </div>
+      </dl>
       <p>{place?.description ?? "No description is attached."}</p>
       {place && place.ranks.length > 0 ? (
-        <ul>
+        <ul className="link-index">
           {place.ranks.map((rank) => (
             <li key={rank.list_slug}>
               <Link to={`/rankings/${rank.list_slug}`}>
-                {rank.list_title}
-                {rank.position == null ? "" : ` · ${rank.position}`}
-                {rank.scope ? ` · ${rank.scope}` : ""}
+                <strong>{rank.list_title}</strong>
+                <span>
+                  {rank.position == null ? "Position not recorded" : `Position ${rank.position}`}
+                  {rank.scope ? ` · ${rank.scope}` : ""}
+                </span>
               </Link>
             </li>
           ))}
         </ul>
       ) : (
-        <p>No list position is recorded.</p>
+        <p className="empty-line">No list position is recorded.</p>
       )}
       <div className="actions">
         <button type="button" className="button-line" onClick={() => void copyLink()}>
-          {copied ? "Link copied" : "Copy link"}
+          {copyState === "copied"
+            ? "Link copied"
+            : copyState === "failed"
+              ? "Could not copy"
+              : "Copy link"}
         </button>
-        <button type="button" className="button-line" onClick={keep} disabled={!place}>
+        <button
+          type="button"
+          className="button-line"
+          onClick={keep}
+          disabled={!place}
+          aria-pressed={kept}
+          aria-describedby={place ? undefined : "keep-hint"}
+        >
           {kept ? "Kept on this browser" : "Keep"}
         </button>
-        {!place ? <span>You can keep a place once it is on file.</span> : null}
+        {!place ? <span id="keep-hint">You can keep a place once it is on file.</span> : null}
       </div>
       <SectionNav score={place?.score ?? null} />
       {registry.map((section) => (

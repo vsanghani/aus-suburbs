@@ -1,10 +1,12 @@
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { fetchCompare } from "../api/client";
 import type { SuburbDetail } from "../api/types";
 import { useApi } from "../api/useApi";
+import { CompareChart } from "../components/CompareChart";
 import { PageIntro } from "../components/PageIntro";
 import { SearchField } from "../components/SearchField";
 import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
+import { TableScroll } from "../components/TableScroll";
 import { FORMULA } from "../config/formula";
 import { formatValue, humaniseSlug } from "../lib/format";
 import { parsePlaceTokens, splitToken, suburbPath } from "../lib/places";
@@ -48,119 +50,116 @@ export function ComparePage() {
       ) : (
         <SearchField onPick={(place) => addPlace(place.state, place.slug)} />
       )}
-      <div className="seats">
+      <ol className="seats">
         {[0, 1, 2, 3].map((index) => {
           const token = tokens[index];
           if (!token) {
             return (
-              <div className="seat" key={index}>
+              <li className="seat" key={index}>
                 <span>Seat {index + 1}</span>
-                Empty
-              </div>
+                <p className="empty-line">Empty</p>
+              </li>
             );
           }
           const { state, slug } = splitToken(token);
           const loaded = places.find((place) => place.state === state && place.slug === slug);
+          const name = loaded?.name ?? humaniseSlug(slug);
           return (
-            <div className="seat" key={token}>
+            <li className="seat" key={token}>
               <span>Seat {index + 1}</span>
-              <strong>{loaded?.name ?? humaniseSlug(slug)}</strong>
+              <strong>{name}</strong>
               <small>{loaded ? state.toUpperCase() : "Not on file"}</small>
-              <button type="button" className="button-line" onClick={() => removePlace(token)}>
+              <button
+                type="button"
+                className="button-line"
+                aria-label={`Remove ${name}`}
+                onClick={() => removePlace(token)}
+              >
                 Remove
               </button>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ol>
       {query.status === "loading" ? <LoadingState /> : null}
       {query.status === "error" ? <ErrorState error={query.error} onRetry={query.retry} /> : null}
       {query.status === "ready" && query.data.omitted.length > 0 ? (
         <p>Left off: {query.data.omitted.join(", ")}.</p>
       ) : null}
-      {query.status === "ready" ? (
+      {query.status === "ready" && !query.data.dataset_connected ? (
         <DatasetNotice
-          connected={query.data.dataset_connected}
+          connected={false}
           notice={query.data.notice}
           emptyTitle="Nothing to compare"
           emptyBody="The places returned no figures."
         />
       ) : null}
-      <table className="data">
-        <caption>
-          {tokens.length === 0
-            ? "The table gains a column for each place you add."
-            : "Rows stay blank until each place is on file."}
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Figure</th>
-            {tokens.map((token) => {
-              const { state, slug } = splitToken(token);
-              return (
-                <th key={token} scope="col">
-                  <a href={suburbPath(state, slug)}>{humaniseSlug(slug)}</a>
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">{FORMULA.score_label}</th>
-            {tokens.map((token) => (
-              <td key={token} className="num">
-                {cellScore(places, token)}
-              </td>
-            ))}
-          </tr>
-        </tbody>
-        {registry
-          .filter((section) => (section.slots?.length ?? 0) > 0)
-          .map((section) => (
-            <tbody key={section.id}>
-              <tr className="group-row">
-                <th colSpan={tokens.length + 1} scope="colgroup">
-                  {section.title}
-                </th>
-              </tr>
-              {(section.slots ?? []).map((slot) => (
-                <tr key={slot.id}>
-                  <th scope="row">{slot.label}</th>
-                  {tokens.map((token) => (
-                    <td key={token} className="num">
-                      {cellMetric(places, token, section.id, slot.id, slot.unit)}
-                    </td>
-                  ))}
-                </tr>
+      {query.status === "ready" &&
+      query.data.dataset_connected &&
+      tokens.length > 0 &&
+      places.length === 0 ? (
+        <DatasetNotice
+          connected
+          notice={query.data.notice}
+          emptyTitle="Nothing to compare"
+          emptyBody="The places returned no figures."
+        />
+      ) : null}
+      <TableScroll label="Comparison figures">
+        <table className="data">
+          <caption>
+            {tokens.length === 0
+              ? "The table gains a column for each place you add."
+              : "Rows stay blank until each place is on file."}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Figure</th>
+              {tokens.map((token) => {
+                const { state, slug } = splitToken(token);
+                const loaded = places.find((place) => place.state === state && place.slug === slug);
+                return (
+                  <th key={token} scope="col">
+                    <Link to={suburbPath(state, slug)}>{loaded?.name ?? humaniseSlug(slug)}</Link>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">{FORMULA.score_label}</th>
+              {tokens.map((token) => (
+                <td key={token} className="num">
+                  {cellScore(places, token)}
+                </td>
               ))}
-            </tbody>
-          ))}
-      </table>
-      <figure className="chart">
-        <svg viewBox="0 0 200 200" role="img" aria-label="Comparison chart with no scores">
-          {FORMULA.groups.map((group, index) => {
-            const angle = (Math.PI * 2 * index) / FORMULA.groups.length - Math.PI / 2;
-            const x = 100 + Math.cos(angle) * 70;
-            const y = 100 + Math.sin(angle) * 70;
-            return (
-              <line
-                key={group.id}
-                x1="100"
-                y1="100"
-                x2={x}
-                y2={y}
-                stroke="currentColor"
-                strokeWidth="1"
-              />
-            );
-          })}
-          <circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" strokeWidth="1" />
-        </svg>
-        <figcaption>
-          The chart needs two places with a 0–100 chart value on each driver. None are loaded.
-        </figcaption>
-      </figure>
+            </tr>
+          </tbody>
+          {registry
+            .filter((section) => (section.slots?.length ?? 0) > 0)
+            .map((section) => (
+              <tbody key={section.id}>
+                <tr className="group-row">
+                  <th colSpan={tokens.length + 1} scope="colgroup">
+                    {section.title}
+                  </th>
+                </tr>
+                {(section.slots ?? []).map((slot) => (
+                  <tr key={slot.id}>
+                    <th scope="row">{slot.label}</th>
+                    {tokens.map((token) => (
+                      <td key={token} className="num">
+                        {cellMetric(places, token, section.id, slot.id, slot.unit)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            ))}
+        </table>
+      </TableScroll>
+      <CompareChart tokens={tokens} places={places} />
     </main>
   );
 }

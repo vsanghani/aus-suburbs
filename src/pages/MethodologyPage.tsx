@@ -3,6 +3,7 @@ import { fetchExport, fetchMethodology } from "../api/client";
 import { useApi } from "../api/useApi";
 import { PageIntro } from "../components/PageIntro";
 import { ErrorState, LoadingState } from "../components/States";
+import { TableScroll } from "../components/TableScroll";
 import { formatNumber } from "../lib/format";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
@@ -39,47 +40,57 @@ export function MethodologyPage({ startAtSources = false }: { startAtSources?: b
             An input that is missing is skipped. The highest tier whose minimum is at or below the
             result supplies the word beside the number: Clear, Steady, Mixed, Thin, or Sparse.
           </p>
-          <table className="data formula-table">
-            <caption>Draft groups</caption>
-            <thead>
-              <tr>
-                <th scope="col">Group</th>
-                <th scope="col">Direction</th>
-                <th scope="col">Ceiling</th>
-              </tr>
-            </thead>
-            <tbody>
-              {method.data.groups.map((group) => (
-                <tr key={group.id}>
-                  <th scope="row">
-                    {group.label}
-                    <small style={{ display: "block", fontWeight: 400 }}>{group.summary}</small>
-                  </th>
-                  <td>{group.direction === "positive" ? "Adds" : "Subtracts"}</td>
-                  <td className="num">{formatNumber(group.draft_max_points)}</td>
+          <TableScroll>
+            <table className="data formula-table">
+              <caption>Draft groups</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Group</th>
+                  <th scope="col">Direction</th>
+                  <th scope="col">Ceiling</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <table className="data">
-            <caption>Words for the result</caption>
-            <thead>
-              <tr>
-                <th scope="col">Word</th>
-                <th scope="col">From</th>
-                <th scope="col">Meaning</th>
-              </tr>
-            </thead>
-            <tbody>
-              {method.data.tiers.map((tier) => (
-                <tr key={tier.id}>
-                  <th scope="row">{tier.label}</th>
-                  <td className="num">{formatNumber(tier.minimum)}</td>
-                  <td>{tier.meaning}</td>
+              </thead>
+              <tbody>
+                {method.data.groups.map((group) => (
+                  <tr key={group.id}>
+                    <th scope="row">
+                      {group.label}
+                      <small className="cell-note">{group.summary}</small>
+                    </th>
+                    <td
+                      className={
+                        group.direction === "positive" ? "direction positive" : "direction negative"
+                      }
+                    >
+                      {group.direction === "positive" ? "Adds" : "Subtracts"}
+                    </td>
+                    <td className="num">{formatNumber(group.draft_max_points)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableScroll>
+          <TableScroll>
+            <table className="data">
+              <caption>Words for the result</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Word</th>
+                  <th scope="col">From</th>
+                  <th scope="col">Meaning</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {method.data.tiers.map((tier) => (
+                  <tr key={tier.id}>
+                    <th scope="row">{tier.label}</th>
+                    <td className="num">{formatNumber(tier.minimum)}</td>
+                    <td>{tier.meaning}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableScroll>
           <h2>Personal weights</h2>
           <p>
             The match page does not invent a second score. It keeps these inputs and changes how
@@ -107,7 +118,10 @@ export function MethodologyPage({ startAtSources = false }: { startAtSources?: b
                     {source.url ? (
                       <>
                         {" "}
-                        · <a href={source.url}>{source.url}</a>
+                        ·{" "}
+                        <a href={source.url} className="url">
+                          {source.url}
+                        </a>
                       </>
                     ) : null}
                   </li>

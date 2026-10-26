@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from "react";
 import type { DataTable, MetricValue, SectionPayload, TimeSeries } from "../api/types";
 import { formatDistance, formatValue } from "../lib/format";
 import type { SectionConfig } from "../metrics/registry";
+import { TableScroll } from "./TableScroll";
 import { TrendChart } from "./TrendChart";
 
 function inGroup<T extends { group?: string | null }>(
@@ -64,6 +65,7 @@ export function MetricsBlock({
       <div
         role={hasTabs ? "tabpanel" : undefined}
         id={hasTabs ? `${config.id}-${tab}-panel` : undefined}
+        aria-labelledby={hasTabs ? `${config.id}-${tab}-tab` : undefined}
       >
         {filled ? null : <p className="empty-line">No figures are on file for this section.</p>}
         {slotRows.length > 0 ? (
@@ -89,33 +91,35 @@ export function MetricsBlock({
           />
         ))}
         {tableRows.map((table) => (
-          <table className="data" key={table.id}>
-            <caption>{table.label}</caption>
-            <thead>
-              <tr>
-                {table.columns.map((column) => (
-                  <th key={column.id} scope="col">
-                    {column.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {table.rows.length === 0 ? (
+          <TableScroll key={table.id}>
+            <table className="data">
+              <caption>{table.label}</caption>
+              <thead>
                 <tr>
-                  <td colSpan={Math.max(table.columns.length, 1)}>No rows are loaded.</td>
+                  {table.columns.map((column) => (
+                    <th key={column.id} scope="col">
+                      {column.label}
+                    </th>
+                  ))}
                 </tr>
-              ) : (
-                table.rows.map((row, index) => (
-                  <tr key={`${table.id}-${index}`}>
-                    {table.columns.map((column) => (
-                      <td key={column.id}>{row[column.id] ?? "—"}</td>
-                    ))}
+              </thead>
+              <tbody>
+                {table.rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={Math.max(table.columns.length, 1)}>No rows are loaded.</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  table.rows.map((row, index) => (
+                    <tr key={`${table.id}-${index}`}>
+                      {table.columns.map((column) => (
+                        <td key={column.id}>{row[column.id] ?? "—"}</td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </TableScroll>
         ))}
         {(config.placeGroups ?? []).map((group) => {
           const grouped = places.filter((place) => place.group === group.id);

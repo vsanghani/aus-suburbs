@@ -1,8 +1,10 @@
+import type { ReactNode } from "react";
 import { ApiError } from "../api/client";
 
 export function LoadingState({ label = "Fetching the record." }: { label?: string }) {
   return (
-    <p className="status-line" role="status">
+    <p className="status-block" role="status">
+      <span className="kicker">Loading</span>
       {label}
     </p>
   );
@@ -12,16 +14,19 @@ export function EmptyState({
   kicker = "Empty",
   title,
   body,
+  children,
 }: {
   kicker?: string;
   title: string;
   body: string;
+  children?: ReactNode;
 }) {
   return (
     <div className="empty">
       <p className="kicker">{kicker}</p>
       <p className="empty-title">{title}</p>
       <p>{body}</p>
+      {children}
     </div>
   );
 }

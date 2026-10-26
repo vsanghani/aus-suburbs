@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ApiError, fetchRanking } from "../api/client";
 import { useApi } from "../api/useApi";
 import { FilterPills } from "../components/FilterPills";
@@ -13,9 +12,21 @@ export function RankingPage() {
   const params = useParams();
   const slug = params.slug ?? "";
   const local = findRanking(slug);
-  const [stateCode, setStateCode] = useState("all");
-  const [region, setRegion] = useState("all");
-  const [council, setCouncil] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const stateCode = searchParams.get("state") ?? "all";
+  const region = searchParams.get("region") ?? "all";
+  const council = searchParams.get("council") ?? "all";
+
+  function setFilter(key: "state" | "region" | "council", value: string) {
+    const next = new URLSearchParams(searchParams);
+    if (value === "all") next.delete(key);
+    else next.set(key, value);
+    if (key === "state") {
+      next.delete("region");
+      next.delete("council");
+    }
+    setSearchParams(next, { replace: true });
+  }
   useDocumentTitle(local?.title ?? "List");
   const query = useApi(`rank:${slug}:${stateCode}:${region}:${council}`, (signal) =>
     fetchRanking(
@@ -46,7 +57,7 @@ export function RankingPage() {
       <FilterPills
         label="State"
         value={stateCode}
-        onChange={setStateCode}
+        onChange={(id) => setFilter("state", id)}
         options={[
           { id: "all", label: "All states" },
           ...STATES.map((state) => ({ id: state.code, label: state.name })),
@@ -56,20 +67,20 @@ export function RankingPage() {
         <FilterPills
           label="Region"
           value={region}
-          onChange={setRegion}
+          onChange={(id) => setFilter("region", id)}
           options={[
             { id: "all", label: "All regions" },
             ...query.data.regions.map((item) => ({ id: item.slug, label: item.name })),
           ]}
         />
-      ) : (
-        <p>Region filters appear when the list returns them.</p>
-      )}
+      ) : query.status === "ready" ? (
+        <p className="empty-line">Region filters appear when the list returns them.</p>
+      ) : null}
       {query.status === "ready" && query.data.councils.length > 0 ? (
         <FilterPills
           label="Council"
           value={council}
-          onChange={setCouncil}
+          onChange={(id) => setFilter("council", id)}
           options={[
             { id: "all", label: "All councils" },
             ...query.data.councils.map((item) => ({ id: item.slug, label: item.name })),

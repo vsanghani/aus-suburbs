@@ -14,6 +14,9 @@ export function applyTheme(theme: ThemeName): void {
     delete document.documentElement.dataset.theme;
     document.documentElement.style.colorScheme = "light";
   }
+  const meta = document.querySelector('meta[name="theme-color"]');
+  const paper = getComputedStyle(document.documentElement).getPropertyValue("--paper").trim();
+  if (meta && paper) meta.setAttribute("content", paper);
   try {
     localStorage.setItem(STORAGE_KEY, theme);
   } catch {

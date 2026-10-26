@@ -41,6 +41,7 @@
   --measure: 74rem;
   --gutter: clamp(1.15rem, 3.5vw, 2.75rem);
   --header-h: 4.25rem;
+  --section-nav-h: 2.75rem;
   --shadow: none;
 }
 
