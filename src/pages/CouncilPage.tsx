@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { ApiError, fetchCouncil } from "../api/client";
 import { useApi } from "../api/useApi";
 import { ErrorState, LoadingState } from "../components/States";
+import { TableScroll } from "../components/TableScroll";
 import { findState } from "../config/geography";
 import { formatNumber, humaniseSlug } from "../lib/format";
 import { suburbPath } from "../lib/places";
@@ -37,46 +38,48 @@ export function CouncilPage() {
         <ErrorState error={query.error} onRetry={query.retry} />
       ) : null}
       <p>
-        <Link to={`/states/${state}`}>Back to the state</Link>
+        <Link to={`/states/${state}`}>Back to {stateName ?? state.toUpperCase()}</Link>
       </p>
       {councilSections.map((section) => (
         <section key={section.id} id={section.id} className="metric-section" tabIndex={-1}>
           <h2>{section.title}</h2>
           <p className="lede">{section.lede}</p>
           {section.id === "suburbs" ? (
-            <table className="data">
-              <caption>
-                {place?.dataset_connected
-                  ? "Suburbs on file."
-                  : "No suburbs are loaded for this council."}
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Suburb</th>
-                  <th scope="col">Postcode</th>
-                  <th scope="col">Composite</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(place?.suburbs.length ?? 0) === 0 ? (
+            <TableScroll>
+              <table className="data">
+                <caption>
+                  {place?.dataset_connected
+                    ? "Suburbs on file."
+                    : "No suburbs are loaded for this council."}
+                </caption>
+                <thead>
                   <tr>
-                    <td colSpan={3}>No suburbs are loaded.</td>
+                    <th scope="col">Suburb</th>
+                    <th scope="col">Postcode</th>
+                    <th scope="col">Composite</th>
                   </tr>
-                ) : (
-                  place?.suburbs.map((suburb) => (
-                    <tr key={suburb.slug}>
-                      <td>
-                        <Link to={suburbPath(suburb.state, suburb.slug)}>{suburb.name}</Link>
-                      </td>
-                      <td>{suburb.postcode ?? "—"}</td>
-                      <td className="num">
-                        {suburb.score == null ? "—" : formatNumber(suburb.score)}
-                      </td>
+                </thead>
+                <tbody>
+                  {(place?.suburbs.length ?? 0) === 0 ? (
+                    <tr>
+                      <td colSpan={3}>No suburbs are loaded.</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    place?.suburbs.map((suburb) => (
+                      <tr key={suburb.slug}>
+                        <td>
+                          <Link to={suburbPath(suburb.state, suburb.slug)}>{suburb.name}</Link>
+                        </td>
+                        <td>{suburb.postcode ?? "—"}</td>
+                        <td className="num">
+                          {suburb.score == null ? "—" : formatNumber(suburb.score)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </TableScroll>
           ) : (
             <p className="empty-line">No figures are on file for this section.</p>
           )}

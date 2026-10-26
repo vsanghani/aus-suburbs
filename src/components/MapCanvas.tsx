@@ -22,12 +22,16 @@ export function MapCanvas({
   collection,
   circle,
   onPick,
+  label = "Map of Australia",
+  frameId,
 }: {
   centre: [number, number];
   zoom: number;
   collection: FeatureCollection | null;
   circle: { centre: [number, number]; radiusKm: number } | null;
   onPick?: (coordinate: [number, number]) => void;
+  label?: string;
+  frameId?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapHandle | null>(null);
@@ -160,15 +164,15 @@ export function MapCanvas({
   }, [collection, circle, status]);
 
   return (
-    <div className="map-frame">
-      <div
-        ref={containerRef}
-        className="map-canvas"
-        role="application"
-        aria-label="Map of Australia"
-      />
+    <div className="map-frame" id={frameId} aria-busy={status === "loading"}>
+      <div ref={containerRef} className="map-canvas" role="application" aria-label={label} />
+      {status === "loading" ? (
+        <p className="map-note" role="status">
+          Loading the base map.
+        </p>
+      ) : null}
       {status === "failed" ? (
-        <p className="map-note">
+        <p className="map-note" role="status">
           The base map did not load. Place outlines appear when geometries do.
         </p>
       ) : null}

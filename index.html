@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4efe6" />
     <meta
       name="description"
       content="A public record of Australian suburbs, read from government datasets."
@@ -16,9 +17,11 @@
           var dark =
             stored === "dark" ||
             (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          var themeColor = document.querySelector('meta[name="theme-color"]');
           if (dark) {
             document.documentElement.dataset.theme = "dark";
             document.documentElement.style.colorScheme = "dark";
+            if (themeColor) themeColor.setAttribute("content", "#1a1613");
           }
         } catch (error) {
           /* Storage can be blocked. The page still renders in the light theme. */

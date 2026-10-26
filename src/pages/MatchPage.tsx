@@ -9,7 +9,14 @@ import { STATES } from "../config/geography";
 import { formatShare } from "../lib/format";
 import { suburbPath } from "../lib/places";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
-import { normaliseWeights, PRESETS, readWeights, WEIGHTS, type WeightValues } from "../lib/weights";
+import {
+  normaliseWeights,
+  PRESETS,
+  readWeights,
+  WEIGHTS,
+  weightsMatch,
+  type WeightValues,
+} from "../lib/weights";
 
 export function MatchPage() {
   const [params, setParams] = useSearchParams();
@@ -49,6 +56,7 @@ export function MatchPage() {
             key={preset.id}
             type="button"
             className="pill"
+            aria-pressed={weightsMatch(values, preset.values)}
             onClick={() => setValues(preset.values)}
           >
             {preset.label}
@@ -72,12 +80,14 @@ export function MatchPage() {
             min={0}
             max={100}
             value={values[weight.id] ?? 50}
+            aria-describedby={`weight-${weight.id}-help`}
+            aria-valuetext={`${values[weight.id] ?? 50} out of 100, ${formatShare(normalised[weight.id] ?? 0)} of the mix`}
             onChange={(event) =>
               setValues((current) => ({ ...current, [weight.id]: Number(event.target.value) }))
             }
           />
           <span className="num">{formatShare(normalised[weight.id] ?? 0)}</span>
-          <p>{weight.help}</p>
+          <p id={`weight-${weight.id}-help`}>{weight.help}</p>
         </div>
       ))}
       <label className="field">

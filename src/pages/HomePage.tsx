@@ -23,7 +23,7 @@ export function HomePage() {
       <blockquote className="pull">
         <p>Empty means the figure is not loaded. It does not mean the figure is zero.</p>
       </blockquote>
-      <div className="home-split">
+      <div className="home-split band">
         <section>
           <h2>What a suburb page holds</h2>
           <ol className="toc">
@@ -50,7 +50,7 @@ export function HomePage() {
           </p>
         </section>
       </div>
-      <section>
+      <section className="band">
         <h2>Fixed lists</h2>
         <p>These questions are fixed. The rows stay empty until a dataset is connected.</p>
         <ul className="link-index">
@@ -64,7 +64,7 @@ export function HomePage() {
           ))}
         </ul>
       </section>
-      <section>
+      <section className="band">
         <h2>States and territories</h2>
         <ul className="state-index">
           {STATES.map((state) => (

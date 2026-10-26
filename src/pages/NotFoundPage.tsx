@@ -1,14 +1,24 @@
 import { Link } from "react-router-dom";
+import { PageIntro } from "../components/PageIntro";
+import { SearchField } from "../components/SearchField";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 export function NotFoundPage() {
   useDocumentTitle("Not found");
   return (
     <main className="page" id="content">
-      <p className="kicker">404</p>
-      <h1>This page is not part of the record.</h1>
+      <PageIntro
+        kicker="404"
+        title="This page is not part of the record."
+        lede="Search for a suburb, or return to a list."
+      />
+      <SearchField />
       <p>
-        <Link to="/">Back to search</Link>
+        <Link to="/">Home</Link>
+        {" · "}
+        <Link to="/rankings">Rankings</Link>
+        {" · "}
+        <Link to="/explore">Map</Link>
       </p>
     </main>
   );
