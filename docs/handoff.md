@@ -79,7 +79,7 @@ The section ids and slot ids in `src/metrics/registry.ts` are the contract the p
 - The unit on each slot (`$/week`, `per 1,000`, `%`) and whether a missing input stays null. The UI prints an em dash for null and only prints zero when the value is zero.
 - Crime: the denominator, the year, and the footnote that footfall inflates counts. The page already reserves `notes` for that caveat. Do not send a rate without it.
 - Traditional owners: a string from a named source, or null. The UI will not infer one, and JSON-LD does not repeat it.
-- `SuburbDetail.geometry` and `GET /api/v1/explore`: GeoJSON property names the map should read once features exist. The paint is teal and ocean blue at low opacity; the base map stays OpenFreeMap.
+- `SuburbDetail.geometry` and `GET /api/v1/explore`: GeoJSON property names the map should read once features exist. The paint is navy and mid blue at low opacity; the base map stays OpenFreeMap.
 - `ScoreDriver.chart_value`: optional 0–100 position for the compare chart. `points` stay in the composite's own units. The ceilings in `contracts/formula.json` are still uncalibrated.
 - Commute minutes stay null until a router is actually called.
 - `GET /api/v1/suburbs` is the listing the sitemap calls. It returns `dataset_connected: false`, `total: null`, and `suburbs: []` until a query runs. When it flips, page with `limit` (max 500) and `offset`. Do not put rows in this repo to make the sitemap look full.

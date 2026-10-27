@@ -1,105 +1,109 @@
 # Design
 
-The interface is sea glass: a cool light ground, Inter for the UI, Inter Tight for headings, and a few translucent panels. Colour marks direction. It is not a wash behind every block. The product name is set in `src/config/site.ts`. This document does not depend on that name.
+The interface is navy glass: a cool light ground, a deep navy brand, Inter for the UI, Inter Tight for headings, and a few translucent panels. Colour marks direction. It is not a wash behind every block. The product name is set in `src/config/site.ts`. This document does not depend on that name.
 
 The rationale, the sites it was taken from, and the font licence are in `docs/design-direction.md`.
 
 ## Palette
 
-Tokens live in `src/styles/tokens.css` as custom properties. Components do not hard-code hex values except the map paint, which MapLibre cannot read from CSS. Place fill mirrors `--data-teal` (`#0e9aa7` light, `#3ec8d4` dark). Place line mirrors `--accent` (`#0a6470` light, `#7ddfea` dark). The radius fill mirrors `--data-blue` (`#2b6cb0` light, `#7eb0e8` dark).
+Tokens live in `src/styles/tokens.css` as custom properties. Components do not hard-code hex values except the map paint, which MapLibre cannot read from CSS. Place fill mirrors `--data-navy` (`#12285e` light, `#8eb0f0` dark). Place line mirrors `--accent` (`#12285e` light, `#c5d4ff` dark). The radius fill mirrors `--data-blue` (`#2f62c2` light, `#6b93e8` dark).
 
 Light is the default. Dark replaces the same tokens under `[data-theme="dark"]`. The choice is stored in `localStorage` under `theme` and is applied before paint by the small script in `index.html`.
 
-The ground is a cool off-white with a faint blue-green tint. Ink is a teal-navy, not a warm black. The accent is sea-glass teal, deepened where it carries text. Coral is the only warm note, and it is limited to the tier word, the “Subtracts” label, and one chart series. Shadows, rules, selection, and the map frame stay in the same cool family.
+The ground is a cool off-white with a faint blue tint. Ink, links, the wordmark, focus rings, and primary buttons are deep navy in the `#0b1f4b` to `#12285e` range. Coral is the only warm note, limited to the tier word, the “Subtracts” label, and one chart series. Sea green is a supporting chart hue. Shadows, rules, selection, and the map frame stay cool slate.
 
-`#0e9aa7` is a large mark and a chart stroke. White on it is about 3.4:1, so it is not a button fill and not small text. Button text uses `--on-accent` on `--accent-deep`.
+`--on-accent` `#f7f9fe` on the light button `#0b1f4b` is 15.2:1. On the dark button `#4568b8` it is 5.1:1. The dark button is lighter than the page so the control still reads, at 3.1:1 against `--glass-solid`.
 
 ### Light
 
-| Token             | Hex or value                | Role                                                    |
-| ----------------- | --------------------------- | ------------------------------------------------------- |
-| `--paper`         | `#f3f8f8`                   | Page background                                         |
-| `--sheet`         | `#f7fcfc`                   | Opaque chart ground, same as the glass solid            |
-| `--ink`           | `#0f2a3a`                   | Text. 13.9:1 on paper, 10.6:1 on the busiest sky wash   |
-| `--ink-soft`      | `#1a3e52`                   | Secondary text                                          |
-| `--faint`         | `#3a5566`                   | Kickers and captions. 7.3:1 on paper, 5.6:1 on raw sky  |
-| `--rule`          | `rgba(15, 42, 58, 0.12)`    | Hairlines                                               |
-| `--rule-strong`   | `#c5d4dc`                   | Stronger dividers, slider tracks                        |
-| `--accent`        | `#0a6470`                   | Links. 6.4:1 on paper, 6.1:1 on glass over the sky wash |
-| `--accent-deep`   | `#0b6e78`                   | Primary button. `--on-accent` on it is 5.7:1            |
-| `--accent-deeper` | `#085c68`                   | Primary hover                                           |
-| `--accent-mark`   | `#0e9aa7`                   | Large marks only. Not for small text                    |
-| `--on-accent`     | `#f4fbfc`                   | Text on primary buttons                                 |
-| `--coral`         | `#9c3e36`                   | Tier word and “Subtracts”. 6.2:1 on paper               |
-| `--sea`           | `#14684a`                   | “Adds”. 6.3:1 on paper                                  |
-| `--selection`     | `#d7f3f0`                   | Text selection                                          |
-| `--frame`         | `#d5e6ec`                   | Map frame before tiles                                  |
-| `--focus`         | `#0a6470`                   | Focus ring. 6.4:1 on paper                              |
-| `--data-teal`     | `#0e9aa7`                   | Chart stroke. 3.3:1 on `--sheet`                        |
-| `--data-blue`     | `#2b6cb0`                   | Chart stroke. 5.2:1 on `--sheet`                        |
-| `--data-green`    | `#1f8a6e`                   | Chart stroke and aside rule. 4.1:1 on `--sheet`         |
-| `--data-coral`    | `#d4654f`                   | Chart stroke. 3.5:1 on `--sheet`                        |
-| `--data-amber`    | `#c47e0a`                   | Alternate bar segment. 3.2:1 on `--sheet`               |
-| `--wash-sky`      | `rgba(126, 186, 224, 0.42)` | Background wash                                         |
-| `--wash-teal`     | `rgba(64, 184, 184, 0.36)`  | Background wash                                         |
-| `--wash-mint`     | `rgba(150, 214, 196, 0.4)`  | Background wash                                         |
-| `--wash-blue`     | `rgba(170, 198, 230, 0.34)` | Background wash                                         |
+| Token               | Hex or value                | Role                                                        |
+| ------------------- | --------------------------- | ----------------------------------------------------------- |
+| `--paper`           | `#f4f6fb`                   | Page background                                             |
+| `--sheet`           | `#f8fafe`                   | Opaque chart ground, same as the glass solid                |
+| `--ink`             | `#0b1f4b`                   | Text and the wordmark. 14.8:1 on paper                      |
+| `--ink-soft`        | `#243866`                   | Secondary text. 10.6:1 on paper                             |
+| `--faint`           | `#3e5278`                   | Kickers and captions. 7.2:1 on paper, 4.7:1 on wash overlap |
+| `--rule`            | `rgba(11, 31, 75, 0.12)`    | Hairlines                                                   |
+| `--rule-strong`     | `#c5d0e4`                   | Stronger dividers, slider tracks                            |
+| `--accent`          | `#12285e`                   | Links and the focus ring. 13.0:1 on paper                   |
+| `--accent-deep`     | `#0b1f4b`                   | Primary button. `--on-accent` on it is 15.2:1               |
+| `--accent-deeper`   | `#071633`                   | Primary hover when the fill is opaque                       |
+| `--accent-mark`     | `#12285e`                   | Large marks                                                 |
+| `--on-accent`       | `#f7f9fe`                   | Text on primary buttons                                     |
+| `--coral`           | `#9c3e36`                   | Tier word and “Subtracts”. 6.2:1 on paper, 5.7:1 on glass   |
+| `--sea`             | `#14684a`                   | “Adds”. 6.3:1 on paper, 5.7:1 on glass                      |
+| `--selection`       | `#d9e3f8`                   | Text selection                                              |
+| `--frame`           | `#d6e1f2`                   | Map frame before tiles                                      |
+| `--focus`           | `#12285e`                   | Focus ring. 13.0:1 on paper                                 |
+| `--data-navy`       | `#12285e`                   | Lead chart stroke. 13.5:1 on `--sheet`                      |
+| `--data-blue`       | `#2f62c2`                   | Chart stroke. 5.5:1 on `--sheet`                            |
+| `--data-sky`        | `#3e86d4`                   | Chart stroke. 3.6:1 on `--sheet`                            |
+| `--data-sea`        | `#0f766e`                   | Supporting chart stroke and aside rule. 5.2:1 on `--sheet`  |
+| `--data-coral`      | `#d4654f`                   | Chart stroke. 3.5:1 on `--sheet`                            |
+| `--data-amber`      | `#c47e0a`                   | Alternate bar segment. 3.2:1 on `--sheet`                   |
+| `--wash-sky`        | `rgba(140, 180, 230, 0.4)`  | Background wash                                             |
+| `--wash-periwinkle` | `rgba(168, 176, 224, 0.42)` | Background wash                                             |
+| `--wash-blue`       | `rgba(186, 208, 240, 0.48)` | Background wash                                             |
+| `--wash-ice`        | `rgba(200, 214, 242, 0.38)` | Background wash                                             |
 
 ### Dark
 
-| Token             | Hex or value                | Role                                    |
-| ----------------- | --------------------------- | --------------------------------------- |
-| `--paper`         | `#071821`                   | Page background                         |
-| `--sheet`         | `#0e2430`                   | Chart ground                            |
-| `--ink`           | `#e7f4f7`                   | Text. 16.1:1 on paper                   |
-| `--ink-soft`      | `#c5dce4`                   | Secondary text                          |
-| `--faint`         | `#a4c0cc`                   | Kickers. 9.5:1 on paper, 7.8:1 on solid |
-| `--rule`          | `rgba(196, 228, 236, 0.14)` | Hairlines                               |
-| `--rule-strong`   | `rgba(196, 228, 236, 0.24)` | Stronger dividers                       |
-| `--accent`        | `#7ddfea`                   | Links. 11.7:1 on paper                  |
-| `--accent-deep`   | `#0b6e78`                   | Buttons stay teal, with `--on-accent`   |
-| `--accent-deeper` | `#085c68`                   | Primary hover                           |
-| `--accent-mark`   | `#3ec8d4`                   | Large marks                             |
-| `--coral`         | `#f3b0a4`                   | Tier word and “Subtracts”               |
-| `--sea`           | `#9edcc4`                   | “Adds”                                  |
-| `--selection`     | `#163a44`                   | Text selection                          |
-| `--frame`         | `#12303c`                   | Map frame                               |
-| `--focus`         | `#7ddfea`                   | Focus ring                              |
-| `--data-teal`     | `#3ec8d4`                   | Chart stroke. 7.9:1 on `--sheet`        |
-| `--data-blue`     | `#7eb0e8`                   | Chart stroke. 7.1:1 on `--sheet`        |
-| `--data-green`    | `#5dca9a`                   | Chart stroke. 7.9:1 on `--sheet`        |
-| `--data-coral`    | `#f0a090`                   | Chart stroke. 7.7:1 on `--sheet`        |
-| `--data-amber`    | `#f0c14a`                   | Bar segment. 9.5:1 on `--sheet`         |
-| `--wash-sky`      | `rgba(40, 110, 160, 0.38)`  | Background wash                         |
-| `--wash-teal`     | `rgba(20, 140, 150, 0.36)`  | Background wash                         |
-| `--wash-mint`     | `rgba(40, 140, 120, 0.28)`  | Background wash                         |
-| `--wash-blue`     | `rgba(30, 80, 140, 0.32)`   | Background wash                         |
+| Token               | Hex or value                | Role                                    |
+| ------------------- | --------------------------- | --------------------------------------- |
+| `--paper`           | `#081226`                   | Page background                         |
+| `--sheet`           | `#101c34`                   | Chart ground                            |
+| `--ink`             | `#e7eef9`                   | Text. 16.0:1 on paper                   |
+| `--ink-soft`        | `#c5d2ea`                   | Secondary text                          |
+| `--faint`           | `#a9b8d6`                   | Kickers. 9.4:1 on paper, 8.4:1 on solid |
+| `--rule`            | `rgba(198, 214, 245, 0.14)` | Hairlines                               |
+| `--rule-strong`     | `rgba(198, 214, 245, 0.24)` | Stronger dividers                       |
+| `--accent`          | `#c5d4ff`                   | Links. 12.7:1 on paper                  |
+| `--accent-deep`     | `#4568b8`                   | Buttons. `--on-accent` on it is 5.1:1   |
+| `--accent-deeper`   | `#3a589e`                   | Primary hover. White text is 6.8:1      |
+| `--accent-mark`     | `#8eb0f0`                   | Large marks                             |
+| `--coral`           | `#f3b0a4`                   | Tier word and “Subtracts”               |
+| `--sea`             | `#9edcc4`                   | “Adds”                                  |
+| `--selection`       | `#1a2748`                   | Text selection                          |
+| `--frame`           | `#15243f`                   | Map frame                               |
+| `--focus`           | `#c5d4ff`                   | Focus ring                              |
+| `--data-navy`       | `#8eb0f0`                   | Chart stroke. 7.8:1 on `--sheet`        |
+| `--data-blue`       | `#6b93e8`                   | Chart stroke. 5.6:1 on `--sheet`        |
+| `--data-sky`        | `#d5e4ff`                   | Chart stroke. 13.2:1 on `--sheet`       |
+| `--data-sea`        | `#6dcfb4`                   | Chart stroke. 9.1:1 on `--sheet`        |
+| `--data-coral`      | `#f0a090`                   | Chart stroke. 8.2:1 on `--sheet`        |
+| `--data-amber`      | `#f0c14a`                   | Bar segment. 10.0:1 on `--sheet`        |
+| `--wash-sky`        | `rgba(70, 100, 180, 0.36)`  | Background wash                         |
+| `--wash-periwinkle` | `rgba(90, 80, 170, 0.28)`   | Background wash                         |
+| `--wash-blue`       | `rgba(50, 90, 170, 0.32)`   | Background wash                         |
+| `--wash-ice`        | `rgba(80, 120, 190, 0.24)`  | Background wash                         |
 
-Direction is never colour alone. “Adds” is sea green and the word Adds. “Subtracts” is coral and the word Subtracts. Tiers are words (Clear, Steady, Mixed, Thin, Sparse) beside the number. Chart series run teal, ocean blue, sea green, then coral, so teal is not distinguished from green by hue alone. The weight bar uses teal, amber, and green, which also differ in lightness.
+Direction is never colour alone. “Adds” is sea green and the word Adds. “Subtracts” is coral and the word Subtracts. Tiers are words (Clear, Steady, Mixed, Thin, Sparse) beside the number. Chart series run navy, mid blue, sea green, then coral. Navy and blue differ in lightness, and sea green is a different hue, so the set stays apart under deuteranopia. The weight bar uses navy, amber, and sea green.
 
-The busiest light wash is sky at 42% over `#f3f8f8`, near `#c2deee`. Glass at 72% over that wash lands near `#e8f4f8`. `--faint` on that glass is 7.0:1. `--ink` on it is 13.3:1. Focus rings use `--focus` (above 3:1 on paper). Filled teal controls switch the ring to `--ink`, offset onto the surface around the control, so the ring is not the same colour as the fill.
+The busiest light wash is periwinkle at 42% over `#f4f6fb`, near `#d4d9f0`. Where that wash overlaps sky, the ground is near `#b7caec`. `--ink` there is 9.7:1 and `--faint` is 4.7:1. Glass at 72% over that overlap lands near `#e6edf9`, where faint text is 6.7:1. Focus rings use `--focus`, well above 3:1 on the page. Filled navy controls switch the ring to `--ink`, offset onto the surface around the control.
 
 ### Glass
 
-| Token                    | Light                                 | Dark                               | Role                                                   |
-| ------------------------ | ------------------------------------- | ---------------------------------- | ------------------------------------------------------ |
-| `--glass-fill`           | `rgba(247, 252, 252, 0.72)`           | `rgba(14, 36, 48, 0.74)`           | Large surfaces, when blur is supported                 |
-| `--glass-fill-raised`    | `rgba(255, 255, 255, 0.84)`           | `rgba(16, 42, 56, 0.88)`           | Controls and overlays                                  |
-| `--glass-solid`          | `#f7fcfc`                             | `#102a38`                          | Fallback, reduced transparency, charts, sticky headers |
-| `--glass-line`           | `rgba(15, 50, 68, 0.12)`              | `rgba(200, 230, 238, 0.16)`        | 1px outer hairline                                     |
-| `--glass-sheen`          | `rgba(255, 255, 255, 0.85)`           | `rgba(220, 245, 250, 0.16)`        | Inset top highlight                                    |
-| `--glass-inset`          | `rgba(255, 255, 255, 0.55)`           | `rgba(220, 245, 250, 0.06)`        | Controls inside an already-blurred surface             |
-| `--glass-sheen-gradient` | white, fading by 42%                  | cool white at 0.14, fading by 46%  | Top light                                              |
-| `--glass-shadow`         | slate, `0 1px 1px` plus `0 12px 32px` | deeper navy, still short           | Soft lift                                              |
-| `--shadow-lift`          | `0 8px 22px rgba(15, 42, 58, 0.08)`   | `0 8px 22px rgba(0, 12, 24, 0.32)` | Control shadow                                         |
-| `--shadow-accent`        | `0 8px 18px rgba(8, 48, 64, 0.16)`    | `0 8px 18px rgba(0, 20, 32, 0.36)` | Primary button shadow                                  |
-| `--accent-glass`         | `rgba(11, 110, 120, 0.92)`            | `rgba(11, 110, 120, 0.94)`         | Primary button fill when blur works                    |
-| `--blur-large`           | `8px` (`6px` under 800px)             | same                               | Header, mast, dock, sheets                             |
-| `--blur-control`         | `14px` (`10px` under 800px)           | same                               | Buttons, pills, fields, tabs                           |
-| `--blur-overlay`         | `16px` (`10px` under 800px)           | same                               | Menus and the map note                                 |
-| `--glass-saturate`       | `1.35`                                | same                               | Saturation on the backdrop                             |
+| Token                    | Light                                 | Dark                              | Role                                                   |
+| ------------------------ | ------------------------------------- | --------------------------------- | ------------------------------------------------------ |
+| `--glass-fill`           | `rgba(248, 250, 254, 0.72)`           | `rgba(16, 26, 52, 0.76)`          | Large surfaces, when blur is supported                 |
+| `--glass-fill-raised`    | `rgba(255, 255, 255, 0.84)`           | `rgba(22, 34, 66, 0.88)`          | Controls and overlays                                  |
+| `--glass-solid`          | `#f8fafe`                             | `#141e38`                         | Fallback, reduced transparency, charts, sticky headers |
+| `--glass-line`           | `rgba(11, 31, 75, 0.12)`              | `rgba(190, 206, 240, 0.16)`       | 1px outer hairline                                     |
+| `--glass-sheen`          | `rgba(255, 255, 255, 0.85)`           | `rgba(210, 220, 250, 0.16)`       | Inset top highlight                                    |
+| `--glass-inset`          | `rgba(255, 255, 255, 0.55)`           | `rgba(210, 220, 250, 0.07)`       | Controls inside an already-blurred surface             |
+| `--glass-sheen-gradient` | white, fading by 42%                  | cool white at 0.16, fading by 46% | Top light                                              |
+| `--glass-shadow`         | slate, `0 1px 1px` plus `0 12px 32px` | deeper navy, still short          | Soft lift                                              |
+| `--shadow-lift`          | `0 8px 22px rgba(11, 24, 56, 0.08)`   | `0 8px 22px rgba(2, 6, 18, 0.36)` | Control shadow                                         |
+| `--shadow-accent`        | `0 8px 18px rgba(8, 20, 56, 0.18)`    | `0 8px 18px rgba(4, 10, 28, 0.4)` | Primary button shadow                                  |
+| `--accent-glass`         | `rgba(11, 31, 75, 0.88)`              | `rgba(69, 104, 184, 0.9)`         | Primary button fill when blur works                    |
+| `--accent-glass-hover`   | `rgba(7, 22, 51, 0.92)`               | `rgba(58, 88, 158, 0.94)`         | Primary hover when blur works                          |
+| `--accent-edge`          | `rgba(255, 255, 255, 0.32)`           | `rgba(197, 212, 255, 0.55)`       | Button hairline                                        |
+| `--blur-large`           | `8px` (`6px` under 800px)             | same                              | Header, mast, dock, sheets                             |
+| `--blur-control`         | `14px` (`10px` under 800px)           | same                              | Buttons, pills, fields, tabs                           |
+| `--blur-overlay`         | `16px` (`10px` under 800px)           | same                              | Menus and the map note                                 |
+| `--glass-saturate`       | `1.35`                                | same                              | Saturation on the backdrop                             |
 
-`--glass-solid` is painted first. The translucent fill and `backdrop-filter` apply only inside `@supports`. `prefers-reduced-transparency: reduce` forces the solid and removes the washes. Controls inside a large glass surface do not add a second blur.
+`--glass-solid` is painted first. The translucent fill and `backdrop-filter` apply only inside `@supports`. `prefers-reduced-transparency: reduce` forces the opaque button fill and removes the washes. Primary buttons keep their own blur, a translucent navy fill, an inset highlight, and a short top light, so they read as glass. The opaque `--accent-deep` fill is the fallback. Other controls inside a large glass surface do not add a second blur.
 
 Sticky headers in tables use `--glass-solid` so scrolling rows do not show through the labels. Chart SVG grounds use `--sheet` for the same reason.
 
@@ -150,7 +154,7 @@ Hover lifts a control by 1px. Press scales it to 0.98. Both are 160ms and only w
 ## Components
 
 - **Header.** A floating glass bar. Wordmark, text links, a Light/Dark switch, and a menu button on narrow screens. The menu is the drawer. It does not add a second blur.
-- **Search.** A glass field with a teal button. Suggestions are a glass menu of links.
+- **Search.** A glass field with a navy glass button. Suggestions are a glass menu of links.
 - **Home.** An asymmetric hero: the title and search on the left, states in a rail on the right. A pull quote, then an open contents list, then the formula beside a numbered ledger of rankings.
 - **Suburb.** A glass mast: one `h1`, a fact row, and the keep/copy actions. The description sits in a reading column. The composite is a glass panel. Later sections are open.
 - **Section nav.** A sticky glass pill row. The current section is marked with `aria-current`.
@@ -161,10 +165,10 @@ Hover lifts a control by 1px. Press scales it to 0.98. Both are 160ms and only w
 - **Missing page.** A large “404” kicker, one `h1`, two glass links.
 - **Composite.** A number, a tier word, and a ruled measure. Drivers are rows: direction word, label, points or “Not scored”.
 - **Metric rows.** Label left, value right, em dash when empty. The sentence above them says the section has no figures.
-- **Charts.** A teal line and a quiet fill on an opaque sheet, with the first and last year labelled. A dashed reference line when the payload includes one. Empty charts say “No series”. The compare chart is a stroked polygon per place, in teal, ocean blue, sea green, then coral.
+- **Charts.** A navy line and a quiet fill on an opaque sheet, with the first and last year labelled. A dashed reference line when the payload includes one. Empty charts say “No series”. The compare chart is a stroked polygon per place, in navy, mid blue, sea green, then coral.
 - **Tables.** A glass sheet, an opaque sticky header, sentence-case column labels, a caption that states the count or the reason there is no count.
-- **Pills.** Pill toggles in a radiogroup. Selected is cool white on teal.
-- **Buttons.** Primary is teal glass. Secondary and ghost are cool-white glass. The menu control is the icon button, and it keeps a text label.
+- **Pills.** Pill toggles in a radiogroup. Selected is cool white on translucent navy.
+- **Buttons.** Primary is navy glass. Secondary and ghost are cool-white glass. The menu control is the icon button, and it keeps a text label.
 - **Source footer.** Always visible. If nothing is attached, it says so.
 - **Map.** OpenFreeMap Positron in light, OpenFreeMap Dark in dark. Attribution stays on an opaque chip. The frame is a cool tint until tiles arrive. The failure note is a small glass overlay.
 
@@ -173,7 +177,7 @@ Hover lifts a control by 1px. Press scales it to 0.98. Both are 160ms and only w
 Light style: `https://tiles.openfreemap.org/styles/positron`  
 Dark style: `https://tiles.openfreemap.org/styles/dark`
 
-The dark base map is OpenFreeMap Dark. It is a neutral reference map, not a second theme. Data layers, when they exist, use teal and ocean blue at low opacity, with the lighter hex values from the dark theme.
+The dark base map is OpenFreeMap Dark. It is a neutral reference map, not a second theme. Data layers, when they exist, use navy and mid blue at low opacity, with the lighter hex values from the dark theme.
 
 ## Writing
 

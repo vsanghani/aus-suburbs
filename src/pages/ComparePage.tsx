@@ -163,9 +163,9 @@ function comparePath(tokens: string[]): string {
 }
 
 const CHART_STROKES = [
-  "var(--data-teal)",
+  "var(--data-navy)",
   "var(--data-blue)",
-  "var(--data-green)",
+  "var(--data-sea)",
   "var(--data-coral)",
 ];
 
