@@ -9,6 +9,8 @@ const retiredPattern = new RegExp(`${["Suburb", "IQ"].join("")}|${["Aus", "Score
 const SKIP_DIRS = new Set([
   "node_modules",
   "dist",
+  "dist-server",
+  ".vercel",
   ".git",
   ".venv",
   "coverage",

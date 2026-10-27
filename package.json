@@ -9,8 +9,9 @@
   "scripts": {
     "dev": "node server/index.mjs",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.e2e.json --noEmit",
-    "build": "npm run typecheck && vite build && vite build --ssr src/entry-server.tsx --outDir dist/server",
+    "build": "npm run typecheck && vite build && vite build --ssr src/entry-server.tsx --outDir dist-server && node server/relocate-template.mjs",
     "start": "NODE_ENV=production node server/index.mjs",
+    "emulate:vercel": "NODE_ENV=production node server/emulate-vercel.mjs",
     "preview": "NODE_ENV=production node server/index.mjs",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
