@@ -1,5 +1,6 @@
 -- National schema for Kerbfox.
--- raw:     loader-owned extracts. This revision creates the schema only.
+-- raw:     loader-owned extracts. Infrastructure creates the schema. This
+--         revision does not put tables in it.
 -- staging: a load lands here and can be rejected. The API does not read it.
 -- curated: the published model. The API reads this schema only.
 --
@@ -11,25 +12,17 @@
 -- A missing figure is no row, or status not_available with a reason.
 -- A stored zero is a real zero. Loaders must not write zero to mean "unknown".
 --
--- raw, staging, and curated already exist on Neon, as do postgis, pg_trgm,
--- and btree_gist. CREATE ... IF NOT EXISTS is a no-op there. Nothing in this
--- revision is created in public. Downgrade drops objects inside the schemas
--- and leaves the schemas and extensions in place.
+-- Infrastructure creates raw, staging, and curated. neondb_owner owns them.
+-- kf_loader has CREATE inside those schemas and no CREATE on the database, so
+-- this revision does not create schemas and does not comment on them.
+-- postgis, pg_trgm, and btree_gist are already installed. CREATE EXTENSION
+-- IF NOT EXISTS skips them. Nothing in this revision is created in public.
+-- Downgrade drops objects inside the schemas and leaves the schemas and
+-- extensions in place.
 
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE EXTENSION IF NOT EXISTS btree_gist;
-
-CREATE SCHEMA IF NOT EXISTS raw;
-CREATE SCHEMA IF NOT EXISTS staging;
-CREATE SCHEMA IF NOT EXISTS curated;
-
-COMMENT ON SCHEMA raw IS
-  'Loader-owned file extracts. Alembic creates this schema and does not manage objects inside it.';
-COMMENT ON SCHEMA staging IS
-  'Landing tables for one load. Promote into curated only from an enabled, commercially cleared source.';
-COMMENT ON SCHEMA curated IS
-  'Published suburb model. Application queries read this schema and not raw or staging.';
 
 CREATE TABLE curated.state (
   code text PRIMARY KEY,

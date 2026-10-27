@@ -8,17 +8,17 @@ Illustrative page JSON, including `data_level` on each section, is `contracts/su
 
 ## Schemas
 
-| Schema | What it holds | Who reads it |
-| --- | --- | --- |
-| `raw` | Created empty. Loaders may keep file extracts here. Alembic does not manage objects inside it. | Loaders only |
-| `staging` | One load, still rejectable. | Loaders only |
-| `curated` | Published places, figures, scores, and the Alembic version table. | The API, when it is wired |
+| Schema    | What it holds                                                                                                             | Who reads it              |
+| --------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `raw`     | Empty. Infrastructure creates the schema. Loaders may keep file extracts here. Alembic does not manage objects inside it. | Loaders only              |
+| `staging` | One load, still rejectable.                                                                                               | Loaders only              |
+| `curated` | Published places, figures, scores, and the Alembic version table.                                                         | The API, when it is wired |
 
 Nothing in this revision is created in `public`. Geometries are `geometry(MultiPolygon, 4326)` or `geometry(Point, 4326)`. ABS digital boundaries ship as GDA2020 (EPSG:7844). Loaders transform to 4326 before insert. Typmod rejects the wrong type or SRID. Polygons go through `ST_Multi`. A centroid that falls outside the polygon should be replaced with `ST_PointOnSurface` by the loader. The column is still called `centroid`.
 
 `postgis`, `pg_trgm`, and `btree_gist` are created with `CREATE EXTENSION IF NOT EXISTS` and without a `SCHEMA` clause, so an existing install is left where it is. `btree_gist` is present because the Neon database already has it. This revision does not build an exclusion constraint on it.
 
-Neon already has the three schemas and the three extensions. `kf_loader` is not a superuser and cannot create tables in `public`. `CREATE EXTENSION IF NOT EXISTS` notices that the extension is installed and skips, including for a role that is not a superuser. `CREATE SCHEMA IF NOT EXISTS` skips when the schema exists, but PostgreSQL checks `CREATE` on the database before that skip. The migration role needs that privilege. It does not need to own the schema. Alembic stores `curated.alembic_version` (`version_table_schema = curated`, `include_schemas = true` in `alembic.ini` and `env.py`). `env.py` runs the three `CREATE SCHEMA` statements and commits before Alembic creates the version table, because on a fresh database the schema has to exist first.
+Infrastructure creates `raw`, `staging`, and `curated`. On Neon, `neondb_owner` owns them. `kf_loader` has `CREATE` inside those schemas and no `CREATE` on the database, so the migration does not run `CREATE SCHEMA` or `COMMENT ON SCHEMA`. `env.py` checks that all three exist before Alembic creates `curated.alembic_version`, and it stops with `Missing schemas: ...` when one is absent. A local or CI database that starts empty creates the three schemas in the test setup, before `alembic upgrade`. `CREATE EXTENSION IF NOT EXISTS` for `postgis`, `pg_trgm`, and `btree_gist` stays. The extensions are already installed, so the statement skips, including for a role that is not a superuser. Alembic stores `curated.alembic_version` (`version_table_schema = curated`, `include_schemas = true` in `alembic.ini` and `env.py`). Nothing is created in `public`.
 
 Downgrade drops views, then tables, then functions. It does not drop `raw`, `staging`, `curated`, the extensions, or `curated.alembic_version`.
 
@@ -26,11 +26,11 @@ Downgrade drops views, then tables, then functions. It does not drop `raw`, `sta
 
 Three states, and they are not interchangeable:
 
-| Situation | What is stored |
-| --- | --- |
-| The source published a number, including a real zero | `status = ok`, `value` set, `as_of` set, `not_available_reason` null |
+| Situation                                                  | What is stored                                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| The source published a number, including a real zero       | `status = ok`, `value` set, `as_of` set, `not_available_reason` null                  |
 | The source says the figure is not published for this place | `status = not_available`, both value columns null, a non-empty `not_available_reason` |
-| The loader has not considered the place | No row |
+| The loader has not considered the place                    | No row                                                                                |
 
 A zero with `status = ok` is a real zero. Writing `0` to mean "unknown" is a loader bug. The check constraint rejects it when the reason is missing, and it rejects a reason on an `ok` row. Text metrics (`gp-note`, `exposure`, `road-noise`, `aircraft-noise`) use `value_text` the same way. A trigger forces `unit` to match `metric_definition` and refuses a number on a text metric.
 
@@ -42,11 +42,11 @@ A zero with `status = ok` is a real zero. Writing `0` to mean "unknown" is a loa
 
 `fallback_from` is set only when a coarser figure is standing in for a finer one that was missing. It names that finer level, and it must differ from `geo_level`.
 
-| Row is stored on | Native | Fallback |
-| --- | --- | --- |
-| a suburb (`sal_code`) | `geo_level = suburb`, `fallback_from` null | coarser `geo_level`, `fallback_from` set (usually `suburb`) |
-| a council (`lga_code`) | `geo_level = lga`, `fallback_from` null | `geo_level = state`, `fallback_from` set |
-| a state | `geo_level = state`, `fallback_from` null | not allowed |
+| Row is stored on       | Native                                     | Fallback                                                    |
+| ---------------------- | ------------------------------------------ | ----------------------------------------------------------- |
+| a suburb (`sal_code`)  | `geo_level = suburb`, `fallback_from` null | coarser `geo_level`, `fallback_from` set (usually `suburb`) |
+| a council (`lga_code`) | `geo_level = lga`, `fallback_from` null    | `geo_level = state`, `fallback_from` set                    |
+| a state                | `geo_level = state`, `fallback_from` null  | not allowed                                                 |
 
 A state median stored on the state row is native. The same median copied onto a suburb, because the suburb has no figure, is `geo_level = state` and `fallback_from = suburb`. Postcode `0800` is legal: postcodes are `text` matching `^[0-9]{4}$`. Postcode `0872` spans the Northern Territory, South Australia, and Western Australia, so `postcode` is not a single-state table.
 
@@ -103,18 +103,18 @@ Traditional owners are a string copied from a named source, or both the name and
 
 A group can have more than one metric. The scorer applies the group ceiling once:
 
-| Group | Metrics |
-| --- | --- |
-| education | `school-count`, `childcare-count` |
-| transport | `transit-stops-1km` |
-| health | `distance-hospital-m` |
-| emergency | `distance-police-m`, `distance-fire-m`, `distance-ambulance-m` |
-| errands | `supermarket-count` |
-| parks | `park-count`, `canopy-pct` |
-| person-offences | `person-rate` |
-| property-offences | `property-rate` |
-| deception | `deception-rate` |
-| hazards | `flood-overlay-pct`, `bushfire-pct` |
+| Group             | Metrics                                                        |
+| ----------------- | -------------------------------------------------------------- |
+| education         | `school-count`, `childcare-count`                              |
+| transport         | `transit-stops-1km`                                            |
+| health            | `distance-hospital-m`                                          |
+| emergency         | `distance-police-m`, `distance-fire-m`, `distance-ambulance-m` |
+| errands           | `supermarket-count`                                            |
+| parks             | `park-count`, `canopy-pct`                                     |
+| person-offences   | `person-rate`                                                  |
+| property-offences | `property-rate`                                                |
+| deception         | `deception-rate`                                               |
+| hazards           | `flood-overlay-pct`, `bushfire-pct`                            |
 
 `lsio-pct` and `sbo-pct` are Victorian breakdowns. They are not linked to the hazards group, so they are not added on top of `flood-overlay-pct`. Housing is stored and can be ranked. It is not a draft composite input. Distance metrics are direction `negative` while the health and emergency groups are `positive`. Inverting a distance into access points is the scorer's job.
 
@@ -140,34 +140,34 @@ Search uses `pg_trgm` on `lower(sal.sal_name)` and `lower(lga.name)`.
 
 ### `curated`
 
-| Table | Role |
-| --- | --- |
-| `state` | Catalogue states plus Other Territories. |
-| `dataset_source` | One fetched version, its licence, and whether it may be loaded. |
-| `sa4` | Statistical Area Level 4. Three-digit code. The page region. |
-| `lga` | Local government area, five-digit code, optional boundary. |
-| `postcode` | Four-digit postcode. Not tied to one state. |
-| `sal` | Suburb or locality. `SAL_CODE_2021`, name, slug, path, MultiPolygon, centroid, area, ASGS loci URI, traditional owners. |
-| `sal_postcode` | Suburb to postcode. One primary. |
-| `sal_lga` | Suburb to council, with area share. One primary. |
-| `sal_sa4` | Suburb to SA4, with area share. One primary. |
-| `slug_redirect` | Retired `{state}/{slug}` pointing at the current suburb. |
-| `formula_group` | Seeded copy of the draft composite groups. |
-| `score_tier` | Seeded copy of the tier words and minimums. |
-| `readiness_rule` | Singleton indexable thresholds. |
-| `readiness_section` | Page section id, and whether a filled section counts. |
-| `metric_definition` | Metric key, label, section, unit, direction, numeric or text, optional formula group. |
-| `metric_value` | One figure: place, metric, period, value or text, unit, geo level, fallback, source, status. |
-| `metric_value_input` | Extra sources used to derive a figure, such as the population behind a rate. |
-| `offence_count` | Recorded count by category (`person`, `property`, `deception`, `other`) and offence name. Rate optional. |
-| `amenity_type` | School, childcare, park, hospital, police, fire, ambulance, supermarket, and the other place groups. |
-| `amenity_feature` | A named point and the source feature id. |
-| `transit_stop` | A GTFS stop. Mode is train, tram, bus, regional rail, ferry, light rail, or other. |
-| `planning_overlay` | Flood, bushfire, or other polygon. Percentages are metrics, not columns. |
-| `score_run` | One calculation, with the formula document it used. |
-| `place_score` | Composite, tier, inputs used and skipped, geo level. |
-| `place_score_group` | Points or a skip reason for one group. |
-| `alembic_version` | Owned by Alembic. Not in the SQLAlchemy models. Not dropped on downgrade. |
+| Table                | Role                                                                                                                    |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `state`              | Catalogue states plus Other Territories.                                                                                |
+| `dataset_source`     | One fetched version, its licence, and whether it may be loaded.                                                         |
+| `sa4`                | Statistical Area Level 4. Three-digit code. The page region.                                                            |
+| `lga`                | Local government area, five-digit code, optional boundary.                                                              |
+| `postcode`           | Four-digit postcode. Not tied to one state.                                                                             |
+| `sal`                | Suburb or locality. `SAL_CODE_2021`, name, slug, path, MultiPolygon, centroid, area, ASGS loci URI, traditional owners. |
+| `sal_postcode`       | Suburb to postcode. One primary.                                                                                        |
+| `sal_lga`            | Suburb to council, with area share. One primary.                                                                        |
+| `sal_sa4`            | Suburb to SA4, with area share. One primary.                                                                            |
+| `slug_redirect`      | Retired `{state}/{slug}` pointing at the current suburb.                                                                |
+| `formula_group`      | Seeded copy of the draft composite groups.                                                                              |
+| `score_tier`         | Seeded copy of the tier words and minimums.                                                                             |
+| `readiness_rule`     | Singleton indexable thresholds.                                                                                         |
+| `readiness_section`  | Page section id, and whether a filled section counts.                                                                   |
+| `metric_definition`  | Metric key, label, section, unit, direction, numeric or text, optional formula group.                                   |
+| `metric_value`       | One figure: place, metric, period, value or text, unit, geo level, fallback, source, status.                            |
+| `metric_value_input` | Extra sources used to derive a figure, such as the population behind a rate.                                            |
+| `offence_count`      | Recorded count by category (`person`, `property`, `deception`, `other`) and offence name. Rate optional.                |
+| `amenity_type`       | School, childcare, park, hospital, police, fire, ambulance, supermarket, and the other place groups.                    |
+| `amenity_feature`    | A named point and the source feature id.                                                                                |
+| `transit_stop`       | A GTFS stop. Mode is train, tram, bus, regional rail, ferry, light rail, or other.                                      |
+| `planning_overlay`   | Flood, bushfire, or other polygon. Percentages are metrics, not columns.                                                |
+| `score_run`          | One calculation, with the formula document it used.                                                                     |
+| `place_score`        | Composite, tier, inputs used and skipped, geo level.                                                                    |
+| `place_score_group`  | Points or a skip reason for one group.                                                                                  |
+| `alembic_version`    | Owned by Alembic. Not in the SQLAlchemy models. Not dropped on downgrade.                                               |
 
 Views: `section_coverage`, `suburb_readiness`, `sitemap_entry`, `score_input`, `sal_neighbour`.
 
@@ -199,24 +199,24 @@ Each of overview, score, housing, education, transport, services, safety, climat
 
 Licences below were checked where a page is named. Everything else is copied from the file at fetch time and the source stays `disabled` until `commercial_use_ok` is true. Do not seed a licence from memory. Domain and CoreLogic are not sources.
 
-| Dataset | Lands in | Licence note |
-| --- | --- | --- |
-| ABS ASGS Edition 3 digital boundaries (SAL, LGA, SA4) and correspondences. Census 2021 GCP at SAL. | `sal`, `lga`, `sa4`, `sal_lga`, `sal_sa4`, `sal_postcode` (POA is a correspondence, not a delivery allocation), census `metric_value` | CC BY 4.0. Commercial use is allowed. SAL fields include `SAL_CODE_2021`, `SAL_NAME_2021`, `STATE_CODE_2021`, `AREA_ALBERS_SQKM`, `ASGS_LOCI_URI_2021`. Names look like `Richmond (Vic.)`. Boundaries are mesh-block approximations, not legal boundaries. |
-| Crime Statistics Agency Victoria, recorded offences, on DataVic | `offence_count`, and category rates in `metric_value` | CC BY 4.0 on the DataVic dataset page. The official listing emphasises state and LGA workbooks. Suburb and postcode tables exist in the CSA series. Use the agency file, not a republication. Rates per 1,000 use ABS population via `metric_value_input`. Youth is often LGA, so a suburb `youth-rate` is `not_available` with a reason. Footfall belongs in `notes`. |
-| Tasmania Police / DPFEM crime | `offence_count` when a suburb file exists | Licence not confirmed. Leave disabled. A missing suburb series is `not_available`, not a zero. |
-| Victorian rental report (DFFH) and Valuer-General sales | `median-rent`, `median-house`, `median-unit` | Copy the file licence before enable. |
-| Tasmania rent and suburb sale medians | same metrics | A published open series may not exist. `not_available` rather than a portal scrape. |
-| Dwelling approvals | `approvals` | Often SA2 or LGA. Store the coarser `geo_level` with `fallback_from`. |
-| Victoria PTV/DTP GTFS on DataVic | `transit_stop`, then `transit-stops-1km` and line counts | Historically CC BY 4.0. Confirm on the resource. |
-| Tasmania GTFS (Transport Services / Building Tasmania) | `transit_stop` | Licence not stated on the pages checked. Disabled until it is recorded. |
-| Victoria school locations (department, DataVic) | `amenity_feature` type `school`, then `school-count` | Typically CC BY. Confirm on the resource. |
-| Tasmania school locations (LIST or the department) | same | Copy the layer licence. |
-| ACECQA national childcare register | `amenity_feature` type `childcare` | Licence not confirmed. Disabled until it is. |
-| Victoria planning overlays (LSIO, SBO, bushfire) | `planning_overlay` (`flood` for LSIO and SBO, `bushfire` for the bushfire overlay) and `lsio-pct`, `sbo-pct`, `flood-overlay-pct`, `bushfire-pct` | Confirm the layer. Some Vicmap products are restricted. |
-| Tasmania LIST flood-prone and bushfire-prone areas | `planning_overlay` and the national percentage metrics | Land Tasmania open data is described as CC BY 3.0 AU, and some layers are excluded. Copy the layer licence. Tasmania does not publish LSIO or SBO, so those two metrics are `not_available`. |
-| OpenStreetMap amenities | `amenity_feature` | ODbL is share-alike. `commercial_use_ok` stays false and the source stays disabled until counsel decides. |
-| NAPLAN / ACARA, Bureau of Meteorology heat, canopy, noise, GP lists | the matching metrics | Treat as unconfirmed or non-commercial. `disabled`, and the page shows `not_available`. |
-| Postcodes | `postcode`, `sal_postcode` | ABS POA correspondence is CC BY and is not a true allocation. Australia Post and Geoscape / G-NAF need a licence decision. |
+| Dataset                                                                                            | Lands in                                                                                                                                          | Licence note                                                                                                                                                                                                                                                                                                                                                           |
+| -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ABS ASGS Edition 3 digital boundaries (SAL, LGA, SA4) and correspondences. Census 2021 GCP at SAL. | `sal`, `lga`, `sa4`, `sal_lga`, `sal_sa4`, `sal_postcode` (POA is a correspondence, not a delivery allocation), census `metric_value`             | CC BY 4.0. Commercial use is allowed. SAL fields include `SAL_CODE_2021`, `SAL_NAME_2021`, `STATE_CODE_2021`, `AREA_ALBERS_SQKM`, `ASGS_LOCI_URI_2021`. Names look like `Richmond (Vic.)`. Boundaries are mesh-block approximations, not legal boundaries.                                                                                                             |
+| Crime Statistics Agency Victoria, recorded offences, on DataVic                                    | `offence_count`, and category rates in `metric_value`                                                                                             | CC BY 4.0 on the DataVic dataset page. The official listing emphasises state and LGA workbooks. Suburb and postcode tables exist in the CSA series. Use the agency file, not a republication. Rates per 1,000 use ABS population via `metric_value_input`. Youth is often LGA, so a suburb `youth-rate` is `not_available` with a reason. Footfall belongs in `notes`. |
+| Tasmania Police / DPFEM crime                                                                      | `offence_count` when a suburb file exists                                                                                                         | Licence not confirmed. Leave disabled. A missing suburb series is `not_available`, not a zero.                                                                                                                                                                                                                                                                         |
+| Victorian rental report (DFFH) and Valuer-General sales                                            | `median-rent`, `median-house`, `median-unit`                                                                                                      | Copy the file licence before enable.                                                                                                                                                                                                                                                                                                                                   |
+| Tasmania rent and suburb sale medians                                                              | same metrics                                                                                                                                      | A published open series may not exist. `not_available` rather than a portal scrape.                                                                                                                                                                                                                                                                                    |
+| Dwelling approvals                                                                                 | `approvals`                                                                                                                                       | Often SA2 or LGA. Store the coarser `geo_level` with `fallback_from`.                                                                                                                                                                                                                                                                                                  |
+| Victoria PTV/DTP GTFS on DataVic                                                                   | `transit_stop`, then `transit-stops-1km` and line counts                                                                                          | Historically CC BY 4.0. Confirm on the resource.                                                                                                                                                                                                                                                                                                                       |
+| Tasmania GTFS (Transport Services / Building Tasmania)                                             | `transit_stop`                                                                                                                                    | Licence not stated on the pages checked. Disabled until it is recorded.                                                                                                                                                                                                                                                                                                |
+| Victoria school locations (department, DataVic)                                                    | `amenity_feature` type `school`, then `school-count`                                                                                              | Typically CC BY. Confirm on the resource.                                                                                                                                                                                                                                                                                                                              |
+| Tasmania school locations (LIST or the department)                                                 | same                                                                                                                                              | Copy the layer licence.                                                                                                                                                                                                                                                                                                                                                |
+| ACECQA national childcare register                                                                 | `amenity_feature` type `childcare`                                                                                                                | Licence not confirmed. Disabled until it is.                                                                                                                                                                                                                                                                                                                           |
+| Victoria planning overlays (LSIO, SBO, bushfire)                                                   | `planning_overlay` (`flood` for LSIO and SBO, `bushfire` for the bushfire overlay) and `lsio-pct`, `sbo-pct`, `flood-overlay-pct`, `bushfire-pct` | Confirm the layer. Some Vicmap products are restricted.                                                                                                                                                                                                                                                                                                                |
+| Tasmania LIST flood-prone and bushfire-prone areas                                                 | `planning_overlay` and the national percentage metrics                                                                                            | Land Tasmania open data is described as CC BY 3.0 AU, and some layers are excluded. Copy the layer licence. Tasmania does not publish LSIO or SBO, so those two metrics are `not_available`.                                                                                                                                                                           |
+| OpenStreetMap amenities                                                                            | `amenity_feature`                                                                                                                                 | ODbL is share-alike. `commercial_use_ok` stays false and the source stays disabled until counsel decides.                                                                                                                                                                                                                                                              |
+| NAPLAN / ACARA, Bureau of Meteorology heat, canopy, noise, GP lists                                | the matching metrics                                                                                                                              | Treat as unconfirmed or non-commercial. `disabled`, and the page shows `not_available`.                                                                                                                                                                                                                                                                                |
+| Postcodes                                                                                          | `postcode`, `sal_postcode`                                                                                                                        | ABS POA correspondence is CC BY and is not a true allocation. Australia Post and Geoscape / G-NAF need a licence decision.                                                                                                                                                                                                                                             |
 
 Edition 3 codes are not stable against ASGS 2016. A later edition is a new code, a crosswalk, and new rows. It is not a rewrite of `slug`. There is no crosswalk table in this revision. `asgs_loci_uri` is on `sal`.
 

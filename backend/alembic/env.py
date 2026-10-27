@@ -39,15 +39,29 @@ def migration_kwargs() -> dict[str, object]:
     }
 
 
-def ensure_version_schema(connection) -> None:
-    """curated must exist before Alembic creates curated.alembic_version.
+def require_schemas(connection) -> None:
+    """raw, staging, and curated are created by infrastructure.
 
-    On Neon the schema is already there, so this is a no-op. Tables are not
-    created in public.
+    Alembic stores its version table in curated, so that schema has to exist
+    before the migration runs. kf_loader can create objects inside the three
+    schemas and cannot create a schema: it has no CREATE on the database, and
+    neondb_owner already owns them.
     """
-    connection.execute(text("CREATE SCHEMA IF NOT EXISTS raw"))
-    connection.execute(text("CREATE SCHEMA IF NOT EXISTS staging"))
-    connection.execute(text("CREATE SCHEMA IF NOT EXISTS curated"))
+    required = ("raw", "staging", "curated")
+    present = {
+        row[0]
+        for row in connection.execute(
+            text("SELECT nspname FROM pg_namespace WHERE nspname IN ('raw', 'staging', 'curated')")
+        )
+    }
+    missing = [name for name in required if name not in present]
+    if missing:
+        raise RuntimeError(
+            "Missing schemas: "
+            + ", ".join(missing)
+            + ". Create raw, staging, and curated before Alembic runs. "
+            + "The migration does not create them."
+        )
     connection.commit()
 
 
@@ -62,7 +76,7 @@ def run_migrations_online() -> None:
     section["sqlalchemy.url"] = database_url()
     connectable = engine_from_config(section, prefix="sqlalchemy.", poolclass=pool.NullPool)
     with connectable.connect() as connection:
-        ensure_version_schema(connection)
+        require_schemas(connection)
         context.configure(connection=connection, **migration_kwargs())
         with context.begin_transaction():
             context.run_migrations()

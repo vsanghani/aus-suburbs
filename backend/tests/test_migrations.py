@@ -1,7 +1,9 @@
 """Migration round trip. Skipped unless TEST_DATABASE_URL is set.
 
-The database is wiped at the start (schemas only). Downgrade must leave the
-schemas and the PostGIS extensions in place, which is what a Neon branch does.
+The database is wiped at the start. The test then creates raw, staging, and
+curated, which is what infrastructure does on Neon. The migration refuses to
+run until those schemas exist. Downgrade must leave the schemas and the
+PostGIS extensions in place.
 """
 
 import os
@@ -37,11 +39,20 @@ def _config(monkeypatch: pytest.MonkeyPatch) -> Config:
     return Config(str(BACKEND / "alembic.ini"))
 
 
-def _wipe(engine: Engine) -> None:
+def _drop_schemas(engine: Engine) -> None:
     with engine.begin() as connection:
         connection.execute(text("DROP SCHEMA IF EXISTS staging CASCADE"))
         connection.execute(text("DROP SCHEMA IF EXISTS curated CASCADE"))
         connection.execute(text("DROP SCHEMA IF EXISTS raw CASCADE"))
+
+
+def _prepare(engine: Engine) -> None:
+    """Empty databases have no schemas. Infrastructure creates them, not Alembic."""
+    _drop_schemas(engine)
+    with engine.begin() as connection:
+        connection.execute(text("CREATE SCHEMA raw"))
+        connection.execute(text("CREATE SCHEMA staging"))
+        connection.execute(text("CREATE SCHEMA curated"))
 
 
 def _exec(connection, sql: str, **params: object) -> None:
@@ -57,7 +68,7 @@ def _fails(connection, sql: str, **params: object) -> None:
 
 def test_upgrade_downgrade_upgrade(monkeypatch: pytest.MonkeyPatch) -> None:
     engine = _engine()
-    _wipe(engine)
+    _prepare(engine)
     config = _config(monkeypatch)
     command.upgrade(config, "head")
     _assert_schema(engine)
@@ -71,6 +82,15 @@ def test_upgrade_downgrade_upgrade(monkeypatch: pytest.MonkeyPatch) -> None:
             for row in connection.execute(text("SELECT code FROM curated.state WHERE in_catalogue"))
         }
     assert codes == {"nsw", "vic", "qld", "sa", "wa", "tas", "nt", "act"}
+    engine.dispose()
+
+
+def test_upgrade_refuses_a_database_without_the_schemas(monkeypatch: pytest.MonkeyPatch) -> None:
+    engine = _engine()
+    _drop_schemas(engine)
+    config = _config(monkeypatch)
+    with pytest.raises(RuntimeError, match="Missing schemas: raw, staging, curated"):
+        command.upgrade(config, "head")
     engine.dispose()
 
 

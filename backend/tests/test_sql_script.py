@@ -29,10 +29,13 @@ def test_split_keeps_a_function_body_together() -> None:
 def test_upgrade_script_is_schema_qualified_and_idempotent_at_the_edges() -> None:
     script = (SQL_DIR / "0002_national_schema_upgrade.sql").read_text(encoding="utf-8")
     lowered = script.lower()
+    executable = "\n".join(
+        line for line in lowered.splitlines() if not line.strip().startswith("--")
+    )
     for extension in ("postgis", "pg_trgm", "btree_gist"):
-        assert f"create extension if not exists {extension}" in lowered
-    for schema in ("raw", "staging", "curated"):
-        assert f"create schema if not exists {schema}" in lowered
+        assert f"create extension if not exists {extension}" in executable
+    assert "create schema" not in executable
+    assert "comment on schema" not in executable
     assert "suburb_is_indexable" in script
     statements = split_sql(script)
     function = next(item for item in statements if "FUNCTION curated.slugify_name" in item)
