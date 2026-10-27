@@ -1,9 +1,9 @@
 /**
  * Plug-in for a later visit write.
  *
- * `handleConsent` calls this only after it has recorded a choice of `all`.
- * It is not called for `essential`, `reject`, a Global Privacy Control or
- * Do Not Track downgrade, a read (`GET /api/consent`), or an invalid body.
+ * `handleConsent` calls this only after it has recorded a choice of `accept_all`.
+ * It is not called for `essential_only`, `reject_all`, a Global Privacy Control
+ * or Do Not Track downgrade, a read (`GET /api/consent`), or an invalid body.
  *
  * The argument is the anonymous visitor id, the policy version, and the
  * consent timestamp. It has no IP address, user agent, account, or name.

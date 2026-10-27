@@ -5,12 +5,14 @@ import { recordConsentedVisit } from "./visit-record.mjs";
 /**
  * First-party consent for the document site.
  *
- * The banner posts a choice here and reads it back. It does not write
- * `kf_consent` or `kf_vid` from the page. Cookies are set only on a valid
- * POST. GET never writes, so a read cannot slide a 12-month lifetime forward.
+ * The banner POSTs `{ choice, version }` and then reads `kf_consent` from
+ * `document.cookie`, so that cookie is not HttpOnly. `Secure` is added only
+ * when the request is https, matching the page's own fallback writer.
+ * `kf_vid` stays HttpOnly. The page never creates or clears it.
  *
- * `kf_vid` is set only for a recorded choice of `all`. `Sec-GPC: 1` and
- * `DNT: 1` record `all` as `essential` and do not set that cookie.
+ * `kf_vid` is set only for a recorded choice of `accept_all`. `Sec-GPC: 1`
+ * and `DNT: 1` store `accept_all` as `essential_only` and do not set it.
+ * GET never writes, so a read cannot slide a 12-month lifetime forward.
  */
 
 export const CONSENT_PATH = "/api/consent";
@@ -21,7 +23,14 @@ export const POLICY_VERSION = 1;
 export const CONSENT_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 export const CONSENT_CACHE_CONTROL = "private, no-store";
 
-const CHOICES = new Set(["all", "essential", "reject"]);
+const CHOICE_ALIASES = new Map([
+  ["accept_all", "accept_all"],
+  ["all", "accept_all"],
+  ["essential_only", "essential_only"],
+  ["essential", "essential_only"],
+  ["reject_all", "reject_all"],
+  ["reject", "reject_all"],
+]);
 const MAX_BODY_BYTES = 1024;
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EXPIRED = "Thu, 01 Jan 1970 00:00:00 GMT";
@@ -30,8 +39,20 @@ function privacyOptOut(request) {
   return request.headers.get("sec-gpc") === "1" || request.headers.get("dnt") === "1";
 }
 
+function normaliseChoice(value) {
+  if (typeof value !== "string") return null;
+  return CHOICE_ALIASES.get(value) ?? null;
+}
+
+function requestIsHttps(request) {
+  if (new URL(request.url).protocol === "https:") return true;
+  const forwarded = request.headers.get("x-forwarded-proto");
+  if (!forwarded) return false;
+  return forwarded.split(",")[0].trim().toLowerCase() === "https";
+}
+
 function analyticsAllowed(choice, optOut) {
-  return choice === "all" && !optOut;
+  return choice === "accept_all" && !optOut;
 }
 
 function stateBody({ choice, analytics, version, timestamp, visitorId }) {
@@ -68,8 +89,13 @@ function jsonError(status, detail, extra) {
   return jsonResponse(status, { detail }, extra);
 }
 
-function serializeCookie(name, value, maxAge) {
-  const parts = [`${name}=${value}`, "Path=/", `Max-Age=${maxAge}`];
+function serializeConsentCookie(value, secure) {
+  const secureAttr = secure ? "; Secure" : "";
+  return `${CONSENT_COOKIE}=${value}; Max-Age=${CONSENT_MAX_AGE_SECONDS}; Path=/; SameSite=Lax${secureAttr}`;
+}
+
+function serializeVisitorCookie(value, maxAge) {
+  const parts = [`${VISITOR_COOKIE}=${value}`, "Path=/", `Max-Age=${maxAge}`];
   if (maxAge === 0) parts.push(`Expires=${EXPIRED}`);
   parts.push("SameSite=Lax", "Secure", "HttpOnly");
   return parts.join("; ");
@@ -113,12 +139,13 @@ function parseConsent(raw) {
   if (!keys.includes("choice") || !keys.includes("version") || !keys.includes("timestamp")) {
     return null;
   }
-  if (!CHOICES.has(data.choice) || data.version !== POLICY_VERSION) return null;
+  const choice = normaliseChoice(data.choice);
+  if (!choice || data.version !== POLICY_VERSION) return null;
   if (typeof data.timestamp !== "string") return null;
   const parsed = Date.parse(data.timestamp);
   if (Number.isNaN(parsed) || new Date(parsed).toISOString() !== data.timestamp) return null;
   return {
-    choice: data.choice,
+    choice,
     version: data.version,
     timestamp: data.timestamp,
   };
@@ -160,11 +187,23 @@ async function readChoice(request) {
     return { error: "Request body must be a JSON object." };
   }
   const keys = Object.keys(data);
-  if (keys.length !== 1 || keys[0] !== "choice") {
-    return { error: 'Request body must be { "choice": "all" | "essential" | "reject" }.' };
+  if (!keys.includes("choice") || keys.some((key) => key !== "choice" && key !== "version")) {
+    return {
+      error:
+        'Request body must be { "choice": "accept_all" | "essential_only" | "reject_all", "version"?: 1 }.',
+    };
   }
-  if (!CHOICES.has(data.choice)) return { error: "choice must be all, essential, or reject." };
-  return { choice: data.choice };
+  const choice = normaliseChoice(data.choice);
+  if (!choice) {
+    return { error: "choice must be accept_all, essential_only, or reject_all." };
+  }
+  if ("version" in data) {
+    if (typeof data.version !== "number" || !Number.isInteger(data.version)) {
+      return { error: "version must be an integer." };
+    }
+    if (data.version !== POLICY_VERSION) return { error: `version must be ${POLICY_VERSION}.` };
+  }
+  return { choice };
 }
 
 async function dispatchConsent(request, options) {
@@ -202,19 +241,18 @@ async function dispatchConsent(request, options) {
   const parsed = await readChoice(request);
   if (parsed.error) return jsonError(400, parsed.error);
 
-  const choice = optOut && parsed.choice === "all" ? "essential" : parsed.choice;
+  const choice = optOut && parsed.choice === "accept_all" ? "essential_only" : parsed.choice;
   const timestamp = now().toISOString();
-  const cookies = [
-    serializeCookie(CONSENT_COOKIE, encodeConsent(choice, timestamp), CONSENT_MAX_AGE_SECONDS),
-  ];
+  const secure = requestIsHttps(request);
+  const cookies = [serializeConsentCookie(encodeConsent(choice, timestamp), secure)];
   let visitorId = null;
-  if (choice === "all") {
+  if (choice === "accept_all") {
     visitorId = storedVisitorId ?? randomId();
     if (!UUID_V4.test(visitorId)) {
       throw new Error("Visitor id generator did not return a UUID v4.");
     }
     visitorId = visitorId.toLowerCase();
-    cookies.push(serializeCookie(VISITOR_COOKIE, visitorId, CONSENT_MAX_AGE_SECONDS));
+    cookies.push(serializeVisitorCookie(visitorId, CONSENT_MAX_AGE_SECONDS));
     try {
       await recordVisit({ visitorId, timestamp, version: POLICY_VERSION });
     } catch (error) {
@@ -222,7 +260,7 @@ async function dispatchConsent(request, options) {
       console.error(`Consented visit hook failed: ${message}`);
     }
   } else {
-    cookies.push(serializeCookie(VISITOR_COOKIE, "", 0));
+    cookies.push(serializeVisitorCookie("", 0));
   }
 
   return jsonResponse(

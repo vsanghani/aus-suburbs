@@ -178,33 +178,54 @@ test("documents set no cookies, and consent is set by the server", async ({ requ
   const suburb = await request.get("/suburbs/vic/richmond");
   expect(setCookies(suburb.headersArray())).toEqual([]);
 
-  const essential = await request.post("/api/consent", { data: { choice: "essential" } });
+  const essential = await request.post("/api/consent", {
+    data: { choice: "essential_only", version: 1 },
+  });
   expect(essential.status()).toBe(200);
   expect(essential.headers()["cache-control"]).toBe("private, no-store");
   const essentialBody = await essential.json();
   expect(essentialBody).toMatchObject({
-    choice: "essential",
+    choice: "essential_only",
     essential: true,
     analytics: false,
     visitorId: null,
   });
   const essentialCookies = setCookies(essential.headersArray());
-  expect(essentialCookies.some((cookie) => cookie.startsWith("kf_consent="))).toBe(true);
-  expect(essentialCookies.some((cookie) => cookie.startsWith("kf_vid=;"))).toBe(true);
-  expect(essentialCookies.join("\n")).toContain("Secure");
-  expect(essentialCookies.join("\n")).toContain("HttpOnly");
-  expect(essentialCookies.join("\n")).toContain("SameSite=Lax");
-  expect(essentialCookies.join("\n")).toContain("Path=/");
+  const consentCookie = essentialCookies.find((cookie) => cookie.startsWith("kf_consent="));
+  expect(consentCookie).toBeDefined();
+  expect(consentCookie).toContain("Max-Age=31536000");
+  expect(consentCookie).toContain("Path=/");
+  expect(consentCookie).toContain("SameSite=Lax");
+  expect(consentCookie).not.toContain("Secure");
+  expect(consentCookie).not.toMatch(/HttpOnly/i);
+  expect(
+    JSON.parse(decodeURIComponent(consentCookie!.split(";")[0].slice("kf_consent=".length))),
+  ).toMatchObject({
+    choice: "essential_only",
+    version: 1,
+  });
+  const cleared = essentialCookies.find((cookie) => cookie.startsWith("kf_vid="));
+  expect(cleared).toContain("HttpOnly");
+  expect(cleared).toContain("Secure");
+  expect(cleared).toContain("SameSite=Lax");
 
   const optedOut = await request.post("/api/consent", {
-    data: { choice: "all" },
+    data: { choice: "accept_all", version: 1 },
     headers: { "sec-gpc": "1" },
   });
   expect(optedOut.status()).toBe(200);
   const optedOutBody = await optedOut.json();
-  expect(optedOutBody).toMatchObject({ choice: "essential", analytics: false, visitorId: null });
+  expect(optedOutBody).toMatchObject({
+    choice: "essential_only",
+    analytics: false,
+    visitorId: null,
+  });
   const optedOutCookies = setCookies(optedOut.headersArray());
-  expect(optedOutCookies.some((cookie) => cookie.startsWith("kf_vid="))).toBe(true);
+  const optedOutConsent = optedOutCookies.find((cookie) => cookie.startsWith("kf_consent="));
+  expect(
+    JSON.parse(decodeURIComponent(optedOutConsent!.split(";")[0].slice("kf_consent=".length)))
+      .choice,
+  ).toBe("essential_only");
   expect(optedOutCookies.some((cookie) => /kf_vid=[0-9a-f-]{36}/i.test(cookie))).toBe(false);
 });
 
