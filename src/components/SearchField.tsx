@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ApiError, fetchSearch } from "../api/client";
 import type { CouncilSummary, SuburbSummary } from "../api/types";
 import { councilPath, suburbPath } from "../lib/places";
+import { searchCanonicalPath } from "../seo/urls";
 import { Icon } from "./Icon";
 
 export function SearchField({
@@ -72,7 +73,7 @@ export function SearchField({
       onPick(suburbs[0]);
       return;
     }
-    if (!onPick) navigate(`/search?q=${encodeURIComponent(query)}`);
+    if (!onPick) navigate(searchCanonicalPath(query));
   }
 
   return (

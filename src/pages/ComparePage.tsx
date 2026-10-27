@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchCompare } from "../api/client";
 import type { SuburbDetail } from "../api/types";
@@ -8,17 +9,27 @@ import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
 import { FORMULA } from "../config/formula";
 import { formatValue, humaniseSlug } from "../lib/format";
 import { parsePlaceTokens, splitToken, suburbPath } from "../lib/places";
+import { compareCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
 import { Head } from "../seo/Head";
+import { compareKey } from "../seo/keys";
+import { resourceSeed } from "../seo/routeData";
 import { registry } from "../metrics/registry";
 
 export function ComparePage() {
   const [params, setParams] = useSearchParams();
+  const routeData = useContext(RouteDataContext);
   const tokens = parsePlaceTokens(params);
-  const key = tokens.join("|");
-  const query = useApi(`compare:${key}`, (signal) => fetchCompare(tokens, signal));
+  const key = compareKey(tokens);
+  const query = useApi(
+    key,
+    (signal) => fetchCompare(tokens, signal),
+    resourceSeed(routeData.compare, key),
+  );
+  const copy = compareCopy(tokens);
 
   function addPlace(state: string, slug: string) {
-    const token = `${state}:${slug}`;
+    const token = `${state.toLowerCase()}:${slug.toLowerCase()}`;
     if (tokens.includes(token) || tokens.length >= 4) return;
     const next = new URLSearchParams(params);
     next.append("p", token);
@@ -37,11 +48,7 @@ export function ComparePage() {
 
   return (
     <main className="page" id="content">
-      <Head
-        title="Compare"
-        description="Up to four suburbs, the same rows. Nothing is blended into a winner."
-        path={comparePath(tokens)}
-      />
+      <Head {...copy} />
       <PageIntro
         kicker="Side by side"
         title="Compare"
@@ -153,13 +160,6 @@ export function ComparePage() {
       <CompareChart places={places} tokens={tokens} />
     </main>
   );
-}
-
-function comparePath(tokens: string[]): string {
-  if (tokens.length === 0) return "/compare";
-  const params = new URLSearchParams();
-  for (const token of tokens) params.append("p", token);
-  return `/compare?${params.toString()}`;
 }
 
 const CHART_STROKES = [

@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const isProd = process.env.NODE_ENV === "production";
 const port = Number(process.env.PORT || (isProd ? 4173 : 5173));
-const origin = (process.env.VITE_SITE_ORIGIN || "").trim().replace(/\/$/, "");
 const apiBase = (
   process.env.SSR_API_BASE ||
   process.env.VITE_API_BASE ||
@@ -46,7 +45,7 @@ function safeJson(value) {
   return JSON.stringify(value ?? null).replace(/</g, "\\u003c");
 }
 
-function applyTemplate(template, rendered) {
+function applyTemplate(template, rendered, origin) {
   const originScript = `<script>window.__SITE_ORIGIN__=${JSON.stringify(origin)};</script>`;
   const seo = `${rendered.head}\n${originScript}`;
   const routeJson = safeJson(rendered.routeData);
@@ -111,25 +110,36 @@ async function serveStatic(pathname, res) {
   return true;
 }
 
-function sendText(res, status, type, body) {
+function sendText(res, status, type, body, extra = {}) {
   res.writeHead(status, {
     "content-type": type,
     "cache-control": "public, max-age=0, must-revalidate",
     "x-content-type-options": "nosniff",
     "referrer-policy": "strict-origin-when-cross-origin",
     "x-frame-options": "SAMEORIGIN",
+    ...extra,
   });
   res.end(body);
 }
 
-async function sendDocument(req, res, url) {
-  const mod = await renderer();
+function redirect(res, location) {
+  res.writeHead(301, {
+    location,
+    "cache-control": "public, max-age=3600",
+    "x-content-type-options": "nosniff",
+  });
+  res.end();
+}
+
+async function sendDocument(req, res, url, mod, origin) {
   const rendered = await mod.render(`${url.pathname}${url.search}`, { origin, apiBase });
   const templatePath = isProd ? join(clientDir, "index.html") : join(root, "index.html");
   let template = await readFile(templatePath, "utf8");
   if (vite) template = await vite.transformIndexHtml(url.pathname + url.search, template);
-  const html = applyTemplate(template, rendered);
-  sendText(res, rendered.status || 200, "text/html; charset=utf-8", html);
+  const html = applyTemplate(template, rendered, origin);
+  const headers = {};
+  if (rendered.robots) headers["x-robots-tag"] = rendered.robots;
+  sendText(res, rendered.status || 200, "text/html; charset=utf-8", html, headers);
 }
 
 const server = createServer(async (req, res) => {
@@ -147,14 +157,14 @@ const server = createServer(async (req, res) => {
       proxyApi(req, res);
       return;
     }
-    if (url.pathname === "/sitemap.xml") {
+    if (url.pathname === "/sitemap.xml" || url.pathname === "/robots.txt") {
       const mod = await renderer();
-      const paths = await mod.collectPaths(apiBase);
-      sendText(res, 200, "application/xml; charset=utf-8", mod.sitemapXml(origin, paths));
-      return;
-    }
-    if (url.pathname === "/robots.txt") {
-      const mod = await renderer();
+      const origin = mod.normaliseOrigin(process.env.VITE_SITE_ORIGIN || "");
+      if (url.pathname === "/sitemap.xml") {
+        const paths = await mod.collectPaths(apiBase);
+        sendText(res, 200, "application/xml; charset=utf-8", mod.sitemapXml(origin, paths));
+        return;
+      }
       sendText(res, 200, "text/plain; charset=utf-8", mod.robotsTxt(origin));
       return;
     }
@@ -166,12 +176,14 @@ const server = createServer(async (req, res) => {
     } else if (await serveStatic(url.pathname, res)) {
       return;
     }
-    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
-      res.writeHead(301, { location: url.pathname.replace(/\/+$/, "") + url.search });
-      res.end();
+    const mod = await renderer();
+    const origin = mod.normaliseOrigin(process.env.VITE_SITE_ORIGIN || "");
+    const location = mod.canonicalRedirect(url.pathname, url.search);
+    if (location) {
+      redirect(res, location);
       return;
     }
-    await sendDocument(req, res, url);
+    await sendDocument(req, res, url, mod, origin);
   } catch (error) {
     if (vite) vite.ssrFixStacktrace(error);
     console.error(error);

@@ -1,14 +1,23 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { fetchExport, fetchMethodology } from "../api/client";
 import { useApi } from "../api/useApi";
 import { PageIntro } from "../components/PageIntro";
 import { ErrorState, LoadingState } from "../components/States";
 import { formatNumber } from "../lib/format";
+import { methodologyCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
 import { Head } from "../seo/Head";
+import { EXPORT_KEY, METHODOLOGY_KEY } from "../seo/keys";
+import { resourceSeed } from "../seo/routeData";
 
 export function MethodologyPage() {
-  const method = useApi("methodology", fetchMethodology);
-  const exported = useApi("export", fetchExport);
+  const routeData = useContext(RouteDataContext);
+  const method = useApi(
+    METHODOLOGY_KEY,
+    fetchMethodology,
+    resourceSeed(routeData.methodology, METHODOLOGY_KEY),
+  );
+  const exported = useApi(EXPORT_KEY, fetchExport, resourceSeed(routeData.exportInfo, EXPORT_KEY));
 
   useEffect(() => {
     const id = window.location.hash.replace("#", "");
@@ -18,11 +27,7 @@ export function MethodologyPage() {
 
   return (
     <main className="page" id="content">
-      <Head
-        title="Methodology"
-        description="The composite is a draft. Missing inputs are skipped, not treated as zero."
-        path="/methodology"
-      />
+      <Head {...methodologyCopy()} status={method.status === "error" ? 503 : 200} />
       <PageIntro
         kicker="Method"
         title="Methodology"

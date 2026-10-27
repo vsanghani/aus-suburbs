@@ -12,9 +12,11 @@ What the server does:
 
 - Renders every document request, so titles and meta tags are in the first HTML, not only after JavaScript.
 - For a suburb URL, fetches `GET /api/v1/suburbs/{state}/{slug}` and renders that payload when it exists.
-- When the API returns 404, still renders the humanised name, the state, and the section skeleton. That shell is unique per URL and does not invent figures.
-- Emits JSON-LD only when a real suburb payload was returned.
-- Serves `/sitemap.xml` and `/robots.txt` on each request.
+- The same prefetch runs for state, council, and ranking URLs, and for methodology, search, compare, match, and explore, so the first HTML includes the API shell instead of a loading line.
+- When the API returns 404, still renders the humanised name and the section skeleton. Suburb, council, unknown state, and unknown ranking URLs are HTTP 404 and `noindex` in that first response. A dead API is 503 for those records. The shell does not invent figures.
+- Emits JSON-LD only when a real suburb payload was returned. Coordinates outside a valid latitude and longitude are left out. Traditional owners, scores, and population are not copied into the structured data.
+- 301s trailing slashes, `/index.html`, and `/sources` (to `/methodology#sources`). State, suburb, council, and ranking paths are lowercased in that redirect. Search `q` and compare `p` are normalised the same way. Match and explore keep their query strings; their canonicals stay `/match` and `/explore`.
+- Serves `/sitemap.xml` and `/robots.txt` on each request. `robots.txt` allows `/` and does not disallow CSS, JS, fonts, or other assets. It disallows `/shortlist`.
 
 Tradeoffs:
 
@@ -22,14 +24,14 @@ Tradeoffs:
 - `npm run dev` and `npm run start` are the Node server. `vite` alone no longer serves the site.
 - Docker Compose runs that server. The old nginx image served a static shell and could not give a suburb its own HTML.
 - Vercel (`vercel.json`) and Cloudflare Pages (`public/_redirects`) still ship the client bundle as a single-page fallback. Those hosts do not run the Node server, so a crawler that does not execute JavaScript sees the empty shell, not a suburb record. Point production at the Node server (or another host that runs it) before relying on suburb HTML.
-- State, council, ranking, and methodology bodies still fill in after hydration. Their titles come from the catalogues in `contracts/`. Only suburb pages are prefetched during the document render. The same `loadSuburb` pattern can be copied for councils if those URLs need the same treatment.
+- State, council, ranking, methodology, search, compare, match, and explore are prefetched during the document render, using the same rule as suburbs: render what the API returned, and do not invent rows. Client navigation still refetches.
 - A dead API during render produces a 503 shell with the place name. The browser then retries. It does not invent a record.
 
 ## Canonical host
 
-One value: `VITE_SITE_ORIGIN`, no trailing slash. `src/config/site.ts` (`siteOrigin()`) is the only reader. The Node server reads the same variable at runtime and copies it onto `window.__SITE_ORIGIN__` before hydration, so canonical links, Open Graph URLs, and the sitemap stay on one host even when the client bundle was built without it.
+One value: `VITE_SITE_ORIGIN`, a bare `http` or `https` origin with no path and no trailing slash. `src/config/site.ts` (`normaliseOrigin` / `siteOrigin()`) is the only reader. The Node server reads that same variable, normalises it, and copies it onto `window.__SITE_ORIGIN__` before hydration, so canonical links, Open Graph URLs, JSON-LD `url`, and the sitemap stay on one host even when the client bundle was built without it.
 
-Until it is set, canonical and `og:url` are omitted rather than guessed from the request host. `robots.txt` then has no `Sitemap:` line. Set the production origin before launch.
+Until it is set, or if it is not a bare origin, canonical and `og:url` are omitted rather than guessed from the request host. `robots.txt` then has no `Sitemap:` line. Set the production origin before launch. Paths in canonicals, the sitemap, and JSON-LD have no trailing slash; the home URL is the origin plus `/`.
 
 ## URL structure the interface exposes
 
@@ -43,10 +45,10 @@ Until it is set, canonical and `og:url` are omitted rather than guessed from the
 | `/suburbs/{state}/{slug}`  | Suburb. Lowercased. This is the URL that is server-rendered from the API.                    |
 | `/rankings`                | List of questions from `contracts/rankings.json`.                                            |
 | `/rankings/{slug}`         | One question.                                                                                |
-| `/compare`                 | Up to four places. Canonical keeps `?p=state:slug` (max four).                               |
+| `/compare`                 | Up to four places. Canonical keeps `?p=state%3Aslug` (max four, lowercased).                 |
 | `/match`                   | Weights. Canonical is `/match` only, so slider query strings are not a pile of indexed URLs. |
 | `/methodology`             | Draft formula. `#sources` and `#export` are sections, not extra documents.                   |
-| `/sources`                 | Redirects to `/methodology#sources`.                                                         |
+| `/sources`                 | HTTP 301 to `/methodology#sources`.                                                          |
 | `/privacy`                 | What stays in the browser.                                                                   |
 | `/shortlist`               | `noindex`. Personal to one browser. Omitted from the sitemap.                                |
 
@@ -56,7 +58,7 @@ State codes are `nsw`, `vic`, `qld`, `sa`, `wa`, `tas`, `nt`, `act`.
 
 `src/seo/Head.tsx` is the only writer. It sets `title`, `meta description`, `link rel=canonical`, `og:title`, `og:description`, `og:url`, `og:type`, `og:site_name`, `og:locale`, `twitter:card`, `twitter:title`, `twitter:description`, and `twitter:url`.
 
-Suburb title: `{name}, {state} · {product}`. Description, in order: `description`, else `blurb`, else a sentence that the record is not on file, else a sentence that names the sections without quoting figures. There is no `og:image`. Nothing in the repo is a share image, and a made-up one would be a lie.
+Suburb title: `{name}, {state} · {product}`. Other document titles name the page and stay near 60 characters with the product suffix. Description, in order: `description`, else `blurb`, else a sentence that the record is not on file, else a sentence that names the suburb and the sections without quoting figures. Descriptions are clipped near 160 characters. Open Graph and Twitter titles and descriptions are that same page, not the home page. There is no `og:image`. Nothing in the repo is a share image, and a made-up one would be a lie.
 
 JSON-LD is `Place` (a locality), not `Residence` (a dwelling). It is omitted on 404 and on transport errors. Fields that are null are left out: postcode, description, geo. `addressCountry` is `AU`. Traditional owners are not copied into the structured data; the page shows the string only when the API sends one.
 
@@ -91,7 +93,7 @@ The section ids and slot ids in `src/metrics/registry.ts` are the contract the p
 - The production value of `VITE_SITE_ORIGIN`.
 - Whether `/search` should stay in the sitemap. It is a real page; query variants are separate canonicals only when `?q=` is present.
 - Whether `/compare?p=` combinations should stay canonical. They are unique documents, but four-place URLs can multiply once data exists.
-- Whether state and council pages need the same server prefetch as suburbs. Today their first HTML has the catalogue title and an empty body.
+- State and council pages are prefetched now, so a missing council is a real 404 in the first HTML. Whether that prefetch should stay once a dataset is connected is still worth a look: each document waits on the API, and a dead API holds the render until the request times out.
 - Whether a suburb 404 should stay `noindex` (it does). Random slugs would otherwise be an infinite set of thin pages.
 - A share image, if one is ever designed. Do not add a default photo of a place.
 - Pre-rendering can replace on-demand SSR for the long tail after the listing endpoint is real. Until then, baking HTML at build time has nothing to bake.

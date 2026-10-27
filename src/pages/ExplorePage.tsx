@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchExplore } from "../api/client";
 import { useApi } from "../api/useApi";
@@ -6,7 +6,11 @@ import { FilterPills } from "../components/FilterPills";
 import { ClientMap } from "../components/ClientMap";
 import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
 import { STATES, stateView } from "../config/geography";
+import { exploreCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
 import { Head } from "../seo/Head";
+import { exploreKey } from "../seo/keys";
+import { resourceSeed } from "../seo/routeData";
 import { mapMetrics } from "../metrics/registry";
 
 const LAYERS = [
@@ -21,6 +25,7 @@ const LAYERS = [
 
 export function ExplorePage() {
   const [params] = useSearchParams();
+  const routeData = useContext(RouteDataContext);
   const metrics = useMemo(() => mapMetrics(), []);
   const [metric, setMetric] = useState(params.get("metric") ?? "score");
   const [stateCode, setStateCode] = useState(params.get("state") ?? "all");
@@ -29,16 +34,19 @@ export function ExplorePage() {
   const [radiusKm, setRadiusKm] = useState(5);
   const [picked, setPicked] = useState<[number, number] | null>(null);
   const view = stateView(stateCode === "all" ? undefined : stateCode);
-  const key = `${metric}|${stateCode}|${layers.join(",")}`;
-  const query = useApi(key, (signal) =>
-    fetchExplore(
-      {
-        metric,
-        state: stateCode === "all" ? undefined : stateCode,
-        layers,
-      },
-      signal,
-    ),
+  const key = exploreKey(metric, stateCode, layers);
+  const query = useApi(
+    key,
+    (signal) =>
+      fetchExplore(
+        {
+          metric,
+          state: stateCode === "all" ? undefined : stateCode,
+          layers,
+        },
+        signal,
+      ),
+    resourceSeed(routeData.explore, key),
   );
 
   function toggleLayer(id: string) {
@@ -49,11 +57,7 @@ export function ExplorePage() {
 
   return (
     <main className="explore" id="content">
-      <Head
-        title="Explore"
-        description="A map of suburb boundaries and overlays. Geometries appear when a dataset is connected."
-        path="/explore"
-      />
+      <Head {...exploreCopy()} />
       <div className="explore-panel">
         <p className="kicker">Map</p>
         <h1>Explore</h1>

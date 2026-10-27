@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
 import type { SuburbDetail } from "../api/types";
-import { suburbCopy } from "./copy";
+import { absoluteUrl, normaliseOrigin, site } from "../config/site";
+import {
+  compareCopy,
+  exploreCopy,
+  homeCopy,
+  matchCopy,
+  methodologyCopy,
+  rankingsIndexCopy,
+  searchCopy,
+  suburbCopy,
+} from "./copy";
 import { placeJsonLd } from "./jsonld";
-import { renderHead } from "./meta";
+import { clipText, pageTitle, renderHead } from "./meta";
 import { collectPaths, robotsTxt, sitemapXml, staticPaths } from "./sitemap";
 
 describe("head tags", () => {
@@ -35,7 +45,8 @@ describe("suburb copy and json-ld", () => {
   it("describes a missing suburb without inventing figures", () => {
     const copy = suburbCopy("vic", "port-melbourne", null, true);
     expect(copy.title).toBe("Port Melbourne, Victoria");
-    expect(copy.description).toBe("No record is on file for Port Melbourne in Victoria.");
+    expect(copy.description).toBe("No suburb record is on file for Port Melbourne in Victoria.");
+    expect(copy.description.length).toBeLessThanOrEqual(160);
     expect(copy.path).toBe("/suburbs/vic/port-melbourne");
     expect(placeJsonLd(null, copy.path, "https://example.test")).toBeNull();
   });
@@ -75,6 +86,55 @@ describe("suburb copy and json-ld", () => {
     expect(json?.geo).toMatchObject({ latitude: -37.8, longitude: 145.0 });
     const address = json?.address as { postalCode?: string };
     expect(address.postalCode).toBe("3121");
+    expect(json).not.toHaveProperty("score");
+    const owned = placeJsonLd(
+      { ...place, traditional_owners: "Wurundjeri", score: 40, latitude: 999, longitude: 10 },
+      "/suburbs/vic/richmond",
+      "https://example.test",
+    );
+    expect(owned?.geo).toBeUndefined();
+    expect(JSON.stringify(owned)).not.toContain("Wurundjeri");
+    expect(suburbCopy("vic", "richmond", place, false).description).toBe("Inner suburb.");
+  });
+});
+
+describe("title and description length", () => {
+  it("keeps the brand suffix and stays within a sensible length", () => {
+    const titled = pageTitle("n".repeat(80));
+    expect(titled.endsWith(` · ${site.name}`)).toBe(true);
+    expect(titled.length).toBeLessThanOrEqual(60);
+    expect(clipText(`${"word ".repeat(40)}end`).length).toBeLessThanOrEqual(160);
+    const pages = [
+      homeCopy(),
+      exploreCopy(),
+      matchCopy(),
+      methodologyCopy(),
+      rankingsIndexCopy(),
+      searchCopy(""),
+      searchCopy("Richmond"),
+      compareCopy([]),
+      compareCopy(["vic:richmond", "nsw:newtown"]),
+      suburbCopy("vic", "richmond", null, false),
+    ];
+    for (const page of pages) {
+      expect(pageTitle(page.title).length).toBeLessThanOrEqual(60);
+      expect(page.description.length).toBeLessThanOrEqual(160);
+    }
+    expect(new Set(pages.map((page) => page.title)).size).toBe(pages.length);
+    expect(homeCopy().description.toLowerCase()).toContain("property");
+    expect(suburbCopy("vic", "richmond", null, false).description.toLowerCase()).toContain(
+      "suburb",
+    );
+  });
+
+  it("uses one origin and drops a trailing slash on every absolute url", () => {
+    expect(normaliseOrigin("https://example.test/")).toBe("https://example.test");
+    expect(normaliseOrigin("https://example.test/app")).toBe("");
+    expect(absoluteUrl("/explore/", "https://example.test/")).toBe("https://example.test/explore");
+    expect(absoluteUrl("/", "https://Example.test")).toBe("https://example.test/");
+    expect(absoluteUrl("/search?q=a", "https://example.test")).toBe(
+      "https://example.test/search?q=a",
+    );
   });
 });
 
@@ -86,6 +146,7 @@ describe("sitemap", () => {
     expect(paths).toContain("/states/vic");
     expect(paths.some((path) => path.startsWith("/suburbs/"))).toBe(false);
     expect(paths).not.toContain("/shortlist");
+    expect(paths).not.toContain("/sources");
   });
 
   it("adds suburb urls only after the listing says the dataset is connected", async () => {
@@ -146,5 +207,16 @@ describe("sitemap", () => {
       "Sitemap: https://example.test/sitemap.xml",
     );
     expect(robotsTxt("")).not.toContain("Sitemap:");
+    const robots = robotsTxt("https://example.test");
+    expect(robots).toContain("Allow: /");
+    expect(robots).toContain("Disallow: /shortlist");
+    expect(robots).not.toMatch(/Disallow:\s+\/(assets|fonts|static|\*)/);
+    expect(robots).not.toMatch(/Disallow:.*\.(css|js|woff2)/);
+    for (const loc of xml.match(/<loc>[^<]+<\/loc>/g) ?? []) {
+      const href = loc.slice("<loc>".length, -"</loc>".length);
+      expect(href.startsWith("https://example.test")).toBe(true);
+      const path = href.slice("https://example.test".length);
+      if (path !== "/") expect(path.endsWith("/")).toBe(false);
+    }
   });
 });

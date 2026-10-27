@@ -1,33 +1,43 @@
+import { useContext } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, fetchState } from "../api/client";
 import { useApi } from "../api/useApi";
 import { ClientMap } from "../components/ClientMap";
 import { ErrorState, LoadingState } from "../components/States";
 import { findState, stateView } from "../config/geography";
+import { stateCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
 import { Head } from "../seo/Head";
+import { stateKey } from "../seo/keys";
+import { resourceSeed } from "../seo/routeData";
 import { councilPath } from "../lib/places";
 
 export function StatePage() {
   const params = useParams();
   const code = (params.code ?? "").toLowerCase();
   const local = findState(code);
-  const query = useApi(`state:${code}`, (signal) => fetchState(code, signal));
+  const routeData = useContext(RouteDataContext);
+  const key = stateKey(code);
+  const query = useApi(
+    key,
+    (signal) => fetchState(code, signal),
+    resourceSeed(routeData.state, key),
+  );
   const view = stateView(code);
   const missing =
-    query.status === "error" && query.error instanceof ApiError && query.error.status === 404;
+    !local ||
+    (query.status === "error" && query.error instanceof ApiError && query.error.status === 404);
+  const transportError = query.status === "error" && !missing;
   const name = query.status === "ready" ? query.data.name : (local?.name ?? code.toUpperCase());
+  const copy = stateCopy(code, name, missing);
 
   return (
     <main id="content">
       <Head
-        title={name}
-        description={
-          missing
-            ? `No state is on file for ${code || "this code"}.`
-            : `Councils and regions in ${name}. The map is ready for boundaries.`
-        }
-        path={`/states/${code}`}
-        status={missing ? 404 : 200}
+        title={copy.title}
+        description={copy.description}
+        path={copy.path}
+        status={missing ? 404 : transportError ? 503 : 200}
         robots={missing ? "noindex" : undefined}
       />
       <div className="page">
