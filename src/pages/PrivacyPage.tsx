@@ -1,14 +1,11 @@
 import { PageIntro } from "../components/PageIntro";
+import { privacyCopy } from "../seo/copy";
 import { Head } from "../seo/Head";
 
 export function PrivacyPage() {
   return (
     <main className="page" id="content">
-      <Head
-        title="Privacy"
-        description="No accounts. The theme and kept places stay in this browser."
-        path="/privacy"
-      />
+      <Head {...privacyCopy()} />
       <PageIntro
         kicker="Privacy"
         title="What this site stores"

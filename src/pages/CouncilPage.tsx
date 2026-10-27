@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, fetchCouncil } from "../api/client";
 import { useApi } from "../api/useApi";
@@ -5,31 +6,40 @@ import { ErrorState, LoadingState } from "../components/States";
 import { findState } from "../config/geography";
 import { formatNumber, humaniseSlug } from "../lib/format";
 import { suburbPath } from "../lib/places";
+import { councilCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
 import { Head } from "../seo/Head";
+import { councilKey } from "../seo/keys";
+import { resourceSeed } from "../seo/routeData";
 import { councilSections } from "../metrics/councilRegistry";
 
 export function CouncilPage() {
   const params = useParams();
   const state = (params.state ?? "").toLowerCase();
   const slug = (params.slug ?? "").toLowerCase();
-  const query = useApi(`council:${state}:${slug}`, (signal) => fetchCouncil(state, slug, signal));
+  const routeData = useContext(RouteDataContext);
+  const key = councilKey(state, slug);
+  const query = useApi(
+    key,
+    (signal) => fetchCouncil(state, slug, signal),
+    resourceSeed(routeData.council, key),
+  );
   const place = query.status === "ready" ? query.data : null;
   const notOnFile =
-    query.status === "error" && query.error instanceof ApiError && query.error.status === 404;
+    !findState(state) ||
+    (query.status === "error" && query.error instanceof ApiError && query.error.status === 404);
+  const transportError = query.status === "error" && !notOnFile;
   const title = place?.name ?? humaniseSlug(slug);
   const stateName = findState(state)?.name;
+  const copy = councilCopy(state, slug, title, stateName, notOnFile);
 
   return (
     <main className="page" id="content">
       <Head
-        title={stateName ? `${title}, ${stateName}` : title}
-        description={
-          notOnFile
-            ? `No council is on file for ${title}.`
-            : `Council record for ${title}. Suburbs and figures appear when a dataset is connected.`
-        }
-        path={`/councils/${state}/${slug}`}
-        status={notOnFile ? 404 : 200}
+        title={copy.title}
+        description={copy.description}
+        path={copy.path}
+        status={notOnFile ? 404 : transportError ? 503 : 200}
         robots={notOnFile ? "noindex" : undefined}
       />
       <p className="kicker">

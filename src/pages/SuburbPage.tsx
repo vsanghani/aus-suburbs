@@ -8,25 +8,27 @@ import { ErrorState, LoadingState } from "../components/States";
 import { findState } from "../config/geography";
 import { siteOrigin } from "../config/site";
 import { formatNumber, humaniseSlug } from "../lib/format";
+import { councilPath } from "../lib/places";
 import { subscribeShortlist, toggleKept, shortlistSnapshot } from "../lib/shortlist";
 import { registry } from "../metrics/registry";
 import { suburbCopy } from "../seo/copy";
 import { OriginContext, RouteDataContext } from "../seo/context";
 import { Head } from "../seo/Head";
+import { suburbKey } from "../seo/keys";
 import { placeJsonLd } from "../seo/jsonld";
-import { suburbSeed } from "../seo/routeData";
+import { resourceSeed } from "../seo/routeData";
 
 export function SuburbPage() {
   const params = useParams();
   const state = (params.state ?? "").toLowerCase();
   const slug = (params.slug ?? "").toLowerCase();
-  const key = `${state}:${slug}`;
+  const key = suburbKey(state, slug);
   const routeData = useContext(RouteDataContext);
   const origin = useContext(OriginContext) ?? siteOrigin();
   const query = useApi(
     key,
     (signal) => fetchSuburb(state, slug, signal),
-    suburbSeed(routeData.suburb, key),
+    resourceSeed(routeData.suburb, key),
   );
   const place = query.status === "ready" ? query.data : null;
   const notOnFile =
@@ -73,7 +75,16 @@ export function SuburbPage() {
       <header className="record-mast">
         <p className="kicker">
           {query.status === "loading" ? "Fetching" : notOnFile ? "Not on file" : "Suburb"}
-          {stateName ? ` · ${stateName}` : state ? ` · ${state.toUpperCase()}` : ""}
+          {stateName ? (
+            <>
+              {" · "}
+              <Link to={`/states/${state}`}>{stateName}</Link>
+            </>
+          ) : state ? (
+            ` · ${state.toUpperCase()}`
+          ) : (
+            ""
+          )}
         </p>
         <h1>{place?.name ?? humaniseSlug(slug)}</h1>
         {notOnFile ? (
@@ -97,7 +108,7 @@ export function SuburbPage() {
             <dt>Council</dt>
             <dd>
               {place?.council_slug ? (
-                <Link to={`/councils/${place.state}/${place.council_slug}`}>
+                <Link to={councilPath(place.state, place.council_slug)}>
                   {place.council_name ?? place.council_slug}
                 </Link>
               ) : (

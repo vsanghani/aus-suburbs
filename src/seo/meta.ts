@@ -9,16 +9,28 @@ export type HeadInput = {
   status?: number;
 };
 
+const TITLE_LIMIT = 60;
+const DESCRIPTION_LIMIT = 160;
+
 export function pageTitle(title: string): string {
-  const trimmed = title.trim();
+  const trimmed = title.replace(/\s+/g, " ").trim();
   if (!trimmed || trimmed === site.name) return site.name;
-  return `${trimmed} · ${site.name}`;
+  const suffix = ` · ${site.name}`;
+  if (trimmed.length + suffix.length <= TITLE_LIMIT) return `${trimmed}${suffix}`;
+  const room = Math.max(12, TITLE_LIMIT - suffix.length - 1);
+  const cut = trimmed.slice(0, room);
+  const word = cut.lastIndexOf(" ");
+  const head = (word > 16 ? cut.slice(0, word) : cut).trimEnd();
+  return `${head}…${suffix}`;
 }
 
-export function clipText(value: string, max = 180): string {
+export function clipText(value: string, max = DESCRIPTION_LIMIT): string {
   const flat = value.replace(/\s+/g, " ").trim();
   if (flat.length <= max) return flat;
-  return `${flat.slice(0, max - 1).trimEnd()}…`;
+  const cut = flat.slice(0, max - 1);
+  const word = cut.lastIndexOf(" ");
+  const head = (word > 80 ? cut.slice(0, word) : cut).trimEnd();
+  return `${head}…`;
 }
 
 function escapeHtml(value: string): string {

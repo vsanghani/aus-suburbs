@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { SuburbSummary } from "../api/types";
 import { formatNumber } from "../lib/format";
 import { suburbPath } from "../lib/places";
@@ -10,13 +11,13 @@ export function NearbyBlock({ places }: { places: SuburbSummary[] }) {
     <ul className="link-index">
       {places.map((place) => (
         <li key={`${place.state}-${place.slug}`}>
-          <a href={suburbPath(place.state, place.slug)}>
+          <Link to={suburbPath(place.state, place.slug)}>
             <strong>{place.name}</strong>
             <span>
               {place.state.toUpperCase()}
               {place.score == null ? "" : ` · ${formatNumber(place.score)}`}
             </span>
-          </a>
+          </Link>
         </li>
       ))}
     </ul>

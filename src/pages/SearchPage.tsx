@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchSearch } from "../api/client";
 import { useApi } from "../api/useApi";
@@ -6,24 +7,28 @@ import { SearchField } from "../components/SearchField";
 import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
 import { formatNumber } from "../lib/format";
 import { councilPath, suburbPath } from "../lib/places";
+import { searchCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
 import { Head } from "../seo/Head";
+import { searchKey } from "../seo/keys";
+import { resourceSeed } from "../seo/routeData";
+import { flatQuery } from "../seo/urls";
 
 export function SearchPage() {
   const [params] = useSearchParams();
-  const queryText = params.get("q") ?? "";
-  const query = useApi(`search:${queryText}`, (signal) => fetchSearch(queryText, signal));
+  const routeData = useContext(RouteDataContext);
+  const queryText = flatQuery(params.get("q"));
+  const key = searchKey(queryText);
+  const query = useApi(
+    key,
+    (signal) => fetchSearch(queryText, signal),
+    resourceSeed(routeData.search, key),
+  );
+  const copy = searchCopy(queryText);
 
   return (
     <main className="page" id="content">
-      <Head
-        title={queryText ? `Search · ${queryText}` : "Search"}
-        description={
-          queryText
-            ? `Search the record for ${queryText}.`
-            : "Search the record for a suburb, a council, or a postcode."
-        }
-        path={queryText ? `/search?q=${encodeURIComponent(queryText)}` : "/search"}
-      />
+      <Head {...copy} />
       <PageIntro
         kicker="Search"
         title="Find a place"

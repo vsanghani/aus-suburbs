@@ -11,10 +11,24 @@ declare global {
 }
 
 /**
- * Public origin for canonical links, Open Graph URLs, and the sitemap.
- * No trailing slash. Empty until `VITE_SITE_ORIGIN` is set.
- * The Node server reads that same variable and copies it onto `window.__SITE_ORIGIN__`.
+ * Public origin for canonical links, Open Graph URLs, JSON-LD, and the sitemap.
+ * No trailing slash, no path. Empty until `VITE_SITE_ORIGIN` is a bare http(s) origin.
+ * The Node server reads that same variable and copies the normalised value onto `window.__SITE_ORIGIN__`.
  */
+export function normaliseOrigin(value: string | null | undefined): string {
+  const trimmed = (value ?? "").trim();
+  if (!trimmed) return "";
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return "";
+    if (url.username || url.password || url.search || url.hash) return "";
+    if (url.pathname !== "/" && url.pathname !== "") return "";
+    return url.origin;
+  } catch {
+    return "";
+  }
+}
+
 export function siteOrigin(): string {
   const injected =
     typeof globalThis !== "undefined"
@@ -26,11 +40,16 @@ export function siteOrigin(): string {
   }
   const fromVite = import.meta.env.VITE_SITE_ORIGIN ?? "";
   const raw = (typeof injected === "string" && injected) || fromProcess || fromVite;
-  return raw.trim().replace(/\/$/, "");
+  return normaliseOrigin(raw);
 }
 
+/** One absolute URL. Paths lose a trailing slash; the root stays `/`. */
 export function absoluteUrl(path: string, origin = siteOrigin()): string | null {
-  if (!origin) return null;
-  const normalised = path.startsWith("/") ? path : `/${path}`;
-  return `${origin}${normalised}`;
+  const clean = normaliseOrigin(origin);
+  if (!clean) return null;
+  const [pathname = "/", query = ""] = path.split("?");
+  let normalised = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  if (normalised.length > 1) normalised = normalised.replace(/\/+$/, "") || "/";
+  const suffix = query ? `?${query}` : "";
+  return `${clean}${normalised}${suffix}`;
 }

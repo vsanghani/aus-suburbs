@@ -9,6 +9,7 @@ import {
   type KeptPlace,
 } from "../lib/shortlist";
 import { suburbPath } from "../lib/places";
+import { shortlistCopy } from "../seo/copy";
 import { Head } from "../seo/Head";
 
 export function ShortlistPage() {
@@ -22,12 +23,7 @@ export function ShortlistPage() {
 
   return (
     <main className="page" id="content">
-      <Head
-        title="Kept"
-        description="Places kept in this browser. They are not an account and they are not synced."
-        path="/shortlist"
-        robots="noindex"
-      />
+      <Head {...shortlistCopy()} robots="noindex" />
       <PageIntro
         kicker="This browser"
         title="Kept"

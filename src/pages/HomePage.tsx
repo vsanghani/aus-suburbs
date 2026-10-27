@@ -4,6 +4,7 @@ import { SearchField } from "../components/SearchField";
 import { RANKINGS } from "../config/rankings";
 import { STATES } from "../config/geography";
 import { site } from "../config/site";
+import { homeCopy } from "../seo/copy";
 import { Head } from "../seo/Head";
 import { registry } from "../metrics/registry";
 
@@ -12,7 +13,7 @@ const contents = registry.filter((section) => section.kind !== "score");
 export function HomePage() {
   return (
     <main className="page home" id="content">
-      <Head title={site.name} description={site.description} path="/" />
+      <Head {...homeCopy()} />
       <div className="hero">
         <div className="hero-copy">
           <p className="kicker">Australia · public datasets</p>

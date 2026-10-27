@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, fetchRanking } from "../api/client";
 import { useApi } from "../api/useApi";
@@ -7,39 +7,51 @@ import { RankTable } from "../components/RankTable";
 import { ErrorState, LoadingState } from "../components/States";
 import { STATES } from "../config/geography";
 import { findRanking } from "../config/rankings";
+import { rankingCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
 import { Head } from "../seo/Head";
+import { rankingKey } from "../seo/keys";
+import { resourceSeed } from "../seo/routeData";
 
 export function RankingPage() {
   const params = useParams();
-  const slug = params.slug ?? "";
+  const slug = (params.slug ?? "").toLowerCase();
   const local = findRanking(slug);
+  const routeData = useContext(RouteDataContext);
   const [stateCode, setStateCode] = useState("all");
   const [region, setRegion] = useState("all");
   const [council, setCouncil] = useState("all");
-  const query = useApi(`rank:${slug}:${stateCode}:${region}:${council}`, (signal) =>
-    fetchRanking(
-      slug,
-      {
-        state: stateCode === "all" ? undefined : stateCode,
-        region: region === "all" ? undefined : region,
-        council: council === "all" ? undefined : council,
-      },
-      signal,
-    ),
+  const key = rankingKey(slug, stateCode, region, council);
+  const query = useApi(
+    key,
+    (signal) =>
+      fetchRanking(
+        slug,
+        {
+          state: stateCode === "all" ? undefined : stateCode,
+          region: region === "all" ? undefined : region,
+          council: council === "all" ? undefined : council,
+        },
+        signal,
+      ),
+    resourceSeed(routeData.ranking, key),
   );
   const missing =
-    query.status === "error" && query.error instanceof ApiError && query.error.status === 404;
+    !local ||
+    (query.status === "error" && query.error instanceof ApiError && query.error.status === 404);
+  const transportError = query.status === "error" && !missing;
   const title = query.status === "ready" ? query.data.ranking.title : (local?.title ?? "List");
   const question = query.status === "ready" ? query.data.ranking.question : local?.question;
+  const copy = rankingCopy(slug, title, question, missing);
 
   return (
     <main className="page" id="content">
       <Head
-        title={title}
-        description={question ?? "This name is not a published list."}
-        path={`/rankings/${slug}`}
-        status={missing || !local ? 404 : 200}
-        robots={missing || !local ? "noindex" : undefined}
+        title={copy.title}
+        description={copy.description}
+        path={copy.path}
+        status={missing ? 404 : transportError ? 503 : 200}
+        robots={missing ? "noindex" : undefined}
       />
       <p className="kicker">
         <Link to="/rankings">Rankings</Link>

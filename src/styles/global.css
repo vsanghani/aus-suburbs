@@ -1226,12 +1226,13 @@ button {
 
 .button-line:hover {
   color: var(--ink);
-  background-color: var(--glass-fill-raised);
+  background-color: var(--glass-solid);
+  background-image: none;
 }
 
 .button-solid:disabled,
 .button-line:disabled {
-  background-color: var(--glass-inset);
+  background-color: var(--glass-solid);
   background-image: none;
   color: var(--faint);
   border: 1px solid var(--glass-line);
@@ -1295,6 +1296,15 @@ button {
 
     .button-solid:hover {
       background-color: var(--accent-glass-hover);
+    }
+
+    .button-line:hover {
+      background-color: var(--glass-fill-raised);
+    }
+
+    .button-solid:disabled,
+    .button-line:disabled {
+      background-color: var(--glass-inset);
     }
   }
 }
@@ -1426,20 +1436,22 @@ input[type="range"]::-moz-range-thumb {
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .field input,
-  .field select {
-    background-color: var(--glass-fill-raised);
-    -webkit-backdrop-filter: blur(var(--blur-control)) saturate(var(--glass-saturate));
-    backdrop-filter: blur(var(--blur-control)) saturate(var(--glass-saturate));
-  }
+  @media (prefers-reduced-transparency: no-preference) {
+    .field input,
+    .field select {
+      background-color: var(--glass-fill-raised);
+      -webkit-backdrop-filter: blur(var(--blur-control)) saturate(var(--glass-saturate));
+      backdrop-filter: blur(var(--blur-control)) saturate(var(--glass-saturate));
+    }
 
-  .explore-panel .field input,
-  .explore-panel .field select,
-  .control-deck .field input,
-  .control-deck .field select {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    background-color: var(--glass-inset);
+    .explore-panel .field input,
+    .explore-panel .field select,
+    .control-deck .field input,
+    .control-deck .field select {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background-color: var(--glass-inset);
+    }
   }
 }
 
@@ -1729,6 +1741,27 @@ fieldset {
 
   .site-footer {
     margin-bottom: var(--space-4);
+  }
+}
+
+/* Later rules must not put a translucent fill back when blur is turned off. */
+@media (prefers-reduced-transparency: reduce) {
+  .theme-switch,
+  .tabs,
+  .nav-toggle,
+  .button-line:hover,
+  .button-solid:disabled,
+  .button-line:disabled,
+  .field input,
+  .field select,
+  .explore-panel .field input,
+  .explore-panel .field select,
+  .control-deck .field input,
+  .control-deck .field select {
+    background-color: var(--glass-solid);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 

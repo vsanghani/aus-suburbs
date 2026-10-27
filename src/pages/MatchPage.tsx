@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchMatch } from "../api/client";
 import { useApi } from "../api/useApi";
@@ -8,11 +8,15 @@ import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
 import { STATES } from "../config/geography";
 import { formatShare } from "../lib/format";
 import { suburbPath } from "../lib/places";
+import { matchCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
 import { Head } from "../seo/Head";
+import { resourceSeed } from "../seo/routeData";
 import { normaliseWeights, PRESETS, readWeights, WEIGHTS, type WeightValues } from "../lib/weights";
 
 export function MatchPage() {
   const [params, setParams] = useSearchParams();
+  const routeData = useContext(RouteDataContext);
   const [values, setValues] = useState<WeightValues>(() => readWeights(params));
   const [budgetWeekly, setBudgetWeekly] = useState(params.get("budget_weekly") ?? "");
   const [commuteTo, setCommuteTo] = useState(params.get("commute_to") ?? "");
@@ -34,15 +38,16 @@ export function MatchPage() {
     return () => window.clearTimeout(timer);
   }, [values, budgetWeekly, commuteTo, needsSchools, stateCode, setParams]);
 
-  const query = useApi(params.toString(), (signal) => fetchMatch(params, signal));
+  const matchParams = params.toString();
+  const query = useApi(
+    matchParams,
+    (signal) => fetchMatch(params, signal),
+    resourceSeed(routeData.match, matchParams),
+  );
 
   return (
     <main className="page" id="content">
-      <Head
-        title="Match"
-        description="Re-rank suburbs with your own weights. The list stays empty until scores are loaded."
-        path="/match"
-      />
+      <Head {...matchCopy()} />
       <PageIntro
         kicker="Weights"
         title="Match"
