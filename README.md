@@ -10,7 +10,7 @@ No suburb rows, geometries, or scraped tables are included. The API returns empt
 
 Vite, React, TypeScript, and React Router on the frontend. MapLibre GL for maps. Plain CSS with the tokens in `src/styles/tokens.css`. Vitest and Playwright. ESLint and Prettier.
 
-FastAPI under `backend/` for the contract. Settings come from the environment. Alembic is initialised with an empty migration. Docker Compose runs PostGIS, Redis, the API, and the Node server that renders the site.
+FastAPI under `backend/` for the contract. Settings come from the environment. Alembic keeps an empty first revision and adds the national schema in `0002_national_schema`. Docker Compose runs PostGIS, Redis, the API, and the Node server that renders the site.
 
 Vite with a small Node server, not a framework migration. Suburb HTML is rendered per request from the API. There are still no suburb pages to bake at build time. Vercel runs that same renderer as a function. Docker Compose still runs the Node server. The section registry, the head helper, and the OpenAPI document are the parts that should stay stable while that work happens.
 
@@ -79,8 +79,11 @@ contracts/formula.json      draft composite, shared
 contracts/rankings.json     list questions, shared
 contracts/states.json       state names and map centres
 contracts/openapi.json      generated OpenAPI
+contracts/suburb-response.example.json
+                            illustrative suburb payload, not a live route
 backend/app/api/v1.py       empty /api/v1 routes
-backend/alembic/            empty initial migration
+backend/alembic/            0001_empty, then the national schema
+docs/data-model.md          tables, provenance, readiness, VIC and TAS sources
 docs/design.md              palette, type, space
 ```
 
@@ -141,7 +144,7 @@ State codes are `nsw`, `vic`, `qld`, `sa`, `wa`, `tas`, `nt`, `act`.
 
 Do not seed suburbs into this repo to “make the UI work”. Wire tables, then change the route handlers in `backend/app/api/v1.py` to query them.
 
-- The first real Alembic revision should enable PostGIS and create the tables. `0001_empty` is a placeholder and must stay empty of domain tables.
+- `0001_empty` stays empty of domain tables. `0002_national_schema` is the national store: `raw`, `staging`, and `curated`, with PostGIS. The model, the indexable rule, and the Victoria and Tasmania source map are in `docs/data-model.md`. `contracts/suburb-response.example.json` is the page shape, including `data_level`, and it is not served by a route.
 - `dataset_connected` flips to true only when that query ran.
 - Missing inputs are null, not zero. The composite skips a null driver.
 - `contracts/formula.json` is the draft: base 50, the group ceilings, the tier words, and the weight ids. Replace the ceilings when you calibrate them, and keep the file and the API in step. The tier word is the highest tier whose `minimum` is less than or equal to the value.
