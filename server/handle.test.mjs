@@ -195,6 +195,44 @@ describe("vercel serverless entry", () => {
     expect(bare.text).not.toContain("Sitemap:");
   });
 
+  it("serves the same suburb HTML with or without a consent cookie or a crawler", async () => {
+    const fetchImpl = jsonFetch(() => ({ body: suburb }));
+    const headersList = [
+      {},
+      {
+        cookie: `kf_consent=${encodeURIComponent(
+          JSON.stringify({
+            choice: "accept_all",
+            version: 1,
+            timestamp: "2026-01-01T00:00:00.000Z",
+          }),
+        )}`,
+      },
+      {
+        "user-agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+      },
+    ];
+    const bodies = [];
+    for (const headers of headersList) {
+      const response = await handler(fetchImpl).fetch(
+        new Request("http://ssr.local/suburbs/vic/richmond", { headers }),
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("set-cookie")).toBeNull();
+      expect(response.headers.get("cache-control")).toBe(DOCUMENT_CACHE_CONTROL);
+      expect(response.headers.get("vary")).toBeNull();
+      bodies.push(await response.text());
+    }
+    expect(bodies[1]).toBe(bodies[0]);
+    expect(bodies[2]).toBe(bodies[0]);
+    expect(bodies[0]).toContain("Richmond");
+    expect(bodies[0]).toContain("<h1");
+    expect(bodies[0]).toContain("Cookie settings");
+    expect(bodies[0]).not.toContain('role="dialog"');
+    expect(bodies[0]).not.toContain(">Accept all<");
+    expect(bodies[0]).not.toContain("kf_vid");
+  });
+
   it("proxies /api and /health to the API base and does not cache a dead proxy", async () => {
     const upstream = createServer((req, res) => {
       if (req.url === "/health") {
@@ -241,6 +279,52 @@ describe("vercel serverless entry", () => {
     expect(down.response.status).toBe(502);
     expect(down.response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
     expect(down.text).toContain("did not respond");
+  });
+
+  it("forwards both consent cookies from POST /api/consent without the document cache", async () => {
+    const upstream = createServer((req, res) => {
+      if (req.method === "POST" && req.url === "/api/consent") {
+        res.writeHead(204, [
+          ["set-cookie", "kf_consent=from-server; Path=/; SameSite=Lax"],
+          ["set-cookie", "kf_vid=anon; Path=/; HttpOnly; SameSite=Lax"],
+          ["cache-control", "no-store"],
+        ]);
+        res.end();
+        return;
+      }
+      res.writeHead(404);
+      res.end();
+    });
+    upstream.listen(0, "127.0.0.1");
+    await once(upstream, "listening");
+    const address = upstream.address();
+    const base = `http://127.0.0.1:${address.port}`;
+    try {
+      const response = await handler(
+        () => {
+          throw new Error("unused");
+        },
+        { SSR_API_BASE: base },
+      ).fetch(
+        new Request("http://ssr.local/api/consent", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ choice: "accept_all", version: 1 }),
+        }),
+      );
+      expect(response.status).toBe(204);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(response.headers.get("cache-control")).not.toBe(DOCUMENT_CACHE_CONTROL);
+      const cookies = response.headers.getSetCookie();
+      expect(cookies).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("kf_consent=from-server"),
+          expect.stringContaining("kf_vid=anon"),
+        ]),
+      );
+    } finally {
+      upstream.close();
+    }
   });
 
   it("does not serve static files from the function, and blocks paths outside dist", async () => {

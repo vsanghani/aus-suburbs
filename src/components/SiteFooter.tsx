@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { openCookieSettings } from "../lib/consent";
 
 export function SiteFooter() {
   return (
@@ -21,6 +22,9 @@ export function SiteFooter() {
             <Link to="/methodology">Methodology</Link>
             <Link to="/methodology#sources">Sources</Link>
             <Link to="/privacy">Privacy</Link>
+            <button type="button" id="cookie-settings" onClick={openCookieSettings}>
+              Cookie settings
+            </button>
             <Link to="/methodology#export">Export</Link>
           </nav>
           <p>

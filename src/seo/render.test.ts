@@ -79,6 +79,9 @@ describe("server rendered documents", () => {
     expect(page.head).not.toContain("ld+json");
     expect(h1Count(page.html)).toBe(1);
     expect(page.html).toContain("States and territories");
+    expect(page.html).toContain("Cookie settings");
+    expect(page.html).not.toContain('role="dialog"');
+    expect(page.html).not.toContain(">Accept all<");
   });
 
   it("renders a suburb 404 without schema and a real suburb with Place data only", async () => {
@@ -131,6 +134,10 @@ describe("server rendered documents", () => {
     expect(h1Count(found.html)).toBe(1);
     expect(found.html).toContain('href="/suburbs/vic/cremorne"');
     expect(found.html).toContain('href="/councils/vic/yarra"');
+    expect(found.html).toContain("Cookie settings");
+    expect(found.html).not.toContain('role="dialog"');
+    expect(found.html).not.toContain(">Accept all<");
+    expect(found.html).not.toContain("kf_vid");
   });
 
   it("returns 404 for an unknown state and the catalogue shell for a real one", async () => {
