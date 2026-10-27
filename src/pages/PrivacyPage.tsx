@@ -1,10 +1,14 @@
 import { PageIntro } from "../components/PageIntro";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Head } from "../seo/Head";
 
 export function PrivacyPage() {
-  useDocumentTitle("Privacy");
   return (
     <main className="page" id="content">
+      <Head
+        title="Privacy"
+        description="No accounts. The theme and kept places stay in this browser."
+        path="/privacy"
+      />
       <PageIntro
         kicker="Privacy"
         title="What this site stores"

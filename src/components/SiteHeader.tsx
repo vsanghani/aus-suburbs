@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { site } from "../config/site";
-import { readShortlist, subscribeShortlist } from "../lib/shortlist";
-import { applyTheme, currentTheme, type ThemeName } from "../lib/theme";
+import { shortlistSnapshot, subscribeShortlist } from "../lib/shortlist";
+import { applyTheme, useThemeName, type ThemeName } from "../lib/theme";
 
 const links = [
   { to: "/explore", label: "Explore" },
@@ -15,45 +15,58 @@ export function SiteHeader() {
   const location = useLocation();
   const [openPath, setOpenPath] = useState<string | null>(null);
   const open = openPath === location.pathname;
-  const [theme, setTheme] = useState<ThemeName>(() => currentTheme());
-  const [kept, setKept] = useState(() => readShortlist().length);
+  const theme = useThemeName();
+  const kept = useSyncExternalStore(subscribeShortlist, keptCount, () => 0);
 
-  useEffect(() => subscribeShortlist(() => setKept(readShortlist().length)), []);
+  useEffect(() => {
+    if (!open) return undefined;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpenPath(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   function choose(next: ThemeName) {
     applyTheme(next);
-    setTheme(next);
   }
 
   return (
     <header className={open ? "site-header is-open" : "site-header"}>
-      <a className="wordmark" href="/">
+      <Link className="wordmark" to="/">
         {site.name}
-      </a>
+      </Link>
+      <nav className="site-nav" id="site-nav" aria-label="Primary">
+        {links.map((link) => (
+          <NavLink key={link.to} to={link.to} onClick={() => setOpenPath(null)}>
+            {link.label}
+          </NavLink>
+        ))}
+        <NavLink to="/shortlist" onClick={() => setOpenPath(null)}>
+          {kept > 0 ? `Kept ${kept}` : "Kept"}
+        </NavLink>
+      </nav>
+      <div className="theme-switch" role="group" aria-label="Colour theme">
+        <button type="button" aria-pressed={theme === "light"} onClick={() => choose("light")}>
+          Light
+        </button>
+        <button type="button" aria-pressed={theme === "dark"} onClick={() => choose("dark")}>
+          Dark
+        </button>
+      </div>
       <button
         type="button"
         className="nav-toggle"
         aria-expanded={open}
+        aria-controls="site-nav"
         onClick={() => setOpenPath(open ? null : location.pathname)}
       >
         {open ? "Close" : "Menu"}
       </button>
-      <nav className="site-nav" aria-label="Primary">
-        {links.map((link) => (
-          <NavLink key={link.to} to={link.to}>
-            {link.label}
-          </NavLink>
-        ))}
-        <NavLink to="/shortlist">{kept > 0 ? `Kept ${kept}` : "Kept"}</NavLink>
-        <div className="theme-switch" role="group" aria-label="Colour theme">
-          <button type="button" aria-pressed={theme === "light"} onClick={() => choose("light")}>
-            Light
-          </button>
-          <button type="button" aria-pressed={theme === "dark"} onClick={() => choose("dark")}>
-            Dark
-          </button>
-        </div>
-      </nav>
     </header>
   );
+}
+
+function keptCount(): number {
+  return shortlistSnapshot().length;
 }

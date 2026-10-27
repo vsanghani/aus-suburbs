@@ -1,12 +1,16 @@
 import { Link } from "react-router-dom";
 import { PageIntro } from "../components/PageIntro";
 import { RANKINGS } from "../config/rankings";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Head } from "../seo/Head";
 
 export function RankingsIndexPage() {
-  useDocumentTitle("Rankings");
   return (
     <main className="page" id="content">
+      <Head
+        title="Rankings"
+        description="Fixed lists. Each one answers a single question with the draft composite."
+        path="/rankings"
+      />
       <PageIntro
         kicker="Lists"
         title="Rankings"

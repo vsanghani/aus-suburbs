@@ -8,18 +8,18 @@ import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
 import { STATES } from "../config/geography";
 import { formatShare } from "../lib/format";
 import { suburbPath } from "../lib/places";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Head } from "../seo/Head";
 import { normaliseWeights, PRESETS, readWeights, WEIGHTS, type WeightValues } from "../lib/weights";
 
 export function MatchPage() {
   const [params, setParams] = useSearchParams();
-  useDocumentTitle("Match");
   const [values, setValues] = useState<WeightValues>(() => readWeights(params));
   const [budgetWeekly, setBudgetWeekly] = useState(params.get("budget_weekly") ?? "");
   const [commuteTo, setCommuteTo] = useState(params.get("commute_to") ?? "");
   const [needsSchools, setNeedsSchools] = useState(params.get("needs_schools") === "true");
   const [stateCode, setStateCode] = useState(params.get("state") ?? "all");
   const normalised = normaliseWeights(values);
+  const presetId = PRESETS.find((preset) => sameWeights(preset.values, values))?.id;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -38,6 +38,11 @@ export function MatchPage() {
 
   return (
     <main className="page" id="content">
+      <Head
+        title="Match"
+        description="Re-rank suburbs with your own weights. The list stays empty until scores are loaded."
+        path="/match"
+      />
       <PageIntro
         kicker="Weights"
         title="Match"
@@ -49,6 +54,7 @@ export function MatchPage() {
             key={preset.id}
             type="button"
             className="pill"
+            aria-pressed={preset.id === presetId}
             onClick={() => setValues(preset.values)}
           >
             {preset.label}
@@ -72,12 +78,14 @@ export function MatchPage() {
             min={0}
             max={100}
             value={values[weight.id] ?? 50}
+            aria-valuetext={`${weight.label}, ${formatShare(normalised[weight.id] ?? 0)} of the mix`}
+            aria-describedby={`weight-${weight.id}-help`}
             onChange={(event) =>
               setValues((current) => ({ ...current, [weight.id]: Number(event.target.value) }))
             }
           />
           <span className="num">{formatShare(normalised[weight.id] ?? 0)}</span>
-          <p>{weight.help}</p>
+          <p id={`weight-${weight.id}-help`}>{weight.help}</p>
         </div>
       ))}
       <label className="field">
@@ -136,4 +144,8 @@ export function MatchPage() {
       ) : null}
     </main>
   );
+}
+
+function sameWeights(left: WeightValues, right: WeightValues): boolean {
+  return WEIGHTS.every((weight) => (left[weight.id] ?? 50) === (right[weight.id] ?? 50));
 }

@@ -4,14 +4,21 @@ export type QueryResult<T> = {
   retry: () => void;
 } & ({ status: "loading" } | { status: "ready"; data: T } | { status: "error"; error: unknown });
 
+export type QuerySeed<T> =
+  { key: string; status: "ready"; data: T } | { key: string; status: "error"; error: unknown };
+
 type Stored<T> =
   | { key: string; attempt: number; status: "ready"; data: T }
   | { key: string; attempt: number; status: "error"; error: unknown };
 
-export function useApi<T>(key: string, load: (signal: AbortSignal) => Promise<T>): QueryResult<T> {
+export function useApi<T>(
+  key: string,
+  load: (signal: AbortSignal) => Promise<T>,
+  seed?: QuerySeed<T> | null,
+): QueryResult<T> {
   const loadRef = useRef(load);
   const [attempt, setAttempt] = useState(0);
-  const [stored, setStored] = useState<Stored<T> | null>(null);
+  const [stored, setStored] = useState<Stored<T> | null>(() => seedStored(key, seed));
 
   useEffect(() => {
     loadRef.current = load;
@@ -42,4 +49,10 @@ export function useApi<T>(key: string, load: (signal: AbortSignal) => Promise<T>
       : { status: "error", error: stored.error, retry };
   }
   return { status: "loading", retry };
+}
+
+function seedStored<T>(key: string, seed: QuerySeed<T> | null | undefined): Stored<T> | null {
+  if (!seed || seed.key !== key) return null;
+  if (seed.status === "ready") return { key, attempt: 0, status: "ready", data: seed.data };
+  return { key, attempt: 0, status: "error", error: seed.error };
 }

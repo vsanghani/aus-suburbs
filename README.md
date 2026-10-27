@@ -10,7 +10,7 @@ Vite, React, TypeScript, and React Router on the frontend. MapLibre GL for maps.
 
 FastAPI under `backend/` for the contract. Settings come from the environment. Alembic is initialised with an empty migration. Docker Compose runs PostGIS, Redis, the API, and a static build of the site.
 
-Vite rather than a pre-rendered framework: there are no suburb pages to bake yet. Pre-rendering can wait until a dataset exists. The section registry and the OpenAPI document are the parts that should stay stable while that work happens.
+Vite with a small Node server, not a framework migration. Suburb HTML is rendered per request from the API. There are still no suburb pages to bake at build time. The section registry, the head helper, and the OpenAPI document are the parts that should stay stable while that work happens.
 
 ## Run it
 
@@ -35,7 +35,7 @@ In another:
 npm run dev
 ```
 
-The dev server proxies `/api` and `/health` to `http://127.0.0.1:8000`. Leave `VITE_API_BASE` empty for that. Set it to an absolute origin when the API is hosted elsewhere.
+`npm run dev` starts the Node server on port 5173. It renders pages and proxies `/api` and `/health` to `http://127.0.0.1:8000`. Leave `VITE_API_BASE` empty for that. Set it, or `SSR_API_BASE`, when the API is hosted elsewhere. Set `VITE_SITE_ORIGIN` (no trailing slash) before you care about canonical links; see `docs/handoff.md`.
 
 `make api` loads `.env` if it exists, then starts uvicorn from `backend/`. Alembic and the catalogue path do not depend on the working directory: the default contracts directory is resolved from the package file.
 
@@ -51,7 +51,8 @@ The site is on port 8080 and the API on port 8000. Compose does not read `.env`.
 
 | Command            | What it does                                               |
 | ------------------ | ---------------------------------------------------------- |
-| `npm run dev`      | Vite dev server                                            |
+| `npm run dev`      | Node server with Vite middleware (port 5173)               |
+| `npm run start`    | Production Node server (port 4173, or `PORT`)              |
 | `npm test`         | Vitest                                                     |
 | `npm run lint`     | ESLint and Prettier                                        |
 | `npm run build`    | Typecheck and production build                             |
@@ -117,6 +118,7 @@ Useful routes:
 | ------ | --------------------------------- | ----------------------------------------------------------------------- |
 | GET    | `/health`                         | Process up. Database and Redis report `unconfigured`, `ok`, or `error`. |
 | GET    | `/api/v1/search`                  | No matches. `dataset_connected: false`.                                 |
+| GET    | `/api/v1/suburbs`                 | Empty page. `dataset_connected: false`. `total: null`.                  |
 | GET    | `/api/v1/suburbs/{state}/{slug}`  | 404.                                                                    |
 | GET    | `/api/v1/councils`                | Empty list.                                                             |
 | GET    | `/api/v1/councils/{state}/{slug}` | 404.                                                                    |
@@ -146,6 +148,7 @@ Do not seed suburbs into this repo to “make the UI work”. Wire tables, then 
 - Crime rates need a plain caveat in `notes`. Footfall inflates counts in busy centres.
 - Traditional owners are a string from a source, or null. Do not infer them.
 - Geometries belong on `SuburbDetail.geometry` and on `GET /api/v1/explore` as a FeatureCollection. The explorer sends `metric` and `layers`.
+- `GET /api/v1/suburbs` is the paged catalogue. The sitemap calls it. Leave it empty, with `dataset_connected: false` and `total: null`, until a query actually ran.
 - Commute minutes stay null until a router is actually called.
 
 Postgres in Compose is `postgresql+psycopg://places:places@db:5432/places` inside the network, and `@localhost` from the host. Redis is `redis://redis:6379/0`.
@@ -161,14 +164,18 @@ The pages already handle loading, not-connected, empty, not-found, and transport
 - Compare links are `/compare?p=vic:slug&p=nsw:slug` (max four). Match links are the weight query string.
 - MapLibre is imported from `MapCanvas` only, so the home bundle does not include it.
 - Colours and type are documented in `docs/design.md`. New UI should use the tokens.
+- Page titles and social tags go through `src/seo/Head.tsx`. The canonical host is `VITE_SITE_ORIGIN`, read only from `src/config/site.ts`.
+- A new suburb section stays one entry in `src/metrics/registry.ts`. Do not add a component for a new metric.
 
 ## Deploy the frontend
 
-The build output is `dist/`. It is a single-page app: unknown paths must serve `index.html`.
+`npm run build` writes the client to `dist/` and the server bundle to `dist/server/`. `npm run start` serves both. Document requests are rendered; hashed files under `dist/assets` are static. Unknown paths are rendered, not rewritten to an empty `index.html`.
 
-**Vercel.** Framework preset Vite, output `dist`. `vercel.json` already rewrites every path to `index.html`. Set `VITE_API_BASE` to the API origin. Do not host the FastAPI app as a Vercel function in this skeleton.
+Set `VITE_SITE_ORIGIN` to the public origin and `SSR_API_BASE` to the API the server can reach. The browser keeps calling `/api` on the same host; the Node process proxies it.
 
-**Cloudflare Pages.** Build command `npm run build`, output directory `dist`. `public/_redirects` is copied into the build and sends unknown paths to `index.html` with status 200. Set `VITE_API_BASE` the same way. This is a static Pages project, not a Worker.
+**Docker Compose.** The `web` service is that Node server, on port 8080. `deploy/nginx.conf` is the previous static image and is not what Compose runs.
+
+**Vercel and Cloudflare Pages.** `vercel.json` and `public/_redirects` still fall back to the client shell. Those hosts do not run the renderer, so suburb HTML is not unique there. Use them only as a client fallback. The SEO notes in `docs/handoff.md` explain the gap.
 
 The API is a container. Compose is the local shape; the same image runs anywhere that can host a container next to PostGIS and Redis.
 

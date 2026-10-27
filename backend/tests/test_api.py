@@ -38,6 +38,17 @@ def test_unknown_state_is_404() -> None:
     assert response.status_code == 404
 
 
+def test_suburb_list_is_empty() -> None:
+    response = client().get("/api/v1/suburbs", params={"limit": 25, "offset": 0})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["dataset_connected"] is False
+    assert body["suburbs"] == []
+    assert body["total"] is None
+    assert body["limit"] == 25
+    assert body["offset"] == 0
+
+
 def test_suburb_is_not_on_file() -> None:
     response = client().get("/api/v1/suburbs/vic/richmond")
     assert response.status_code == 404
@@ -149,6 +160,7 @@ def test_openapi_lists_the_contract() -> None:
     for path in (
         "/health",
         "/api/v1/search",
+        "/api/v1/suburbs",
         "/api/v1/suburbs/{state}/{slug}",
         "/api/v1/councils",
         "/api/v1/councils/{state}/{slug}",

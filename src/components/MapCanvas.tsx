@@ -16,19 +16,25 @@ type MapHandle = {
   once: (event: string, handler: () => void) => void;
 };
 
+export type MapCanvasProps = {
+  centre: [number, number];
+  zoom: number;
+  collection: FeatureCollection | null;
+  circle: { centre: [number, number]; radiusKm: number } | null;
+  onPick?: (coordinate: [number, number]) => void;
+  label?: string;
+  cooperativeGestures?: boolean;
+};
+
 export function MapCanvas({
   centre,
   zoom,
   collection,
   circle,
   onPick,
-}: {
-  centre: [number, number];
-  zoom: number;
-  collection: FeatureCollection | null;
-  circle: { centre: [number, number]; radiusKm: number } | null;
-  onPick?: (coordinate: [number, number]) => void;
-}) {
+  label = "Map of Australia",
+  cooperativeGestures = false,
+}: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapHandle | null>(null);
   const pickRef = useRef(onPick);
@@ -75,12 +81,15 @@ export function MapCanvas({
         };
         // The bundled library looks for a sibling worker file that Vite does not emit.
         maplibre.setWorkerUrl(worker.default);
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         map = new maplibre.Map({
           container,
           style: theme === "dark" ? MAP_STYLE.dark : MAP_STYLE.light,
           center: viewRef.current.centre,
           zoom: viewRef.current.zoom,
-          attributionControl: { compact: true },
+          attributionControl: { compact: false },
+          fadeDuration: reduceMotion ? 0 : 300,
+          cooperativeGestures,
         });
         mapRef.current = map;
         const control = new maplibre.NavigationControl({ showCompass: false });
@@ -113,7 +122,7 @@ export function MapCanvas({
       map?.remove();
       mapRef.current = null;
     };
-  }, [theme]);
+  }, [theme, cooperativeGestures]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -161,12 +170,7 @@ export function MapCanvas({
 
   return (
     <div className="map-frame">
-      <div
-        ref={containerRef}
-        className="map-canvas"
-        role="application"
-        aria-label="Map of Australia"
-      />
+      <div ref={containerRef} className="map-canvas" role="application" aria-label={label} />
       {status === "failed" ? (
         <p className="map-note">
           The base map did not load. Place outlines appear when geometries do.

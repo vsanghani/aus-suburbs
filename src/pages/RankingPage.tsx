@@ -7,7 +7,7 @@ import { RankTable } from "../components/RankTable";
 import { ErrorState, LoadingState } from "../components/States";
 import { STATES } from "../config/geography";
 import { findRanking } from "../config/rankings";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Head } from "../seo/Head";
 
 export function RankingPage() {
   const params = useParams();
@@ -16,7 +16,6 @@ export function RankingPage() {
   const [stateCode, setStateCode] = useState("all");
   const [region, setRegion] = useState("all");
   const [council, setCouncil] = useState("all");
-  useDocumentTitle(local?.title ?? "List");
   const query = useApi(`rank:${slug}:${stateCode}:${region}:${council}`, (signal) =>
     fetchRanking(
       slug,
@@ -35,6 +34,13 @@ export function RankingPage() {
 
   return (
     <main className="page" id="content">
+      <Head
+        title={title}
+        description={question ?? "This name is not a published list."}
+        path={`/rankings/${slug}`}
+        status={missing || !local ? 404 : 200}
+        robots={missing || !local ? "noindex" : undefined}
+      />
       <p className="kicker">
         <Link to="/rankings">Rankings</Link>
       </p>
