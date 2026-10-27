@@ -4,6 +4,8 @@ import { extname, join, normalize, sep } from "node:path";
 import { Readable } from "node:stream";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { CONSENT_PATH } from "./consent.mjs";
+
 /**
  * Cache policy for rendered responses.
  *
@@ -22,6 +24,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
  * will grow, so an unknown place must not stick, and a 503 from a dead API
  * must not stick either. Vercel also refuses to cache 503s; the headers make
  * that explicit for the Vercel CDN and any cache in front of it.
+ *
+ * This renderer must not set a cookie and must not vary on Cookie. Consent
+ * cookies are set only by `api/consent.js`, which is `private, no-store`.
+ * A `Set-Cookie` on a document, or a `Vary: Cookie`, would break the shared
+ * cache above.
  */
 export const DOCUMENT_CACHE_CONTROL =
   "public, max-age=60, s-maxage=300, stale-while-revalidate=86400";
@@ -241,6 +248,16 @@ export async function handleRequest(request, options = {}) {
   const serveStatic = options.serveStatic ?? isProd;
 
   try {
+    // Consent is its own function. If a request still reaches this renderer,
+    // do not proxy it to the record API and do not set a cookie.
+    if (url.pathname === CONSENT_PATH) {
+      return textResponse(
+        404,
+        JSON.stringify({ detail: "Not found." }),
+        "application/json; charset=utf-8",
+        url.pathname,
+      );
+    }
     if (method !== "GET" && method !== "HEAD") {
       if (isProxyPath(url.pathname)) return proxyApi(request, resolveApiBase(env), url);
       return textResponse(405, "Method not allowed.", "text/plain; charset=utf-8", url.pathname);
@@ -319,14 +336,24 @@ export function nodeRequestToWeb(req) {
   return new Request(url, init);
 }
 
-export async function writeNodeResponse(res, response) {
+export function nodeHeadersFromResponse(response) {
   const headers = {};
+  const cookies =
+    typeof response.headers.getSetCookie === "function" ? response.headers.getSetCookie() : [];
   for (const [key, value] of response.headers) {
+    if (key.toLowerCase() === "set-cookie") continue;
     const current = headers[key];
     if (current === undefined) headers[key] = value;
     else if (Array.isArray(current)) current.push(value);
     else headers[key] = [current, value];
   }
+  if (cookies.length === 1) headers["set-cookie"] = cookies[0];
+  else if (cookies.length > 1) headers["set-cookie"] = cookies;
+  return headers;
+}
+
+export async function writeNodeResponse(res, response) {
+  const headers = nodeHeadersFromResponse(response);
   res.writeHead(response.status, headers);
   if (!response.body) {
     res.end();

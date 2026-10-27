@@ -162,6 +162,52 @@ test("suburb HTML is rendered before javascript, and the sitemap stays empty of 
   expect(await robots.text()).toContain("Sitemap: http://127.0.0.1:4173/sitemap.xml");
 });
 
+function setCookies(headers: { name: string; value: string }[]) {
+  return headers
+    .filter((header) => header.name.toLowerCase() === "set-cookie")
+    .map((header) => header.value);
+}
+
+test("documents set no cookies, and consent is set by the server", async ({ request }) => {
+  const home = await request.get("/");
+  expect(home.status()).toBe(200);
+  expect(home.headers()["cache-control"]).toContain("s-maxage=300");
+  expect(home.headers()["cache-control"]).toContain("stale-while-revalidate=86400");
+  expect(setCookies(home.headersArray())).toEqual([]);
+
+  const suburb = await request.get("/suburbs/vic/richmond");
+  expect(setCookies(suburb.headersArray())).toEqual([]);
+
+  const essential = await request.post("/api/consent", { data: { choice: "essential" } });
+  expect(essential.status()).toBe(200);
+  expect(essential.headers()["cache-control"]).toBe("private, no-store");
+  const essentialBody = await essential.json();
+  expect(essentialBody).toMatchObject({
+    choice: "essential",
+    essential: true,
+    analytics: false,
+    visitorId: null,
+  });
+  const essentialCookies = setCookies(essential.headersArray());
+  expect(essentialCookies.some((cookie) => cookie.startsWith("kf_consent="))).toBe(true);
+  expect(essentialCookies.some((cookie) => cookie.startsWith("kf_vid=;"))).toBe(true);
+  expect(essentialCookies.join("\n")).toContain("Secure");
+  expect(essentialCookies.join("\n")).toContain("HttpOnly");
+  expect(essentialCookies.join("\n")).toContain("SameSite=Lax");
+  expect(essentialCookies.join("\n")).toContain("Path=/");
+
+  const optedOut = await request.post("/api/consent", {
+    data: { choice: "all" },
+    headers: { "sec-gpc": "1" },
+  });
+  expect(optedOut.status()).toBe(200);
+  const optedOutBody = await optedOut.json();
+  expect(optedOutBody).toMatchObject({ choice: "essential", analytics: false, visitorId: null });
+  const optedOutCookies = setCookies(optedOut.headersArray());
+  expect(optedOutCookies.some((cookie) => cookie.startsWith("kf_vid="))).toBe(true);
+  expect(optedOutCookies.some((cookie) => /kf_vid=[0-9a-f-]{36}/i.test(cookie))).toBe(false);
+});
+
 test("match sliders and a ranking list explain the empty record", async ({ page }) => {
   await page.goto("/match");
   await expect(page.getByRole("heading", { name: "Match" })).toBeVisible();

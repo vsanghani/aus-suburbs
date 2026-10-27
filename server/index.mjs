@@ -1,5 +1,7 @@
 import { createServer } from "node:http";
-import { handleNodeRequest, projectRoot } from "./handle.mjs";
+import handler from "../api/consent.js";
+import { CONSENT_PATH } from "./consent.mjs";
+import { handleNodeRequest, nodeRequestToWeb, projectRoot, writeNodeResponse } from "./handle.mjs";
 
 const root = projectRoot();
 const isProd = process.env.NODE_ENV === "production";
@@ -17,6 +19,12 @@ if (!isProd) {
 
 const server = createServer(async (req, res) => {
   try {
+    const pathname = new URL(req.url || "/", "http://localhost").pathname;
+    if (pathname === CONSENT_PATH) {
+      const response = await handler.fetch(nodeRequestToWeb(req));
+      await writeNodeResponse(res, response);
+      return;
+    }
     if (!isProd && vite) {
       const url = new URL(req.url || "/", "http://localhost");
       const proxied = url.pathname.startsWith("/api/") || url.pathname === "/health";
