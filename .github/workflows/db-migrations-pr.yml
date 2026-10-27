@@ -1,0 +1,91 @@
+name: DB migrations (PR)
+
+# Proves that Alembic migrations apply cleanly and are reversible, on a throwaway
+# Neon branch forked from the `dev` Neon branch. Never touches `dev` or `main` data.
+
+on:
+  pull_request:
+    paths:
+      - "backend/alembic/**"
+      - "backend/alembic.ini"
+      - "backend/app/**"
+      - "backend/pyproject.toml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-migrations-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  migrate-roundtrip:
+    name: migrate-roundtrip
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Secrets are not available to PRs from forks.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID || secrets.NEON_PROJECT_ID }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Check required secrets are configured
+        run: |
+          missing=0
+          for name in NEON_API_KEY NEON_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Repository secret ${name} is not set. See docs/ci-database.md."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - run: pip install -e .
+
+      - name: Compute safety-net expiry for the throwaway branch
+        id: expiry
+        run: echo "at=$(date -u --date '+1 day' +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+
+      - name: Create throwaway Neon branch from dev
+        id: create-branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ env.NEON_PROJECT_ID }}
+          api_key: ${{ env.NEON_API_KEY }}
+          parent_branch: dev
+          branch_name: ci-pr-${{ github.event.pull_request.number }}-${{ github.run_id }}-${{ github.run_attempt }}
+          role: kf_loader
+          database: neondb
+          expires_at: ${{ steps.expiry.outputs.at }}
+
+      - name: Alembic round trip (upgrade, downgrade, upgrade)
+        env:
+          NEON_DB_URL: ${{ steps.create-branch.outputs.db_url }}
+        run: |
+          # Neon gives postgresql://; the backend uses the psycopg v3 driver.
+          echo "::add-mask::${NEON_DB_URL}"
+          DATABASE_URL="postgresql+psycopg://${NEON_DB_URL#*://}"
+          export DATABASE_URL
+          alembic upgrade head
+          alembic downgrade base
+          alembic upgrade head
+          alembic current
+
+      - name: Delete throwaway Neon branch
+        if: always() && steps.create-branch.outputs.branch_id != ''
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ env.NEON_PROJECT_ID }}
+          api_key: ${{ env.NEON_API_KEY }}
+          branch: ${{ steps.create-branch.outputs.branch_id }}
