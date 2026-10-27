@@ -11,6 +11,13 @@ export type HeadInput = {
 
 const TITLE_LIMIT = 60;
 const DESCRIPTION_LIMIT = 160;
+const SHARE_IMAGE_PATH = "/share.png";
+const SHARE_IMAGE_WIDTH = "1200";
+const SHARE_IMAGE_HEIGHT = "630";
+
+function shareImageAlt(): string {
+  return `${site.name}. ${site.description}`;
+}
 
 export function pageTitle(title: string): string {
   const trimmed = title.replace(/\s+/g, " ").trim();
@@ -54,16 +61,30 @@ export function renderHead(input: HeadInput, origin: string): string {
     tags.push(`<link rel="canonical" href="${href}" data-seo="1" />`);
   }
   const ogUrl = canonical ? escapeHtml(canonical) : "";
+  const image = absoluteUrl(SHARE_IMAGE_PATH, origin);
+  const card = image ? "summary_large_image" : "summary";
   tags.push(
     `<meta property="og:title" content="${title}" data-seo="1" />`,
     `<meta property="og:description" content="${description}" data-seo="1" />`,
     `<meta property="og:type" content="website" data-seo="1" />`,
     `<meta property="og:site_name" content="${escapeHtml(site.name)}" data-seo="1" />`,
     `<meta property="og:locale" content="en_AU" data-seo="1" />`,
-    `<meta name="twitter:card" content="summary" data-seo="1" />`,
+    `<meta name="twitter:card" content="${card}" data-seo="1" />`,
     `<meta name="twitter:title" content="${title}" data-seo="1" />`,
     `<meta name="twitter:description" content="${description}" data-seo="1" />`,
   );
+  if (image) {
+    const src = escapeHtml(image);
+    const alt = escapeHtml(shareImageAlt());
+    tags.push(
+      `<meta property="og:image" content="${src}" data-seo="1" />`,
+      `<meta property="og:image:width" content="${SHARE_IMAGE_WIDTH}" data-seo="1" />`,
+      `<meta property="og:image:height" content="${SHARE_IMAGE_HEIGHT}" data-seo="1" />`,
+      `<meta property="og:image:alt" content="${alt}" data-seo="1" />`,
+      `<meta name="twitter:image" content="${src}" data-seo="1" />`,
+      `<meta name="twitter:image:alt" content="${alt}" data-seo="1" />`,
+    );
+  }
   if (ogUrl) {
     tags.push(
       `<meta property="og:url" content="${ogUrl}" data-seo="1" />`,
@@ -153,10 +174,17 @@ export function applyHead(input: HeadInput, origin: string): void {
   upsertMeta("property", "og:type", "website");
   upsertMeta("property", "og:site_name", site.name);
   upsertMeta("property", "og:locale", "en_AU");
-  upsertMeta("name", "twitter:card", "summary");
+  const image = absoluteUrl(SHARE_IMAGE_PATH, origin);
+  upsertMeta("name", "twitter:card", image ? "summary_large_image" : "summary");
   upsertMeta("name", "twitter:title", title);
   upsertMeta("name", "twitter:description", description);
   upsertMeta("name", "twitter:url", canonical);
+  upsertMeta("property", "og:image", image);
+  upsertMeta("property", "og:image:width", image ? SHARE_IMAGE_WIDTH : null);
+  upsertMeta("property", "og:image:height", image ? SHARE_IMAGE_HEIGHT : null);
+  upsertMeta("property", "og:image:alt", image ? shareImageAlt() : null);
+  upsertMeta("name", "twitter:image", image);
+  upsertMeta("name", "twitter:image:alt", image ? shareImageAlt() : null);
   upsertMeta("name", "robots", input.robots ?? null);
   upsertJsonLd(input.jsonLd ?? null);
 }
