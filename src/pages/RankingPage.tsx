@@ -1,5 +1,5 @@
-import { useContext, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useContext } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ApiError, fetchRanking } from "../api/client";
 import { useApi } from "../api/useApi";
 import { FilterPills } from "../components/FilterPills";
@@ -18,9 +18,21 @@ export function RankingPage() {
   const slug = (params.slug ?? "").toLowerCase();
   const local = findRanking(slug);
   const routeData = useContext(RouteDataContext);
-  const [stateCode, setStateCode] = useState("all");
-  const [region, setRegion] = useState("all");
-  const [council, setCouncil] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const stateCode = searchParams.get("state") ?? "all";
+  const region = searchParams.get("region") ?? "all";
+  const council = searchParams.get("council") ?? "all";
+
+  function setFilter(name: "state" | "region" | "council", value: string) {
+    const next = new URLSearchParams(searchParams);
+    if (value === "all") next.delete(name);
+    else next.set(name, value);
+    if (name === "state") {
+      next.delete("region");
+      next.delete("council");
+    }
+    setSearchParams(next, { replace: true });
+  }
   const key = rankingKey(slug, stateCode, region, council);
   const query = useApi(
     key,
@@ -65,7 +77,7 @@ export function RankingPage() {
         <FilterPills
           label="State"
           value={stateCode}
-          onChange={setStateCode}
+          onChange={(id) => setFilter("state", id)}
           options={[
             { id: "all", label: "All states" },
             ...STATES.map((state) => ({ id: state.code, label: state.name })),
@@ -75,7 +87,7 @@ export function RankingPage() {
           <FilterPills
             label="Region"
             value={region}
-            onChange={setRegion}
+            onChange={(id) => setFilter("region", id)}
             options={[
               { id: "all", label: "All regions" },
               ...query.data.regions.map((item) => ({ id: item.slug, label: item.name })),
@@ -88,7 +100,7 @@ export function RankingPage() {
           <FilterPills
             label="Council"
             value={council}
-            onChange={setCouncil}
+            onChange={(id) => setFilter("council", id)}
             options={[
               { id: "all", label: "All councils" },
               ...query.data.councils.map((item) => ({ id: item.slug, label: item.name })),

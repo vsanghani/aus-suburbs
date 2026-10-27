@@ -24,6 +24,7 @@ export type MapCanvasProps = {
   onPick?: (coordinate: [number, number]) => void;
   label?: string;
   cooperativeGestures?: boolean;
+  frameId?: string;
 };
 
 export function MapCanvas({
@@ -34,6 +35,7 @@ export function MapCanvas({
   onPick,
   label = "Map of Australia",
   cooperativeGestures = false,
+  frameId,
 }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapHandle | null>(null);
@@ -175,10 +177,15 @@ export function MapCanvas({
   }, [collection, circle, status, theme]);
 
   return (
-    <div className="map-frame">
+    <div className="map-frame" id={frameId} aria-busy={status === "loading"}>
       <div ref={containerRef} className="map-canvas" role="application" aria-label={label} />
+      {status === "loading" ? (
+        <p className="map-note tooltip" role="status">
+          Loading the base map.
+        </p>
+      ) : null}
       {status === "failed" ? (
-        <p className="map-note tooltip">
+        <p className="map-note tooltip" role="status">
           The base map did not load. Place outlines appear when geometries do.
         </p>
       ) : null}

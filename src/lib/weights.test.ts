@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normaliseWeights, PRESETS, WEIGHTS } from "./weights";
+import { normaliseWeights, PRESETS, WEIGHTS, weightsMatch } from "./weights";
 
 describe("weights", () => {
   it("normalises a mix and falls back to even when everything is zero", () => {
@@ -17,5 +17,12 @@ describe("weights", () => {
     for (const preset of PRESETS) {
       expect(Object.keys(preset.values).sort()).toEqual([...ids].sort());
     }
+  });
+
+  it("matches a preset only when every weight agrees", () => {
+    const even = PRESETS[0];
+    if (!even) throw new Error("missing preset");
+    expect(weightsMatch(even.values, { ...even.values })).toBe(true);
+    expect(weightsMatch(even.values, { ...even.values, budget: 10 })).toBe(false);
   });
 });

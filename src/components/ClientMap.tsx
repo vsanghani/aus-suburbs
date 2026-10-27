@@ -17,7 +17,7 @@ export function ClientMap(props: MapCanvasProps) {
 
   if (!MapView) {
     return (
-      <div className="map-frame">
+      <div className="map-frame" id={props.frameId}>
         <div className="map-canvas" role="img" aria-label={props.label ?? "Map of Australia"} />
       </div>
     );

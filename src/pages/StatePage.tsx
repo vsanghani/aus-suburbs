@@ -4,6 +4,7 @@ import { ApiError, fetchState } from "../api/client";
 import { useApi } from "../api/useApi";
 import { ClientMap } from "../components/ClientMap";
 import { ErrorState, LoadingState } from "../components/States";
+import { TableScroll } from "../components/TableScroll";
 import { findState, stateView } from "../config/geography";
 import { stateCopy } from "../seo/copy";
 import { RouteDataContext } from "../seo/context";
@@ -57,7 +58,24 @@ export function StatePage() {
             <p>
               <Link to={`/explore?state=${query.data.code}`}>Open this state on the map</Link>
             </p>
-            <div className="table-scroll">
+            {query.data.regions.length > 0 ? (
+              <>
+                <h2>Regions</h2>
+                <ul className="plain-index">
+                  {query.data.regions.map((region) => (
+                    <li key={region.slug}>
+                      <strong>{region.name}</strong>
+                      <span>
+                        {region.council_count == null
+                          ? "Council count not recorded"
+                          : `${region.council_count} councils`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+            <TableScroll>
               <table className="data">
                 <caption>
                   {query.data.dataset_connected
@@ -91,7 +109,7 @@ export function StatePage() {
                   )}
                 </tbody>
               </table>
-            </div>
+            </TableScroll>
           </>
         ) : null}
       </div>

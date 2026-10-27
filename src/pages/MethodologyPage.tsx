@@ -3,6 +3,7 @@ import { fetchExport, fetchMethodology } from "../api/client";
 import { useApi } from "../api/useApi";
 import { PageIntro } from "../components/PageIntro";
 import { ErrorState, LoadingState } from "../components/States";
+import { TableScroll } from "../components/TableScroll";
 import { formatNumber } from "../lib/format";
 import { methodologyCopy } from "../seo/copy";
 import { RouteDataContext } from "../seo/context";
@@ -49,7 +50,7 @@ export function MethodologyPage() {
             An input that is missing is skipped. The highest tier whose minimum is at or below the
             result supplies the word beside the number: Clear, Steady, Mixed, Thin, or Sparse.
           </p>
-          <div className="table-scroll">
+          <TableScroll>
             <table className="data formula-table">
               <caption>Draft groups</caption>
               <thead>
@@ -72,8 +73,8 @@ export function MethodologyPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-          <div className="table-scroll">
+          </TableScroll>
+          <TableScroll>
             <table className="data">
               <caption>Words for the result</caption>
               <thead>
@@ -93,7 +94,7 @@ export function MethodologyPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           <h2>Personal weights</h2>
           <p>
             The match page does not invent a second score. It keeps these inputs and changes how

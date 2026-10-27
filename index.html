@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#f4f6fb" />
     <!--seo-start-->
     <title>Australian suburbs</title>
     <meta
@@ -32,9 +33,11 @@
           var dark =
             stored === "dark" ||
             (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          var themeColor = document.querySelector('meta[name="theme-color"]');
           if (dark) {
             document.documentElement.dataset.theme = "dark";
             document.documentElement.style.colorScheme = "dark";
+            if (themeColor) themeColor.setAttribute("content", "#081226");
           }
         } catch (error) {
           /* Storage can be blocked. The page still renders in the light theme. */

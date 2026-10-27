@@ -34,7 +34,13 @@ export function SuburbPage() {
   const notOnFile =
     query.status === "error" && query.error instanceof ApiError && query.error.status === 404;
   const copy = suburbCopy(state, slug, place, notOnFile);
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
+  const placeKey = `${state}:${slug}`;
+  const [trackedPlace, setTrackedPlace] = useState(placeKey);
+  if (trackedPlace !== placeKey) {
+    setTrackedPlace(placeKey);
+    setCopyState("idle");
+  }
   const kept = useSyncExternalStore(
     subscribeShortlist,
     () => shortlistSnapshot().some((item) => item.state === state && item.slug === slug),
@@ -46,9 +52,9 @@ export function SuburbPage() {
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
+      setCopyState("copied");
     } catch {
-      setCopied(false);
+      setCopyState("failed");
     }
   }
 
@@ -129,14 +135,19 @@ export function SuburbPage() {
         </dl>
         <div className="actions">
           <button type="button" className="button-line" onClick={() => void copyLink()}>
-            {copied ? "Link copied" : "Copy link"}
+            {copyState === "copied"
+              ? "Link copied"
+              : copyState === "failed"
+                ? "Could not copy"
+                : "Copy link"}
           </button>
           <button type="button" className="button-line" onClick={keep} disabled={!place}>
             {kept ? "Kept on this browser" : "Keep"}
           </button>
           <span className="status-line" role="status">
-            {copied ? "The address is on the clipboard." : ""}
-            {!place && !copied ? "You can keep a place once it is on file." : ""}
+            {copyState === "copied" ? "The address is on the clipboard." : ""}
+            {copyState === "failed" ? "The address could not be copied from this browser." : ""}
+            {!place && copyState === "idle" ? "You can keep a place once it is on file." : ""}
           </span>
         </div>
       </header>

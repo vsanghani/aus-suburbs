@@ -17,6 +17,8 @@ export function SearchField({
 }) {
   const navigate = useNavigate();
   const inputId = useId();
+  const listId = useId();
+  const statusId = useId();
   const [value, setValue] = useState(initial);
   const [result, setResult] = useState<{
     query: string;
@@ -31,6 +33,8 @@ export function SearchField({
   const councils = matched?.status === "ready" ? matched.councils : [];
   const notice = matched?.notice ?? "";
   const status = query.length < 2 ? "idle" : matched ? matched.status : "loading";
+  const open = suburbs.length > 0 || councils.length > 0;
+  const statusText = status === "loading" ? "Searching the record." : notice;
 
   useEffect(() => {
     if (query.length < 2) return undefined;
@@ -86,8 +90,13 @@ export function SearchField({
           value={value}
           autoFocus={autoFocus}
           autoComplete="off"
+          autoCapitalize="off"
           enterKeyHint="search"
           spellCheck={false}
+          aria-autocomplete="list"
+          aria-controls={listId}
+          aria-expanded={open}
+          aria-describedby={statusText ? statusId : undefined}
           onChange={(event) => setValue(event.target.value)}
         />
         <button type="submit">
@@ -95,11 +104,11 @@ export function SearchField({
           Search
         </button>
       </div>
-      <p className="status-line" role="status">
-        {status === "loading" ? "Searching the record." : notice}
+      <p id={statusId} className="status-line" role="status">
+        {statusText}
       </p>
-      {suburbs.length > 0 || councils.length > 0 ? (
-        <ul className="suggest">
+      {open ? (
+        <ul id={listId} className="suggest" aria-label="Matches">
           {suburbs.map((place) => (
             <li key={`s-${place.state}-${place.slug}`}>
               {onPick ? (
