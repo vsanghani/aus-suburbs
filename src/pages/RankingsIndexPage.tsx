@@ -16,16 +16,17 @@ export function RankingsIndexPage() {
         title="Rankings"
         lede="Each list answers one question with the draft formula. Your own weights live on the match page."
       />
-      <ul className="link-index">
-        {RANKINGS.map((ranking) => (
+      <ol className="ledger">
+        {RANKINGS.map((ranking, index) => (
           <li key={ranking.slug}>
             <Link to={`/rankings/${ranking.slug}`}>
+              <span className="idx">{String(index + 1).padStart(2, "0")}</span>
               <strong>{ranking.title}</strong>
               <span>{ranking.question}</span>
             </Link>
           </li>
         ))}
-      </ul>
+      </ol>
     </main>
   );
 }

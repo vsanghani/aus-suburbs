@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ApiError, fetchSearch } from "../api/client";
 import type { CouncilSummary, SuburbSummary } from "../api/types";
 import { councilPath, suburbPath } from "../lib/places";
+import { Icon } from "./Icon";
 
 export function SearchField({
   initial = "",
@@ -88,7 +89,10 @@ export function SearchField({
           spellCheck={false}
           onChange={(event) => setValue(event.target.value)}
         />
-        <button type="submit">Search</button>
+        <button type="submit">
+          <Icon name="search" />
+          Search
+        </button>
       </div>
       <p className="status-line" role="status">
         {status === "loading" ? "Searching the record." : notice}

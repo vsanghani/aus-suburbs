@@ -49,39 +49,41 @@ export function RankingPage() {
       <p>
         <Link to="/methodology">How the draft formula works</Link>
       </p>
-      <FilterPills
-        label="State"
-        value={stateCode}
-        onChange={setStateCode}
-        options={[
-          { id: "all", label: "All states" },
-          ...STATES.map((state) => ({ id: state.code, label: state.name })),
-        ]}
-      />
-      {query.status === "ready" && query.data.regions.length > 0 ? (
+      <div className="filter-bar">
         <FilterPills
-          label="Region"
-          value={region}
-          onChange={setRegion}
+          label="State"
+          value={stateCode}
+          onChange={setStateCode}
           options={[
-            { id: "all", label: "All regions" },
-            ...query.data.regions.map((item) => ({ id: item.slug, label: item.name })),
+            { id: "all", label: "All states" },
+            ...STATES.map((state) => ({ id: state.code, label: state.name })),
           ]}
         />
-      ) : (
-        <p>Region filters appear when the list returns them.</p>
-      )}
-      {query.status === "ready" && query.data.councils.length > 0 ? (
-        <FilterPills
-          label="Council"
-          value={council}
-          onChange={setCouncil}
-          options={[
-            { id: "all", label: "All councils" },
-            ...query.data.councils.map((item) => ({ id: item.slug, label: item.name })),
-          ]}
-        />
-      ) : null}
+        {query.status === "ready" && query.data.regions.length > 0 ? (
+          <FilterPills
+            label="Region"
+            value={region}
+            onChange={setRegion}
+            options={[
+              { id: "all", label: "All regions" },
+              ...query.data.regions.map((item) => ({ id: item.slug, label: item.name })),
+            ]}
+          />
+        ) : (
+          <p>Region filters appear when the list returns them.</p>
+        )}
+        {query.status === "ready" && query.data.councils.length > 0 ? (
+          <FilterPills
+            label="Council"
+            value={council}
+            onChange={setCouncil}
+            options={[
+              { id: "all", label: "All councils" },
+              ...query.data.councils.map((item) => ({ id: item.slug, label: item.name })),
+            ]}
+          />
+        ) : null}
+      </div>
       {query.status === "loading" ? <LoadingState /> : null}
       {missing ? <p>No list is published under this name.</p> : null}
       {query.status === "error" && !missing ? (

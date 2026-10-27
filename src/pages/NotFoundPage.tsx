@@ -4,7 +4,7 @@ import { Head } from "../seo/Head";
 export function NotFoundPage() {
   const location = useLocation();
   return (
-    <main className="page" id="content">
+    <main className="page missing" id="content">
       <Head
         title="Not found"
         description="This address is not part of the record."

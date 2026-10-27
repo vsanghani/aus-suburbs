@@ -1,7 +1,7 @@
 import { useEffect, useState, type ComponentType } from "react";
 import type { MapCanvasProps } from "./MapCanvas";
 
-/** Loads the map in the browser. The server renders the clay frame only. */
+/** Loads the map in the browser. The server renders the map frame only. */
 export function ClientMap(props: MapCanvasProps) {
   const [MapView, setMapView] = useState<ComponentType<MapCanvasProps> | null>(null);
 

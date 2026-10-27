@@ -20,6 +20,7 @@ import { SuburbPage } from "./pages/SuburbPage";
 export function App() {
   return (
     <>
+      <div className="atmosphere" aria-hidden="true" />
       <a className="skip-link" href="#content">
         Skip to content
       </a>

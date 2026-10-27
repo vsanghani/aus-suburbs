@@ -47,7 +47,7 @@ export function SearchPage() {
               emptyBody="The search ran and returned no places."
             />
           ) : (
-            <div>
+            <div className="result-sheet">
               <ul className="link-index">
                 {query.data.results.map((place) => (
                   <li key={`${place.state}-${place.slug}`}>

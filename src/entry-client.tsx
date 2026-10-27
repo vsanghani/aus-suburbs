@@ -5,8 +5,6 @@ import { App } from "./App";
 import { siteOrigin } from "./config/site";
 import { OriginContext, RouteDataContext } from "./seo/context";
 import { readRoutePayload } from "./seo/routeData";
-import "@fontsource-variable/public-sans";
-import "@fontsource-variable/fraunces/opsz.css";
 import "./styles/global.css";
 
 const root = document.getElementById("root");
