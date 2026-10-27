@@ -135,17 +135,20 @@ export function MapCanvas({
     if (!map || status !== "ready") return;
     const places = collection ?? { type: "FeatureCollection", features: [] };
     ensureGeoJson(map, "places", places);
+    // MapLibre paint cannot read CSS variables. Fills mirror --data-teal, lines mirror --accent, and the radius mirrors --data-blue.
+    const placeFill = theme === "dark" ? "#3ec8d4" : "#0e9aa7";
+    const placeLine = theme === "dark" ? "#7ddfea" : "#0a6470";
     ensureLayer(map, "places-fill", {
       id: "places-fill",
       type: "fill",
       source: "places",
-      paint: { "fill-color": "#8d3c2b", "fill-opacity": 0.28 },
+      paint: { "fill-color": placeFill, "fill-opacity": theme === "dark" ? 0.34 : 0.28 },
     });
     ensureLayer(map, "places-line", {
       id: "places-line",
       type: "line",
       source: "places",
-      paint: { "line-color": "#6f2e22", "line-width": 1.25 },
+      paint: { "line-color": placeLine, "line-width": 1.25 },
     });
     const radiusData = circle
       ? {
@@ -164,9 +167,12 @@ export function MapCanvas({
       id: "radius-fill",
       type: "fill",
       source: "radius",
-      paint: { "fill-color": "#6b4b1d", "fill-opacity": 0.18 },
+      paint: {
+        "fill-color": theme === "dark" ? "#7eb0e8" : "#2b6cb0",
+        "fill-opacity": theme === "dark" ? 0.22 : 0.18,
+      },
     });
-  }, [collection, circle, status]);
+  }, [collection, circle, status, theme]);
 
   return (
     <div className="map-frame">

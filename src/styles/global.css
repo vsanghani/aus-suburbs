@@ -35,10 +35,10 @@ body {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(46rem 34rem at -6% -10%, var(--wash-apricot), transparent 68%),
-    radial-gradient(38rem 30rem at 108% -4%, var(--wash-sage), transparent 70%),
-    radial-gradient(42rem 28rem at 82% 112%, var(--wash-clay), transparent 72%),
-    radial-gradient(26rem 20rem at 38% 42%, var(--wash-sand), transparent 70%), var(--paper);
+    radial-gradient(46rem 34rem at -6% -10%, var(--wash-sky), transparent 68%),
+    radial-gradient(38rem 30rem at 108% -4%, var(--wash-mint), transparent 70%),
+    radial-gradient(42rem 28rem at 82% 112%, var(--wash-teal), transparent 72%),
+    radial-gradient(26rem 20rem at 38% 42%, var(--wash-blue), transparent 70%), var(--paper);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -95,7 +95,7 @@ a {
 }
 
 a:hover {
-  color: var(--terracotta);
+  color: var(--accent);
 }
 
 :focus-visible {
@@ -103,8 +103,16 @@ a:hover {
   outline-offset: 3px;
 }
 
+.button-solid:focus-visible,
+.search-row button:focus-visible,
+.pill[aria-checked="true"]:focus-visible,
+.pill[aria-pressed="true"]:focus-visible,
+.tabs button[aria-selected="true"]:focus-visible {
+  outline-color: var(--ink);
+}
+
 ::selection {
-  background: var(--ochre-wash);
+  background: var(--selection);
   color: var(--ink);
 }
 
@@ -235,18 +243,18 @@ button {
   border: 1px solid var(--glass-line);
   box-shadow:
     inset 0 1px 0 var(--glass-sheen),
-    0 8px 22px rgba(86, 52, 28, 0.06);
+    var(--shadow-lift);
   border-radius: var(--radius-control);
 }
 
 .button-solid {
-  background-color: var(--terracotta-deep);
+  background-color: var(--accent-deep);
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 48%);
   color: var(--on-accent);
   border: 1px solid rgba(255, 255, 255, 0.28);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    0 8px 18px rgba(84, 36, 24, 0.16);
+    var(--shadow-accent);
   border-radius: var(--radius-control);
 }
 
@@ -360,7 +368,7 @@ button {
   .theme-switch button[aria-pressed="true"],
   .tabs button[aria-selected="true"],
   .search-row button {
-    background-color: var(--terracotta-deep);
+    background-color: var(--accent-deep);
     background-image: none;
     color: var(--on-accent);
   }
@@ -582,7 +590,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background-color: var(--terracotta-deep);
+  background-color: var(--accent-deep);
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 48%);
   color: var(--on-accent);
   border: 1px solid rgba(255, 255, 255, 0.28);
@@ -596,7 +604,7 @@ button {
 }
 
 .search-row button:hover {
-  background-color: var(--terracotta-deeper);
+  background-color: var(--accent-deeper);
   color: var(--on-accent);
 }
 
@@ -762,7 +770,7 @@ button {
 
 .link-index a:hover strong,
 .ledger a:hover strong {
-  color: var(--terracotta);
+  color: var(--accent);
 }
 
 .result-sheet {
@@ -898,7 +906,7 @@ button {
 .aside {
   max-width: 40rem;
   color: var(--ink-soft);
-  border-left: 2px solid var(--sage-mark);
+  border-left: 2px solid var(--data-green);
   padding-left: 0.9rem;
 }
 
@@ -923,7 +931,7 @@ button {
   font-size: 1.45rem;
   font-weight: 520;
   letter-spacing: -0.03em;
-  color: var(--terracotta);
+  color: var(--coral);
 }
 
 .measure {
@@ -941,7 +949,7 @@ button {
   width: 15px;
   height: 15px;
   border-radius: var(--radius-pill);
-  background: var(--terracotta-mark);
+  background: var(--data-teal);
   box-shadow: 0 0 0 4px var(--sheet);
 }
 
@@ -968,11 +976,11 @@ button {
 }
 
 .direction.positive {
-  color: var(--sage);
+  color: var(--sea);
 }
 
 .direction.negative {
-  color: var(--terracotta);
+  color: var(--coral);
 }
 
 .driver-points {
@@ -1195,7 +1203,7 @@ button {
 }
 
 .button-solid:hover {
-  background-color: var(--terracotta-deeper);
+  background-color: var(--accent-deeper);
   color: var(--on-accent);
 }
 
@@ -1259,7 +1267,7 @@ button {
 
 .pill[aria-checked="true"],
 .pill[aria-pressed="true"] {
-  background-color: var(--terracotta-deep);
+  background-color: var(--accent-deep);
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 50%);
   color: var(--on-accent);
   border-color: transparent;
@@ -1309,15 +1317,15 @@ button {
 .stack i {
   display: block;
   height: 100%;
-  background: var(--terracotta-mark);
+  background: var(--data-teal);
 }
 
 .stack i:nth-child(even) {
-  background: var(--ochre-mark);
+  background: var(--data-amber);
 }
 
 .stack i:nth-child(3n) {
-  background: var(--sage-mark);
+  background: var(--data-green);
 }
 
 .control-deck {
@@ -1354,18 +1362,18 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: var(--radius-pill);
-  background: var(--terracotta-deep);
+  background: var(--accent-deep);
   border: 2px solid var(--sheet);
-  box-shadow: 0 0 0 1px var(--terracotta-deep);
+  box-shadow: 0 0 0 1px var(--accent-deep);
 }
 
 input[type="range"]::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: var(--radius-pill);
-  background: var(--terracotta-deep);
+  background: var(--accent-deep);
   border: 2px solid var(--sheet);
-  box-shadow: 0 0 0 1px var(--terracotta-deep);
+  box-shadow: 0 0 0 1px var(--accent-deep);
 }
 
 .field {
@@ -1429,7 +1437,7 @@ fieldset {
 .check input {
   width: 1.05rem;
   height: 1.05rem;
-  accent-color: var(--terracotta-deep);
+  accent-color: var(--accent-deep);
 }
 
 .explore {
@@ -1460,7 +1468,7 @@ fieldset {
 .map-frame {
   position: relative;
   min-height: 28rem;
-  background: var(--clay);
+  background: var(--frame);
   border-radius: var(--radius-panel);
   overflow: hidden;
 }

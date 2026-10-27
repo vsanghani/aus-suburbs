@@ -68,9 +68,9 @@ export function TrendChart({
             opacity="0.45"
           />
         ) : null}
-        {area ? <path d={area} fill="var(--terracotta)" opacity="0.12" /> : null}
+        {area ? <path d={area} fill="var(--data-teal)" opacity="0.12" /> : null}
         {path ? (
-          <path d={path} fill="none" stroke="var(--terracotta)" strokeWidth="2.25" />
+          <path d={path} fill="none" stroke="var(--data-teal)" strokeWidth="2.25" />
         ) : (
           <text x={padX} y={height / 2} fill="currentColor" fontSize="14">
             No series

@@ -162,7 +162,12 @@ function comparePath(tokens: string[]): string {
   return `/compare?${params.toString()}`;
 }
 
-const CHART_STROKES = ["var(--terracotta)", "var(--ochre)", "var(--sage)", "var(--ink)"];
+const CHART_STROKES = [
+  "var(--data-teal)",
+  "var(--data-blue)",
+  "var(--data-green)",
+  "var(--data-coral)",
+];
 
 function CompareChart({ places, tokens }: { places: SuburbDetail[]; tokens: string[] }) {
   const groups = FORMULA.groups;
