@@ -1,7 +1,7 @@
 # CI for the database (Neon + Alembic)
 
-Three workflows manage schema changes on the Neon project `kerbfox-data`
-(Sydney, Postgres 17). None of them print connection strings, and none of them
+Three workflows manage schema changes on the project's Neon database
+(`empty-violet-00517600`, Sydney, Postgres 17). None of them print connection strings, and none of them
 change the existing `frontend` and `backend` checks in `ci.yml`.
 
 | Workflow               | Trigger                                                                                                         | What it does                                                                                                                                                                           |
@@ -14,7 +14,7 @@ change the existing `frontend` and `backend` checks in `ci.yml`.
 
 | Name                | Where                           | Used by       | Notes                                                                                 |
 | ------------------- | ------------------------------- | ------------- | ------------------------------------------------------------------------------------- |
-| `NEON_API_KEY`      | Repository secret               | PR workflow   | Neon API key able to create and delete branches in `kerbfox-data`.                    |
+| `NEON_API_KEY`      | Repository secret               | PR workflow   | Neon API key able to create and delete branches in the Neon project.                  |
 | `NEON_PROJECT_ID`   | Repository variable or secret   | PR workflow   | `empty-violet-00517600`. Not sensitive.                                               |
 | `DATABASE_URL_DEV`  | Repository secret               | dev workflow  | `kf_loader` role, **direct** (non-pooled) URL for the `dev` branch.                   |
 | `DATABASE_URL_PROD` | `production` environment secret | prod workflow | `kf_loader` role, direct URL for the `main` branch. Scope it to the environment only. |
