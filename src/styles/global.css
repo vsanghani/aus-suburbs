@@ -525,6 +525,7 @@ button {
 .search-form {
   position: relative;
   max-width: 40rem;
+  min-width: 0;
   margin: var(--space-5) 0 var(--space-3);
 }
 
@@ -540,12 +541,15 @@ button {
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  min-width: 0;
+  max-width: 100%;
   padding: 0.35rem 0.35rem 0.35rem 0.95rem;
   border-radius: 18px;
 }
 
 .search-row input {
-  flex: 1;
+  flex: 1 1 0;
+  width: 0;
   border: 0;
   background: transparent;
   font-family: var(--display);
@@ -638,7 +642,7 @@ button {
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(16rem, 0.72fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(15rem, 0.72fr);
   gap: var(--space-6);
   align-items: end;
   margin-bottom: var(--space-6);
@@ -1634,13 +1638,12 @@ fieldset {
   .ledger a,
   .driver-list li,
   .slider-row,
-  .seats,
-  .fact-row {
-    grid-template-columns: 1fr;
+  .seats {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .fact-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .explore-panel {
