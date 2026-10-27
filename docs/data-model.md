@@ -1,6 +1,6 @@
 # Data model
 
-National suburb store for Kerbfox. Phase 1 loads Victoria and Tasmania. The keys are national from the first revision, so later states do not need a new shape.
+National suburb store for the site. Phase 1 loads Victoria and Tasmania. The keys are national from the first revision, so later states do not need a new shape.
 
 The HTTP API does not read these tables yet. `GET /api/v1/*` still returns `dataset_connected: false`. `contracts/formula.json` remains the methodology the API serves. The database copies that document into `curated.formula_group` and `curated.score_tier` at migrate time so a later scorer and the page share one seed.
 
@@ -81,7 +81,7 @@ The public path is `{state}/{slug}`, generated and stored as `sal.path` (`vic/ri
 
 `curated.slugify_name` and `app.slug.slugify_name` do the same thing: strip a trailing ABS state suffix (`(Vic.)`, `(Tas.)`, `(NSW)`, and the same for the other states, including `OT`), turn `&` into `and`, drop apostrophes, and turn other non-alphanumerics into hyphens. A parenthetical that is not a state stays: `Ascot (Ballarat)` becomes `ascot-ballarat`.
 
-`curated.allocate_slug` appends `-2`, `-3`, and so on when the candidate is already a current slug or a retired one. A rename writes `curated.slug_redirect (state_code, old_slug) → sal_code`. Redirects point at the suburb, not at another slug, so they do not chain. A retired slug cannot be reused. `SAL_CODE_2021` cannot change. The rename trigger sets `kerbfox.slug_rename` for that statement so the collision check allows the in-progress rename.
+`curated.allocate_slug` appends `-2`, `-3`, and so on when the candidate is already a current slug or a retired one. A rename writes `curated.slug_redirect (state_code, old_slug) → sal_code`. Redirects point at the suburb, not at another slug, so they do not chain. A retired slug cannot be reused. `SAL_CODE_2021` cannot change. The rename trigger sets `kf.slug_rename` for that statement so the collision check allows the in-progress rename.
 
 SA4 and LGA slugs follow the same pattern and are unique per state. They are not redirected by this revision.
 

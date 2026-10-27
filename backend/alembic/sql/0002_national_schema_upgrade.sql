@@ -1,4 +1,4 @@
--- National schema for Kerbfox.
+-- National schema for the project.
 -- raw:     loader-owned extracts. Infrastructure creates the schema. This
 --         revision does not put tables in it.
 -- staging: a load lands here and can be rejected. The API does not read it.
@@ -1043,7 +1043,7 @@ BEGIN
      AND NEW.state_code IS NOT DISTINCT FROM OLD.state_code THEN
     RETURN NEW;
   END IF;
-  PERFORM set_config('kerbfox.slug_rename', OLD.sal_code, true);
+  PERFORM set_config('kf.slug_rename', OLD.sal_code, true);
   INSERT INTO curated.slug_redirect (state_code, old_slug, sal_code, redirected_on, reason)
   VALUES (OLD.state_code, OLD.slug, OLD.sal_code, CURRENT_DATE, 'slug changed');
   RETURN NEW;
@@ -1055,7 +1055,7 @@ RETURNS trigger
 LANGUAGE plpgsql
 AS $func$
 DECLARE
-  renaming text := current_setting('kerbfox.slug_rename', true);
+  renaming text := current_setting('kf.slug_rename', true);
 BEGIN
   IF EXISTS (
     SELECT 1
