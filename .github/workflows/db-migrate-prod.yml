@@ -1,0 +1,57 @@
+name: DB migrate (production)
+
+# Manual only. The `production` environment must have required reviewers configured
+# (Vivaswaan), so the job pauses until he approves it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "migrate-production" to confirm'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-migrate-prod
+  cancel-in-progress: false
+
+jobs:
+  migrate-prod:
+    name: migrate-prod
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Production migrations only ever run from `main`.
+    if: github.ref == 'refs/heads/main' && inputs.confirm == 'migrate-production'
+    environment: production
+    env:
+      NEON_DB_URL: ${{ secrets.DATABASE_URL_PROD }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Check required secrets are configured
+        run: |
+          if [ -z "${NEON_DB_URL}" ]; then
+            echo "::error::Environment secret DATABASE_URL_PROD is not set on the production environment. See docs/ci-database.md."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - run: pip install -e .
+
+      - name: alembic upgrade head (production)
+        run: |
+          DATABASE_URL="postgresql+psycopg://${NEON_DB_URL#*://}"
+          export DATABASE_URL
+          alembic upgrade head
+          alembic current
