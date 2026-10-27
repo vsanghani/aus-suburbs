@@ -1,4 +1,6 @@
 dist
+dist-server
+.vercel
 node_modules
 coverage
 playwright-report

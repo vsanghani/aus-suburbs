@@ -1,5 +1,7 @@
 node_modules
 dist
+dist-server
+.vercel
 .venv
 backend/.venv
 backend/*.egg-info

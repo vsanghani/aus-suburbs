@@ -16,6 +16,7 @@ ENV NODE_ENV=production
 ENV PORT=8080
 
 COPY --from=build /src/dist ./dist
+COPY --from=build /src/dist-server ./dist-server
 COPY --from=build /src/server ./server
 
 EXPOSE 8080

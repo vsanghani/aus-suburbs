@@ -8,9 +8,9 @@ No suburb rows, geometries, or scraped tables are included. The API returns empt
 
 Vite, React, TypeScript, and React Router on the frontend. MapLibre GL for maps. Plain CSS with the tokens in `src/styles/tokens.css`. Vitest and Playwright. ESLint and Prettier.
 
-FastAPI under `backend/` for the contract. Settings come from the environment. Alembic is initialised with an empty migration. Docker Compose runs PostGIS, Redis, the API, and a static build of the site.
+FastAPI under `backend/` for the contract. Settings come from the environment. Alembic is initialised with an empty migration. Docker Compose runs PostGIS, Redis, the API, and the Node server that renders the site.
 
-Vite with a small Node server, not a framework migration. Suburb HTML is rendered per request from the API. There are still no suburb pages to bake at build time. The section registry, the head helper, and the OpenAPI document are the parts that should stay stable while that work happens.
+Vite with a small Node server, not a framework migration. Suburb HTML is rendered per request from the API. There are still no suburb pages to bake at build time. Vercel runs that same renderer as a function. Docker Compose still runs the Node server. The section registry, the head helper, and the OpenAPI document are the parts that should stay stable while that work happens.
 
 ## Run it
 
@@ -49,18 +49,19 @@ The site is on port 8080 and the API on port 8000. Compose does not read `.env`.
 
 ## Scripts
 
-| Command            | What it does                                               |
-| ------------------ | ---------------------------------------------------------- |
-| `npm run dev`      | Node server with Vite middleware (port 5173)               |
-| `npm run start`    | Production Node server (port 4173, or `PORT`)              |
-| `npm test`         | Vitest                                                     |
-| `npm run lint`     | ESLint and Prettier                                        |
-| `npm run build`    | Typecheck and production build                             |
-| `npm run test:e2e` | Build, then Playwright smoke tests                         |
-| `make test`        | Frontend tests and pytest                                  |
-| `make lint`        | Frontend lint and Ruff                                     |
-| `make openapi`     | Rewrite `contracts/openapi.json` and `src/api/schema.d.ts` |
-| `make compose`     | `docker compose up --build`                                |
+| Command                  | What it does                                                     |
+| ------------------------ | ---------------------------------------------------------------- |
+| `npm run dev`            | Node server with Vite middleware (port 5173)                     |
+| `npm run start`          | Production Node server (port 4173, or `PORT`)                    |
+| `npm test`               | Vitest                                                           |
+| `npm run lint`           | ESLint and Prettier                                              |
+| `npm run build`          | Typecheck and production build                                   |
+| `npm run emulate:vercel` | After a build, static files plus the Vercel function (port 4174) |
+| `npm run test:e2e`       | Build, then Playwright smoke tests                               |
+| `make test`              | Frontend tests and pytest                                        |
+| `make lint`              | Frontend lint and Ruff                                           |
+| `make openapi`           | Rewrite `contracts/openapi.json` and `src/api/schema.d.ts`       |
+| `make compose`           | `docker compose up --build`                                      |
 
 Backend checks, from `backend/` with the venv active: `ruff check .`, `ruff format --check .`, `pytest`.
 
@@ -169,13 +170,15 @@ The pages already handle loading, not-connected, empty, not-found, and transport
 
 ## Deploy the frontend
 
-`npm run build` writes the client to `dist/` and the server bundle to `dist/server/`. `npm run start` serves both. Document requests are rendered; hashed files under `dist/assets` are static. Unknown paths are rendered, not rewritten to an empty `index.html`.
+`npm run build` writes the client to `dist/` and the server bundle to `dist-server/`. The HTML template is moved to `dist-server/template.html` so a static host does not serve an empty shell for `/`. `npm run start` serves both. Document requests are rendered; hashed files under `dist/assets` are static. Unknown paths are rendered, not rewritten to an empty `index.html`.
 
-Set `VITE_SITE_ORIGIN` to the public origin and `SSR_API_BASE` to the API the server can reach. The browser keeps calling `/api` on the same host; the Node process proxies it.
+Set `VITE_SITE_ORIGIN` to the public origin and `SSR_API_BASE` to the API the server can reach. The browser keeps calling `/api` on the same host; the server proxies it. Leave `VITE_API_BASE` empty unless the browser should call the API host directly.
 
 **Docker Compose.** The `web` service is that Node server, on port 8080. `deploy/nginx.conf` is the previous static image and is not what Compose runs.
 
-**Vercel and Cloudflare Pages.** `vercel.json` and `public/_redirects` still fall back to the client shell. Those hosts do not run the renderer, so suburb HTML is not unique there. Use them only as a client fallback. The SEO notes in `docs/handoff.md` explain the gap.
+**Vercel.** The production host. `vercel.json` serves files from `dist/` and rewrites every other path to the Node.js function in `api/ssr.js`, which uses the same renderer as `npm run start`. Framework preset in the dashboard is **Other** (`framework: null` in `vercel.json`). Required environment variables are `VITE_SITE_ORIGIN` (production origin, set by the owner) and `SSR_API_BASE` (the deployed API). The full cache policy, dashboard settings, and tradeoffs are in `docs/handoff.md`. After a build, `npm run emulate:vercel` checks that routing locally on port 4174.
+
+**Cloudflare Pages.** `public/_redirects` is still a static shell. It is not the production host.
 
 The API is a container. Compose is the local shape; the same image runs anywhere that can host a container next to PostGIS and Redis.
 
@@ -191,5 +194,5 @@ Backend tests hit every route with `TestClient` and check that the committed Ope
 - The OpenAPI title is “Places API”, so a rename of the product does not touch the backend.
 - Database role and database name are `places`, for the same reason.
 - Methodology copy is served by the API from `contracts/formula.json`. The score skeleton on a suburb page also imports that file, so the driver labels render before the methodology request returns.
-- Suburb pages are client-rendered. Pre-rendering is deferred until there are real paths to render.
+- Suburb pages are server-rendered on each request. Pre-rendering waits until the listing endpoint is real. Vercel runs that renderer; see `docs/handoff.md`.
 - There is no dev fixture of fake suburbs.

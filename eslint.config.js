@@ -8,6 +8,8 @@ export default tseslint.config(
   {
     ignores: [
       "dist/**",
+      "dist-server/**",
+      ".vercel/**",
       "coverage/**",
       "playwright-report/**",
       "test-results/**",
@@ -29,12 +31,19 @@ export default tseslint.config(
     },
   },
   {
-    files: ["server/**/*.mjs"],
+    files: ["server/**/*.mjs", "api/**/*.js"],
     languageOptions: {
       globals: {
         URL: "readonly",
+        URLSearchParams: "readonly",
         process: "readonly",
         console: "readonly",
+        fetch: "readonly",
+        Request: "readonly",
+        Response: "readonly",
+        Headers: "readonly",
+        AbortSignal: "readonly",
+        TextEncoder: "readonly",
       },
     },
   },
