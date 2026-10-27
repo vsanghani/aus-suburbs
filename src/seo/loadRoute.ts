@@ -10,6 +10,7 @@ import type {
   StateDetail,
 } from "../api/types";
 import { findState } from "../config/geography";
+import { EXPLORE_LAYER_IDS } from "../config/map";
 import { findRanking } from "../config/rankings";
 import { parsePlaceTokens } from "../lib/places";
 import {
@@ -85,7 +86,10 @@ export async function loadRouteData(
   }
 
   if (parts[0] === "rankings" && parts.length === 2 && parts[1]) {
-    const key = rankingKey(parts[1]);
+    const stateCode = url.searchParams.get("state") ?? "all";
+    const region = url.searchParams.get("region") ?? "all";
+    const council = url.searchParams.get("council") ?? "all";
+    const key = rankingKey(parts[1], stateCode, region, council);
     if (!findRanking(parts[1])) {
       data.ranking = {
         key,
@@ -95,9 +99,14 @@ export async function loadRouteData(
       };
       return data;
     }
+    const filters = new URLSearchParams();
+    if (stateCode !== "all") filters.set("state", stateCode);
+    if (region !== "all") filters.set("region", region);
+    if (council !== "all") filters.set("council", council);
+    const filterQuery = filters.toString();
     data.ranking = await loadResource<RankingResponse>(
       key,
-      `/api/v1/rankings/${parts[1]}`,
+      `/api/v1/rankings/${parts[1]}${filterQuery ? `?${filterQuery}` : ""}`,
       apiBase,
       fetchImpl,
       "No list is published under this name.",
@@ -131,10 +140,15 @@ export async function loadRouteData(
   if (path === "/explore") {
     const metric = url.searchParams.get("metric") ?? "score";
     const stateCode = url.searchParams.get("state") ?? "all";
+    const layers = (url.searchParams.get("layers") ?? "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => EXPLORE_LAYER_IDS.has(item));
     const params = new URLSearchParams({ metric });
     if (stateCode !== "all") params.set("state", stateCode);
+    if (layers.length > 0) params.set("layers", layers.join(","));
     data.explore = await loadResource<ExploreResponse>(
-      exploreKey(metric, stateCode, []),
+      exploreKey(metric, stateCode, layers),
       `/api/v1/explore?${params.toString()}`,
       apiBase,
       fetchImpl,

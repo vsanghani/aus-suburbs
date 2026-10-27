@@ -3,6 +3,7 @@ import type { RankingResponse } from "../api/types";
 import { formatValue } from "../lib/format";
 import { suburbPath } from "../lib/places";
 import { DatasetNotice } from "./States";
+import { TableScroll } from "./TableScroll";
 
 export function RankTable({ ranking }: { ranking: RankingResponse }) {
   if (!ranking.dataset_connected) {
@@ -16,7 +17,7 @@ export function RankTable({ ranking }: { ranking: RankingResponse }) {
     );
   }
   return (
-    <div className="table-scroll">
+    <TableScroll label={`${ranking.ranking.title} rows`}>
       <table className="data">
         <caption>
           {ranking.total == null
@@ -52,6 +53,6 @@ export function RankTable({ ranking }: { ranking: RankingResponse }) {
           )}
         </tbody>
       </table>
-    </div>
+    </TableScroll>
   );
 }

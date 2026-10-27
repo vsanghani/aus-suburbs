@@ -65,6 +65,10 @@ export function normaliseWeights(values: WeightValues): WeightValues {
   );
 }
 
+export function weightsMatch(left: WeightValues, right: WeightValues): boolean {
+  return WEIGHTS.every((weight) => (left[weight.id] ?? 0) === (right[weight.id] ?? 0));
+}
+
 export function readWeights(params: URLSearchParams): WeightValues {
   const values: WeightValues = {};
   for (const weight of WEIGHTS) {

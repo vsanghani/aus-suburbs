@@ -14,9 +14,9 @@ export class RouteErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <div className="page">
+        <main className="page" id="content">
           <ErrorState error={this.state.error} onRetry={() => this.setState({ error: null })} />
-        </div>
+        </main>
       );
     }
     return this.props.children;

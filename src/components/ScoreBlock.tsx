@@ -35,7 +35,7 @@ export function ScoreBlock({ score }: { score: ScoreDetail | null }) {
               <span className={positive ? "direction positive" : "direction negative"}>
                 {positive ? "Adds" : "Subtracts"}
               </span>
-              <span>
+              <span className="driver-label">
                 {group.label}
                 <small className="cell-note">
                   Draft ceiling {formatNumber(group.draft_max_points)}

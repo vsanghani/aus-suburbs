@@ -3,9 +3,11 @@ import { Link, useSearchParams } from "react-router-dom";
 import { fetchCompare } from "../api/client";
 import type { SuburbDetail } from "../api/types";
 import { useApi } from "../api/useApi";
+import { CompareChart } from "../components/CompareChart";
 import { PageIntro } from "../components/PageIntro";
 import { SearchField } from "../components/SearchField";
 import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
+import { TableScroll } from "../components/TableScroll";
 import { FORMULA } from "../config/formula";
 import { formatValue, humaniseSlug } from "../lib/format";
 import { parsePlaceTokens, splitToken, suburbPath } from "../lib/places";
@@ -96,15 +98,26 @@ export function ComparePage() {
       {query.status === "ready" && query.data.omitted.length > 0 ? (
         <p>Left off: {query.data.omitted.join(", ")}.</p>
       ) : null}
-      {query.status === "ready" ? (
+      {query.status === "ready" && !query.data.dataset_connected ? (
         <DatasetNotice
-          connected={query.data.dataset_connected}
+          connected={false}
           notice={query.data.notice}
           emptyTitle="Nothing to compare"
           emptyBody="The places returned no figures."
         />
       ) : null}
-      <div className="table-scroll">
+      {query.status === "ready" &&
+      query.data.dataset_connected &&
+      tokens.length > 0 &&
+      places.length === 0 ? (
+        <DatasetNotice
+          connected
+          notice={query.data.notice}
+          emptyTitle="Nothing to compare"
+          emptyBody="The places returned no figures."
+        />
+      ) : null}
+      <TableScroll label="Comparison figures">
         <table className="data">
           <caption>
             {tokens.length === 0
@@ -116,9 +129,10 @@ export function ComparePage() {
               <th scope="col">Figure</th>
               {tokens.map((token) => {
                 const { state, slug } = splitToken(token);
+                const loaded = places.find((place) => place.state === state && place.slug === slug);
                 return (
                   <th key={token} scope="col">
-                    <Link to={suburbPath(state, slug)}>{humaniseSlug(slug)}</Link>
+                    <Link to={suburbPath(state, slug)}>{loaded?.name ?? humaniseSlug(slug)}</Link>
                   </th>
                 );
               })}
@@ -156,90 +170,9 @@ export function ComparePage() {
               </tbody>
             ))}
         </table>
-      </div>
+      </TableScroll>
       <CompareChart places={places} tokens={tokens} />
     </main>
-  );
-}
-
-const CHART_STROKES = [
-  "var(--data-navy)",
-  "var(--data-blue)",
-  "var(--data-sea)",
-  "var(--data-coral)",
-];
-
-function CompareChart({ places, tokens }: { places: SuburbDetail[]; tokens: string[] }) {
-  const groups = FORMULA.groups;
-  const series = tokens
-    .map((token, index) => {
-      const place = placeFor(places, token);
-      const drivers = place?.score_detail?.drivers ?? [];
-      const values = groups.map((group) => {
-        const driver = drivers.find((item) => item.id === group.id);
-        return typeof driver?.chart_value === "number" ? driver.chart_value : null;
-      });
-      const complete = values.every((value) => value != null);
-      return {
-        token,
-        index,
-        values,
-        complete,
-        name: place?.name ?? humaniseSlug(splitToken(token).slug),
-      };
-    })
-    .filter((item) => item.complete);
-  const spokes = groups.map((group, index) => {
-    const angle = (Math.PI * 2 * index) / groups.length - Math.PI / 2;
-    return {
-      id: group.id,
-      x: 100 + Math.cos(angle) * 70,
-      y: 100 + Math.sin(angle) * 70,
-    };
-  });
-  const label =
-    series.length === 0
-      ? "Comparison chart with no scores"
-      : `Comparison chart for ${series.map((item) => item.name).join(", ")}`;
-  return (
-    <figure className="chart">
-      <svg viewBox="0 0 200 200" role="img" aria-label={label}>
-        {spokes.map((spoke) => (
-          <line
-            key={spoke.id}
-            x1="100"
-            y1="100"
-            x2={spoke.x}
-            y2={spoke.y}
-            stroke="currentColor"
-            strokeWidth="1"
-          />
-        ))}
-        <circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" strokeWidth="1" />
-        {series.map((item) => {
-          const points = item.values.map((value, index) => {
-            const angle = (Math.PI * 2 * index) / groups.length - Math.PI / 2;
-            const radius = ((value ?? 0) / 100) * 70;
-            return `${100 + Math.cos(angle) * radius},${100 + Math.sin(angle) * radius}`;
-          });
-          return (
-            <polygon
-              key={item.token}
-              points={points.join(" ")}
-              fill={CHART_STROKES[item.index] ?? "currentColor"}
-              fillOpacity="0.08"
-              stroke={CHART_STROKES[item.index] ?? "currentColor"}
-              strokeWidth="1.75"
-            />
-          );
-        })}
-      </svg>
-      <figcaption>
-        {series.length === 0
-          ? "No chart values are loaded. A place needs a 0–100 chart value on every driver."
-          : "Chart values are 0–100 positions supplied with the composite. They are not the points themselves."}
-      </figcaption>
-    </figure>
   );
 }
 

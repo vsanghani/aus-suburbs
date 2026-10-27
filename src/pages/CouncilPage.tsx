@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ApiError, fetchCouncil } from "../api/client";
 import { useApi } from "../api/useApi";
 import { ErrorState, LoadingState } from "../components/States";
+import { TableScroll } from "../components/TableScroll";
 import { findState } from "../config/geography";
 import { formatNumber, humaniseSlug } from "../lib/format";
 import { suburbPath } from "../lib/places";
@@ -64,7 +65,7 @@ export function CouncilPage() {
           <h2>{section.title}</h2>
           <p className="lede">{section.lede}</p>
           {section.id === "suburbs" ? (
-            <div className="table-scroll">
+            <TableScroll>
               <table className="data">
                 <caption>
                   {place?.dataset_connected
@@ -98,7 +99,7 @@ export function CouncilPage() {
                   )}
                 </tbody>
               </table>
-            </div>
+            </TableScroll>
           ) : (
             <p className="empty-line">No figures are on file for this section.</p>
           )}
