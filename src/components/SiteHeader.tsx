@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type MouseEvent } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { site } from "../config/site";
-import { readShortlist, subscribeShortlist } from "../lib/shortlist";
 import { preloadMap } from "../lib/preloadMap";
-import { applyTheme, currentTheme, type ThemeName } from "../lib/theme";
+import { shortlistSnapshot, subscribeShortlist } from "../lib/shortlist";
+import { applyTheme, useThemeName, type ThemeName } from "../lib/theme";
+import { Icon } from "./Icon";
 
 const links = [
   { to: "/explore", label: "Explore", preload: true },
@@ -16,12 +17,10 @@ export function SiteHeader() {
   const location = useLocation();
   const [openPath, setOpenPath] = useState<string | null>(null);
   const open = openPath === location.pathname;
-  const [theme, setTheme] = useState<ThemeName>(() => currentTheme());
-  const [kept, setKept] = useState(() => readShortlist().length);
+  const theme = useThemeName();
+  const kept = useSyncExternalStore(subscribeShortlist, keptCount, () => 0);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
-
-  useEffect(() => subscribeShortlist(() => setKept(readShortlist().length)), []);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -37,70 +36,54 @@ export function SiteHeader() {
 
   function choose(next: ThemeName) {
     applyTheme(next);
-    setTheme(next);
-  }
-
-  function closeMenu(restoreFocus: boolean) {
-    setOpenPath(null);
-    if (restoreFocus) toggleRef.current?.focus();
-  }
-
-  function onNavClick(event: MouseEvent<HTMLElement>) {
-    const target = event.target;
-    if (target instanceof Element && target.closest("a")) closeMenu(false);
   }
 
   return (
     <header className={open ? "site-header is-open" : "site-header"}>
-      <NavLink className="wordmark" to="/" end>
+      <Link className="wordmark" to="/">
         {site.name}
-      </NavLink>
-      <button
-        ref={toggleRef}
-        type="button"
-        className="nav-toggle"
-        aria-expanded={open}
-        aria-controls="primary-nav"
-        onClick={() => (open ? closeMenu(false) : setOpenPath(location.pathname))}
-      >
-        {open ? "Close" : "Menu"}
-      </button>
-      <nav
-        ref={navRef}
-        id="primary-nav"
-        className="site-nav"
-        aria-label="Primary"
-        onClick={onNavClick}
-      >
+      </Link>
+      <nav ref={navRef} className="site-nav" id="site-nav" aria-label="Primary">
         {links.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
+            onClick={() => setOpenPath(null)}
             onMouseEnter={link.preload ? preloadMap : undefined}
             onFocus={link.preload ? preloadMap : undefined}
           >
             {link.label}
           </NavLink>
         ))}
-        <NavLink to="/shortlist">{kept > 0 ? `Kept ${kept}` : "Kept"}</NavLink>
+        <NavLink to="/shortlist" onClick={() => setOpenPath(null)}>
+          {kept > 0 ? `Kept ${kept}` : "Kept"}
+        </NavLink>
       </nav>
       <div className="theme-switch" role="group" aria-label="Colour theme">
         <button type="button" aria-pressed={theme === "light"} onClick={() => choose("light")}>
-          Light
+          <Icon name="sun" />
+          <span className="theme-label">Light</span>
         </button>
         <button type="button" aria-pressed={theme === "dark"} onClick={() => choose("dark")}>
-          Dark
+          <Icon name="moon" />
+          <span className="theme-label">Dark</span>
         </button>
       </div>
-      {open ? (
-        <button
-          type="button"
-          className="nav-scrim"
-          tabIndex={-1}
-          aria-hidden="true"
-          onClick={() => closeMenu(true)}
-        />
-      ) : null}
+      <button
+        ref={toggleRef}
+        type="button"
+        className="nav-toggle"
+        aria-expanded={open}
+        aria-controls="site-nav"
+        onClick={() => setOpenPath(open ? null : location.pathname)}
+      >
+        <Icon name={open ? "close" : "menu"} />
+        {open ? "Close" : "Menu"}
+      </button>
     </header>
   );
+}
+
+function keptCount(): number {
+  return shortlistSnapshot().length;
 }

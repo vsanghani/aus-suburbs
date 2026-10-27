@@ -119,6 +119,17 @@ export type SuburbDetail = SuburbSummary & {
   geometry: Record<string, unknown> | null;
 };
 
+/** Catalogue page for the sitemap. Empty until a dataset is connected. */
+export type SuburbListResponse = {
+  state: string | null;
+  dataset_connected: boolean;
+  total: number | null;
+  offset: number;
+  limit: number;
+  suburbs: SuburbSummary[];
+  notice: string;
+};
+
 export type CouncilSummary = {
   state: string;
   slug: string;

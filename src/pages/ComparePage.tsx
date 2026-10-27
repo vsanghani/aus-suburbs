@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchCompare } from "../api/client";
 import type { SuburbDetail } from "../api/types";
@@ -10,18 +11,27 @@ import { TableScroll } from "../components/TableScroll";
 import { FORMULA } from "../config/formula";
 import { formatValue, humaniseSlug } from "../lib/format";
 import { parsePlaceTokens, splitToken, suburbPath } from "../lib/places";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { compareCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
+import { Head } from "../seo/Head";
+import { compareKey } from "../seo/keys";
+import { resourceSeed } from "../seo/routeData";
 import { registry } from "../metrics/registry";
 
 export function ComparePage() {
   const [params, setParams] = useSearchParams();
+  const routeData = useContext(RouteDataContext);
   const tokens = parsePlaceTokens(params);
-  useDocumentTitle("Compare");
-  const key = tokens.join("|");
-  const query = useApi(`compare:${key}`, (signal) => fetchCompare(tokens, signal));
+  const key = compareKey(tokens);
+  const query = useApi(
+    key,
+    (signal) => fetchCompare(tokens, signal),
+    resourceSeed(routeData.compare, key),
+  );
+  const copy = compareCopy(tokens);
 
   function addPlace(state: string, slug: string) {
-    const token = `${state}:${slug}`;
+    const token = `${state.toLowerCase()}:${slug.toLowerCase()}`;
     if (tokens.includes(token) || tokens.length >= 4) return;
     const next = new URLSearchParams(params);
     next.append("p", token);
@@ -40,6 +50,7 @@ export function ComparePage() {
 
   return (
     <main className="page" id="content">
+      <Head {...copy} />
       <PageIntro
         kicker="Side by side"
         title="Compare"
@@ -50,37 +61,38 @@ export function ComparePage() {
       ) : (
         <SearchField onPick={(place) => addPlace(place.state, place.slug)} />
       )}
-      <ol className="seats">
-        {[0, 1, 2, 3].map((index) => {
-          const token = tokens[index];
-          if (!token) {
+      <div className="seat-tray">
+        <div className="seats">
+          {[0, 1, 2, 3].map((index) => {
+            const token = tokens[index];
+            if (!token) {
+              return (
+                <div className="seat" key={index}>
+                  <span>Seat {index + 1}</span>
+                  Empty
+                </div>
+              );
+            }
+            const { state, slug } = splitToken(token);
+            const loaded = places.find((place) => place.state === state && place.slug === slug);
             return (
-              <li className="seat" key={index}>
+              <div className="seat" key={token}>
                 <span>Seat {index + 1}</span>
-                <p className="empty-line">Empty</p>
-              </li>
+                <strong>{loaded?.name ?? humaniseSlug(slug)}</strong>
+                <small>{loaded ? state.toUpperCase() : "Not on file"}</small>
+                <button
+                  type="button"
+                  className="button-line"
+                  onClick={() => removePlace(token)}
+                  aria-label={`Remove ${loaded?.name ?? humaniseSlug(slug)}`}
+                >
+                  Remove
+                </button>
+              </div>
             );
-          }
-          const { state, slug } = splitToken(token);
-          const loaded = places.find((place) => place.state === state && place.slug === slug);
-          const name = loaded?.name ?? humaniseSlug(slug);
-          return (
-            <li className="seat" key={token}>
-              <span>Seat {index + 1}</span>
-              <strong>{name}</strong>
-              <small>{loaded ? state.toUpperCase() : "Not on file"}</small>
-              <button
-                type="button"
-                className="button-line"
-                aria-label={`Remove ${name}`}
-                onClick={() => removePlace(token)}
-              >
-                Remove
-              </button>
-            </li>
-          );
-        })}
-      </ol>
+          })}
+        </div>
+      </div>
       {query.status === "loading" ? <LoadingState /> : null}
       {query.status === "error" ? <ErrorState error={query.error} onRetry={query.retry} /> : null}
       {query.status === "ready" && query.data.omitted.length > 0 ? (
@@ -159,7 +171,7 @@ export function ComparePage() {
             ))}
         </table>
       </TableScroll>
-      <CompareChart tokens={tokens} places={places} />
+      <CompareChart places={places} tokens={tokens} />
     </main>
   );
 }

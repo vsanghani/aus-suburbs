@@ -8,9 +8,17 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM nginx:1.27-alpine
+FROM node:22-alpine
 
-COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /src/dist /usr/share/nginx/html
+WORKDIR /app
 
-EXPOSE 80
+ENV NODE_ENV=production
+ENV PORT=8080
+
+COPY --from=build /src/dist ./dist
+COPY --from=build /src/dist-server ./dist-server
+COPY --from=build /src/server ./server
+
+EXPOSE 8080
+
+CMD ["node", "server/index.mjs"]

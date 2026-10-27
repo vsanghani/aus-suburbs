@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchMatch } from "../api/client";
 import { useApi } from "../api/useApi";
@@ -8,25 +8,22 @@ import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
 import { STATES } from "../config/geography";
 import { formatShare } from "../lib/format";
 import { suburbPath } from "../lib/places";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
-import {
-  normaliseWeights,
-  PRESETS,
-  readWeights,
-  WEIGHTS,
-  weightsMatch,
-  type WeightValues,
-} from "../lib/weights";
+import { matchCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
+import { Head } from "../seo/Head";
+import { resourceSeed } from "../seo/routeData";
+import { normaliseWeights, PRESETS, readWeights, WEIGHTS, type WeightValues } from "../lib/weights";
 
 export function MatchPage() {
   const [params, setParams] = useSearchParams();
-  useDocumentTitle("Match");
+  const routeData = useContext(RouteDataContext);
   const [values, setValues] = useState<WeightValues>(() => readWeights(params));
   const [budgetWeekly, setBudgetWeekly] = useState(params.get("budget_weekly") ?? "");
   const [commuteTo, setCommuteTo] = useState(params.get("commute_to") ?? "");
   const [needsSchools, setNeedsSchools] = useState(params.get("needs_schools") === "true");
   const [stateCode, setStateCode] = useState(params.get("state") ?? "all");
   const normalised = normaliseWeights(values);
+  const presetId = PRESETS.find((preset) => sameWeights(preset.values, values))?.id;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -41,84 +38,92 @@ export function MatchPage() {
     return () => window.clearTimeout(timer);
   }, [values, budgetWeekly, commuteTo, needsSchools, stateCode, setParams]);
 
-  const query = useApi(params.toString(), (signal) => fetchMatch(params, signal));
+  const matchParams = params.toString();
+  const query = useApi(
+    matchParams,
+    (signal) => fetchMatch(params, signal),
+    resourceSeed(routeData.match, matchParams),
+  );
 
   return (
     <main className="page" id="content">
+      <Head {...matchCopy()} />
       <PageIntro
         kicker="Weights"
         title="Match"
         lede="Move the sliders. The list re-ranks suburbs by the mix you set, once scores exist."
       />
-      <div className="pills" role="group" aria-label="Starting mixes">
-        {PRESETS.map((preset) => (
-          <button
-            key={preset.id}
-            type="button"
-            className="pill"
-            aria-pressed={weightsMatch(values, preset.values)}
-            onClick={() => setValues(preset.values)}
-          >
-            {preset.label}
-          </button>
-        ))}
-      </div>
-      <div className="stack" aria-hidden="true">
-        {WEIGHTS.map((weight) => (
-          <i key={weight.id} style={{ width: formatShare(normalised[weight.id] ?? 0) }} />
-        ))}
-      </div>
-      <p>
-        The bar is your mix, normalised to 100. The address keeps it, so the link can be shared.
-      </p>
-      {WEIGHTS.map((weight) => (
-        <div className="slider-row" key={weight.id}>
-          <label htmlFor={`weight-${weight.id}`}>{weight.label}</label>
-          <input
-            id={`weight-${weight.id}`}
-            type="range"
-            min={0}
-            max={100}
-            value={values[weight.id] ?? 50}
-            aria-describedby={`weight-${weight.id}-help`}
-            aria-valuetext={`${values[weight.id] ?? 50} out of 100, ${formatShare(normalised[weight.id] ?? 0)} of the mix`}
-            onChange={(event) =>
-              setValues((current) => ({ ...current, [weight.id]: Number(event.target.value) }))
-            }
-          />
-          <span className="num">{formatShare(normalised[weight.id] ?? 0)}</span>
-          <p id={`weight-${weight.id}-help`}>{weight.help}</p>
+      <div className="control-deck">
+        <div className="pills" role="group" aria-label="Starting mixes">
+          {PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              className="pill"
+              aria-pressed={preset.id === presetId}
+              onClick={() => setValues(preset.values)}
+            >
+              {preset.label}
+            </button>
+          ))}
         </div>
-      ))}
-      <label className="field">
-        Weekly housing budget, optional
-        <input
-          inputMode="numeric"
-          value={budgetWeekly}
-          onChange={(event) => setBudgetWeekly(event.target.value.replace(/[^\d]/g, ""))}
+        <div className="stack" aria-hidden="true">
+          {WEIGHTS.map((weight) => (
+            <i key={weight.id} style={{ width: formatShare(normalised[weight.id] ?? 0) }} />
+          ))}
+        </div>
+        <p>
+          The bar is your mix, normalised to 100. The address keeps it, so the link can be shared.
+        </p>
+        {WEIGHTS.map((weight) => (
+          <div className="slider-row" key={weight.id}>
+            <label htmlFor={`weight-${weight.id}`}>{weight.label}</label>
+            <input
+              id={`weight-${weight.id}`}
+              type="range"
+              min={0}
+              max={100}
+              value={values[weight.id] ?? 50}
+              aria-valuetext={`${weight.label}, ${formatShare(normalised[weight.id] ?? 0)} of the mix`}
+              aria-describedby={`weight-${weight.id}-help`}
+              onChange={(event) =>
+                setValues((current) => ({ ...current, [weight.id]: Number(event.target.value) }))
+              }
+            />
+            <span className="num">{formatShare(normalised[weight.id] ?? 0)}</span>
+            <p id={`weight-${weight.id}-help`}>{weight.help}</p>
+          </div>
+        ))}
+        <label className="field">
+          Weekly housing budget, optional
+          <input
+            inputMode="numeric"
+            value={budgetWeekly}
+            onChange={(event) => setBudgetWeekly(event.target.value.replace(/[^\d]/g, ""))}
+          />
+        </label>
+        <label className="field">
+          Commute toward
+          <input value={commuteTo} onChange={(event) => setCommuteTo(event.target.value)} />
+        </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={needsSchools}
+            onChange={(event) => setNeedsSchools(event.target.checked)}
+          />
+          Needs schools or early learning
+        </label>
+        <FilterPills
+          label="Limit to a state"
+          value={stateCode}
+          onChange={setStateCode}
+          options={[
+            { id: "all", label: "All states" },
+            ...STATES.map((state) => ({ id: state.code, label: state.name })),
+          ]}
         />
-      </label>
-      <label className="field">
-        Commute toward
-        <input value={commuteTo} onChange={(event) => setCommuteTo(event.target.value)} />
-      </label>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={needsSchools}
-          onChange={(event) => setNeedsSchools(event.target.checked)}
-        />
-        Needs schools or early learning
-      </label>
-      <FilterPills
-        label="Limit to a state"
-        value={stateCode}
-        onChange={setStateCode}
-        options={[
-          { id: "all", label: "All states" },
-          ...STATES.map((state) => ({ id: state.code, label: state.name })),
-        ]}
-      />
+      </div>
       {query.status === "loading" ? <LoadingState label="Sending the weights." /> : null}
       {query.status === "error" ? <ErrorState error={query.error} onRetry={query.retry} /> : null}
       {query.status === "ready" ? (
@@ -146,4 +151,8 @@ export function MatchPage() {
       ) : null}
     </main>
   );
+}
+
+function sameWeights(left: WeightValues, right: WeightValues): boolean {
+  return WEIGHTS.every((weight) => (left[weight.id] ?? 50) === (right[weight.id] ?? 50));
 }

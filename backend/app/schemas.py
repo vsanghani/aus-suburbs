@@ -136,6 +136,16 @@ class SuburbDetail(SuburbSummary):
     geometry: dict[str, Any] | None
 
 
+class SuburbListResponse(BaseModel):
+    state: str | None
+    dataset_connected: bool
+    total: int | None
+    offset: int
+    limit: int
+    suburbs: list[SuburbSummary]
+    notice: str
+
+
 class CouncilSummary(BaseModel):
     state: str
     slug: str

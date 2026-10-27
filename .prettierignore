@@ -1,4 +1,6 @@
 dist
+dist-server
+.vercel
 node_modules
 coverage
 playwright-report
@@ -7,3 +9,4 @@ contracts/openapi.json
 src/api/schema.d.ts
 package-lock.json
 backend/.venv
+public/fonts

@@ -1,5 +1,9 @@
 {
-  "name": "hearthfire",
+  "name": "kerbfox",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vsanghani/kerbfox"
+  },
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,18 +11,18 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "node server/index.mjs",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.e2e.json --noEmit",
-    "build": "npm run typecheck && vite build",
-    "preview": "vite preview",
+    "build": "npm run typecheck && vite build && vite build --ssr src/entry-server.tsx --outDir dist-server && node server/relocate-template.mjs",
+    "start": "NODE_ENV=production node server/index.mjs",
+    "emulate:vercel": "NODE_ENV=production node server/emulate-vercel.mjs",
+    "preview": "NODE_ENV=production node server/index.mjs",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "test": "vitest run",
     "test:e2e": "npm run build && playwright test"
   },
   "dependencies": {
-    "@fontsource-variable/fraunces": "^5.3.0",
-    "@fontsource-variable/public-sans": "^5.3.0",
     "maplibre-gl": "^6.15.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

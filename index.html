@@ -3,13 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f4efe6" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#f4f6fb" />
+    <!--seo-start-->
+    <title>Australian suburbs</title>
     <meta
       name="description"
-      content="A public record of Australian suburbs, read from government datasets."
+      content="A public record of Australian suburbs for housing, property, schools, transport, safety, and hazards, read from government datasets."
     />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>Suburb record</title>
+    <!--seo-end-->
+    <link
+      rel="preload"
+      href="/fonts/inter-latin-opsz-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/inter-tight-latin-wght-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <script>
       (function () {
         try {
@@ -21,7 +37,7 @@
           if (dark) {
             document.documentElement.dataset.theme = "dark";
             document.documentElement.style.colorScheme = "dark";
-            if (themeColor) themeColor.setAttribute("content", "#1a1613");
+            if (themeColor) themeColor.setAttribute("content", "#081226");
           }
         } catch (error) {
           /* Storage can be blocked. The page still renders in the light theme. */
@@ -30,7 +46,10 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="root"><!--app-html--></div>
+    <script type="application/json" id="route-data">
+      null
+    </script>
+    <script type="module" src="/src/entry-client.tsx"></script>
   </body>
 </html>

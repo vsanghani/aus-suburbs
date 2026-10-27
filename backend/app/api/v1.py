@@ -23,6 +23,7 @@ from app.schemas import (
     SearchResponse,
     StateDetail,
     SuburbDetail,
+    SuburbListResponse,
     Weights,
 )
 
@@ -58,6 +59,26 @@ def search(
         results=[],
         councils=[],
         notice="No dataset is connected, so the search cannot match places.",
+    )
+
+
+@router.get("/suburbs", response_model=SuburbListResponse, tags=["Places"])
+def suburb_index(
+    state: StateQuery = None,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
+) -> SuburbListResponse:
+    """Pages of suburbs for the sitemap. Returns nothing until a dataset is connected."""
+    if state is not None:
+        require_state(state)
+    return SuburbListResponse(
+        state=state,
+        dataset_connected=False,
+        total=None,
+        offset=offset,
+        limit=limit,
+        suburbs=[],
+        notice="No dataset is connected, so no suburbs are listed.",
     )
 
 

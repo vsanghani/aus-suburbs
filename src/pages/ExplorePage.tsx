@@ -1,29 +1,24 @@
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchExplore } from "../api/client";
 import { useApi } from "../api/useApi";
+import { ClientMap } from "../components/ClientMap";
 import { FilterPills } from "../components/FilterPills";
-import { MapCanvas } from "../components/MapCanvas";
 import { DatasetNotice, ErrorState, LoadingState } from "../components/States";
 import { STATES, stateView } from "../config/geography";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { EXPLORE_LAYERS } from "../config/map";
+import { exploreCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
+import { Head } from "../seo/Head";
+import { exploreKey } from "../seo/keys";
+import { resourceSeed } from "../seo/routeData";
 import { mapMetrics } from "../metrics/registry";
 
-const LAYERS = [
-  { id: "boundary", label: "Suburb boundaries" },
-  { id: "flood", label: "Flood overlay" },
-  { id: "bushfire", label: "Bushfire overlay" },
-  { id: "schools", label: "Schools" },
-  { id: "transit", label: "Transit" },
-  { id: "parks", label: "Parks" },
-  { id: "offences", label: "Offence counts" },
-];
-
-const LAYER_IDS = new Set(LAYERS.map((layer) => layer.id));
+const LAYER_IDS = new Set<string>(EXPLORE_LAYERS.map((layer) => layer.id));
 
 export function ExplorePage() {
   const [params, setParams] = useSearchParams();
-  useDocumentTitle("Explore");
+  const routeData = useContext(RouteDataContext);
   const metrics = useMemo(() => mapMetrics(), []);
   const metric = params.get("metric") ?? "score";
   const stateCode = params.get("state") ?? "all";
@@ -35,18 +30,20 @@ export function ExplorePage() {
   const [radiusKm, setRadiusKm] = useState(5);
   const [picked, setPicked] = useState<[number, number] | null>(null);
   const view = stateView(stateCode === "all" ? undefined : stateCode);
-  const key = `${metric}|${stateCode}|${layers.join(",")}`;
-  const query = useApi(key, (signal) =>
-    fetchExplore(
-      {
-        metric,
-        state: stateCode === "all" ? undefined : stateCode,
-        layers,
-      },
-      signal,
-    ),
+  const key = exploreKey(metric, stateCode, layers);
+  const query = useApi(
+    key,
+    (signal) =>
+      fetchExplore(
+        {
+          metric,
+          state: stateCode === "all" ? undefined : stateCode,
+          layers,
+        },
+        signal,
+      ),
+    resourceSeed(routeData.explore, key),
   );
-  const stateName = STATES.find((state) => state.code === stateCode)?.name;
 
   function write(next: { metric?: string; state?: string; layers?: string[] }) {
     const metricValue = next.metric ?? metric;
@@ -71,6 +68,7 @@ export function ExplorePage() {
 
   return (
     <main className="explore" id="content">
+      <Head {...exploreCopy()} />
       <div className="explore-panel">
         <p className="kicker">Map</p>
         <h1>Explore</h1>
@@ -103,21 +101,17 @@ export function ExplorePage() {
         />
         <fieldset>
           <legend className="kicker">Layers</legend>
-          {LAYERS.map((layer) => (
+          {EXPLORE_LAYERS.map((layer) => (
             <label key={layer.id} className="check">
               <input
                 type="checkbox"
                 checked={layers.includes(layer.id)}
                 onChange={() => toggleLayer(layer.id)}
               />
-              <span>
-                {layer.label}
-                {layer.id === "offences" ? (
-                  <small className="check-note">Counts follow footfall as well as harm.</small>
-                ) : null}
-              </span>
+              {layer.label}
             </label>
           ))}
+          <p>Offence counts follow footfall as well as harm.</p>
         </fieldset>
         <label className="check">
           <input
@@ -125,11 +119,11 @@ export function ExplorePage() {
             checked={radiusOn}
             onChange={(event) => setRadiusOn(event.target.checked)}
           />
-          <span>Draw a radius</span>
+          Draw a radius
         </label>
         {radiusOn ? (
-          <div className="field">
-            <label htmlFor="explore-radius">Radius, kilometres</label>
+          <label className="field">
+            Radius, kilometres
             <input
               id="explore-radius"
               type="range"
@@ -141,9 +135,9 @@ export function ExplorePage() {
               onChange={(event) => setRadiusKm(Number(event.target.value))}
             />
             <span id="explore-radius-note" className="num">
-              {radiusKm} km. Click the map to place the circle.
+              {radiusKm} km. Click the map to place it.
             </span>
-          </div>
+          </label>
         ) : null}
         {query.status === "loading" ? <LoadingState label="Asking for geometries." /> : null}
         {query.status === "error" ? <ErrorState error={query.error} onRetry={query.retry} /> : null}
@@ -163,15 +157,20 @@ export function ExplorePage() {
             emptyBody="The map query returned no geometries."
           />
         ) : null}
-        {query.status === "ready" && layers.length > 0 && !query.data.dataset_connected ? (
-          <p>{layers.join(", ")} stay off until those geometries are loaded.</p>
+        {query.status === "ready" && layers.length > 0 ? (
+          <p>
+            {layers.join(", ")}: no features are loaded for{" "}
+            {query.data.layers.join(", ") || "this view"}.
+          </p>
         ) : null}
       </div>
-      <MapCanvas
+      <ClientMap
         frameId="map"
-        label={stateName ? `Map of ${stateName}` : "Map of Australia"}
         centre={view.centre}
         zoom={view.zoom}
+        label={
+          radiusOn ? "Map of Australia. Click the map to place the radius." : "Map of Australia"
+        }
         collection={query.status === "ready" ? query.data.feature_collection : null}
         circle={radiusOn && picked ? { centre: picked, radiusKm } : null}
         onPick={radiusOn ? setPicked : undefined}

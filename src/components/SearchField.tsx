@@ -3,16 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { ApiError, fetchSearch } from "../api/client";
 import type { CouncilSummary, SuburbSummary } from "../api/types";
 import { councilPath, suburbPath } from "../lib/places";
+import { searchCanonicalPath } from "../seo/urls";
+import { Icon } from "./Icon";
 
 export function SearchField({
   initial = "",
   autoFocus = false,
-  suggest = true,
   onPick,
 }: {
   initial?: string;
   autoFocus?: boolean;
-  suggest?: boolean;
   onPick?: (place: SuburbSummary) => void;
 }) {
   const navigate = useNavigate();
@@ -28,14 +28,16 @@ export function SearchField({
     status: "ready" | "error";
   } | null>(null);
   const query = value.trim();
-  const matched = suggest && result?.query === query ? result : null;
+  const matched = result?.query === query ? result : null;
   const suburbs = matched?.status === "ready" ? matched.suburbs : [];
   const councils = matched?.status === "ready" ? matched.councils : [];
+  const notice = matched?.notice ?? "";
+  const status = query.length < 2 ? "idle" : matched ? matched.status : "loading";
   const open = suburbs.length > 0 || councils.length > 0;
-  const statusText = suggest ? statusMessage(query, matched, suburbs.length, councils.length) : "";
+  const statusText = status === "loading" ? "Searching the record." : notice;
 
   useEffect(() => {
-    if (!suggest || query.length < 2) return undefined;
+    if (query.length < 2) return undefined;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       fetchSearch(query, controller.signal)
@@ -65,17 +67,17 @@ export function SearchField({
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [query, suggest]);
+  }, [query]);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const submitted = value.trim();
-    if (!submitted) return;
+    const query = value.trim();
+    if (!query) return;
     if (onPick && suburbs.length === 1 && suburbs[0]) {
       onPick(suburbs[0]);
       return;
     }
-    if (!onPick) navigate(`/search?q=${encodeURIComponent(submitted)}`);
+    if (!onPick) navigate(searchCanonicalPath(query));
   }
 
   return (
@@ -89,21 +91,22 @@ export function SearchField({
           autoFocus={autoFocus}
           autoComplete="off"
           autoCapitalize="off"
-          spellCheck={false}
           enterKeyHint="search"
-          aria-autocomplete={suggest ? "list" : undefined}
-          aria-controls={suggest ? listId : undefined}
-          aria-expanded={suggest ? open : undefined}
+          spellCheck={false}
+          aria-autocomplete="list"
+          aria-controls={listId}
+          aria-expanded={open}
           aria-describedby={statusText ? statusId : undefined}
           onChange={(event) => setValue(event.target.value)}
         />
-        <button type="submit">Search</button>
+        <button type="submit">
+          <Icon name="search" />
+          Search
+        </button>
       </div>
-      {statusText ? (
-        <p id={statusId} className="status-line" role="status">
-          {statusText}
-        </p>
-      ) : null}
+      <p id={statusId} className="status-line" role="status">
+        {statusText}
+      </p>
       {open ? (
         <ul id={listId} className="suggest" aria-label="Matches">
           {suburbs.map((place) => (
@@ -133,20 +136,4 @@ export function SearchField({
       ) : null}
     </form>
   );
-}
-
-function statusMessage(
-  query: string,
-  matched: { notice: string; status: "ready" | "error" } | null,
-  suburbs: number,
-  councils: number,
-): string {
-  if (query.length < 2) return "";
-  if (!matched) return "Searching the record.";
-  if (matched.status === "error" || matched.notice) return matched.notice;
-  if (suburbs === 0 && councils === 0) return "No places matched.";
-  const parts: string[] = [];
-  if (suburbs > 0) parts.push(`${suburbs} ${suburbs === 1 ? "suburb" : "suburbs"}`);
-  if (councils > 0) parts.push(`${councils} ${councils === 1 ? "council" : "councils"}`);
-  return `${parts.join(", ")}.`;
 }

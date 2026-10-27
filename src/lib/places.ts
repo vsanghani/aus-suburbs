@@ -17,9 +17,9 @@ export function splitToken(token: string): { state: string; slug: string } {
 }
 
 export function suburbPath(state: string, slug: string): string {
-  return `/suburbs/${state}/${slug}`;
+  return `/suburbs/${state.toLowerCase()}/${slug.toLowerCase()}`;
 }
 
 export function councilPath(state: string, slug: string): string {
-  return `/councils/${state}/${slug}`;
+  return `/councils/${state.toLowerCase()}/${slug.toLowerCase()}`;
 }

@@ -3,12 +3,17 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ALLOWED_NAME = new Set(["src/config/site.ts", "package.json", "README.md", "docs/design.md"]);
-const namePattern = new RegExp(["hearth", "fire"].join(""), "i");
-const retiredPattern = new RegExp(`${["Suburb", "IQ"].join("")}|${["Aus", "Score"].join("")}`, "i");
+const namePattern = new RegExp(["kerb", "fox"].join(""), "i");
+const retiredPattern = new RegExp(
+  `${["Suburb", "IQ"].join("")}|${["Aus", "Score"].join("")}|${["hearth", "fire"].join("")}`,
+  "i",
+);
 
 const SKIP_DIRS = new Set([
   "node_modules",
   "dist",
+  "dist-server",
+  ".vercel",
   ".git",
   ".venv",
   "coverage",

@@ -1,6 +1,8 @@
 .git
 node_modules
 dist
+dist-server
+.vercel
 backend/.venv
 **/__pycache__
 .pytest_cache

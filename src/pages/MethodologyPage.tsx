@@ -1,24 +1,34 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { fetchExport, fetchMethodology } from "../api/client";
 import { useApi } from "../api/useApi";
 import { PageIntro } from "../components/PageIntro";
 import { ErrorState, LoadingState } from "../components/States";
 import { TableScroll } from "../components/TableScroll";
 import { formatNumber } from "../lib/format";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { methodologyCopy } from "../seo/copy";
+import { RouteDataContext } from "../seo/context";
+import { Head } from "../seo/Head";
+import { EXPORT_KEY, METHODOLOGY_KEY } from "../seo/keys";
+import { resourceSeed } from "../seo/routeData";
 
-export function MethodologyPage({ startAtSources = false }: { startAtSources?: boolean }) {
-  useDocumentTitle("Methodology");
-  const method = useApi("methodology", fetchMethodology);
-  const exported = useApi("export", fetchExport);
+export function MethodologyPage() {
+  const routeData = useContext(RouteDataContext);
+  const method = useApi(
+    METHODOLOGY_KEY,
+    fetchMethodology,
+    resourceSeed(routeData.methodology, METHODOLOGY_KEY),
+  );
+  const exported = useApi(EXPORT_KEY, fetchExport, resourceSeed(routeData.exportInfo, EXPORT_KEY));
 
   useEffect(() => {
-    if (!startAtSources) return;
-    document.getElementById("sources")?.scrollIntoView();
-  }, [startAtSources, method.status]);
+    const id = window.location.hash.replace("#", "");
+    if (id !== "sources" && id !== "export") return;
+    document.getElementById(id)?.scrollIntoView();
+  }, [method.status, exported.status]);
 
   return (
     <main className="page" id="content">
+      <Head {...methodologyCopy()} status={method.status === "error" ? 503 : 200} />
       <PageIntro
         kicker="Method"
         title="Methodology"
@@ -57,13 +67,7 @@ export function MethodologyPage({ startAtSources = false }: { startAtSources?: b
                       {group.label}
                       <small className="cell-note">{group.summary}</small>
                     </th>
-                    <td
-                      className={
-                        group.direction === "positive" ? "direction positive" : "direction negative"
-                      }
-                    >
-                      {group.direction === "positive" ? "Adds" : "Subtracts"}
-                    </td>
+                    <td>{group.direction === "positive" ? "Adds" : "Subtracts"}</td>
                     <td className="num">{formatNumber(group.draft_max_points)}</td>
                   </tr>
                 ))}
@@ -118,10 +122,7 @@ export function MethodologyPage({ startAtSources = false }: { startAtSources?: b
                     {source.url ? (
                       <>
                         {" "}
-                        ·{" "}
-                        <a href={source.url} className="url">
-                          {source.url}
-                        </a>
+                        · <a href={source.url}>{source.url}</a>
                       </>
                     ) : null}
                   </li>

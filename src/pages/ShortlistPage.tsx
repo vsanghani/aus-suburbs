@@ -1,51 +1,45 @@
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Link } from "react-router-dom";
 import { PageIntro } from "../components/PageIntro";
-import { EmptyState } from "../components/States";
-import { readShortlist, writeShortlist, type KeptPlace } from "../lib/shortlist";
+import {
+  serverShortlist,
+  shortlistSnapshot,
+  subscribeShortlist,
+  writeShortlist,
+  type KeptPlace,
+} from "../lib/shortlist";
 import { suburbPath } from "../lib/places";
-import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { shortlistCopy } from "../seo/copy";
+import { Head } from "../seo/Head";
 
 export function ShortlistPage() {
-  useDocumentTitle("Kept");
-  const [places, setPlaces] = useState<KeptPlace[]>(() => readShortlist());
+  const places = useSyncExternalStore(subscribeShortlist, shortlistSnapshot, serverShortlist);
 
   function remove(place: KeptPlace) {
-    const next = places.filter((item) => !(item.state === place.state && item.slug === place.slug));
-    writeShortlist(next);
-    setPlaces(next);
+    writeShortlist(
+      places.filter((item) => !(item.state === place.state && item.slug === place.slug)),
+    );
   }
 
   return (
     <main className="page" id="content">
+      <Head {...shortlistCopy()} robots="noindex" />
       <PageIntro
         kicker="This browser"
         title="Kept"
         lede="Places you marked on a suburb page. Nothing here is an account, and nothing is synced."
       />
       {places.length === 0 ? (
-        <EmptyState
-          title="Nothing kept on this browser"
-          body="Open a suburb that is on file and choose Keep. The list stays in this browser."
-        >
-          <p>
-            <Link to="/">Search the record</Link>
-          </p>
-        </EmptyState>
+        <p>Nothing kept on this browser.</p>
       ) : (
         <ul className="link-index">
           {places.map((place) => (
-            <li key={`${place.state}-${place.slug}`} className="with-action">
+            <li key={`${place.state}-${place.slug}`}>
               <Link to={suburbPath(place.state, place.slug)}>
                 <strong>{place.name}</strong>
                 <span>{place.state.toUpperCase()}</span>
               </Link>
-              <button
-                type="button"
-                className="button-line"
-                aria-label={`Remove ${place.name}`}
-                onClick={() => remove(place)}
-              >
+              <button type="button" className="button-line" onClick={() => remove(place)}>
                 Remove
               </button>
             </li>

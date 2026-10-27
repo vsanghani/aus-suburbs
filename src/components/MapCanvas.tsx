@@ -16,6 +16,17 @@ type MapHandle = {
   once: (event: string, handler: () => void) => void;
 };
 
+export type MapCanvasProps = {
+  centre: [number, number];
+  zoom: number;
+  collection: FeatureCollection | null;
+  circle: { centre: [number, number]; radiusKm: number } | null;
+  onPick?: (coordinate: [number, number]) => void;
+  label?: string;
+  cooperativeGestures?: boolean;
+  frameId?: string;
+};
+
 export function MapCanvas({
   centre,
   zoom,
@@ -23,16 +34,9 @@ export function MapCanvas({
   circle,
   onPick,
   label = "Map of Australia",
+  cooperativeGestures = false,
   frameId,
-}: {
-  centre: [number, number];
-  zoom: number;
-  collection: FeatureCollection | null;
-  circle: { centre: [number, number]; radiusKm: number } | null;
-  onPick?: (coordinate: [number, number]) => void;
-  label?: string;
-  frameId?: string;
-}) {
+}: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapHandle | null>(null);
   const pickRef = useRef(onPick);
@@ -79,12 +83,15 @@ export function MapCanvas({
         };
         // The bundled library looks for a sibling worker file that Vite does not emit.
         maplibre.setWorkerUrl(worker.default);
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         map = new maplibre.Map({
           container,
           style: theme === "dark" ? MAP_STYLE.dark : MAP_STYLE.light,
           center: viewRef.current.centre,
           zoom: viewRef.current.zoom,
-          attributionControl: { compact: true },
+          attributionControl: { compact: false },
+          fadeDuration: reduceMotion ? 0 : 300,
+          cooperativeGestures,
         });
         mapRef.current = map;
         const control = new maplibre.NavigationControl({ showCompass: false });
@@ -117,7 +124,7 @@ export function MapCanvas({
       map?.remove();
       mapRef.current = null;
     };
-  }, [theme]);
+  }, [theme, cooperativeGestures]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -130,17 +137,20 @@ export function MapCanvas({
     if (!map || status !== "ready") return;
     const places = collection ?? { type: "FeatureCollection", features: [] };
     ensureGeoJson(map, "places", places);
+    // MapLibre paint cannot read CSS variables. Fills mirror --data-navy, lines mirror --accent, and the radius mirrors --data-blue.
+    const placeFill = theme === "dark" ? "#8eb0f0" : "#12285e";
+    const placeLine = theme === "dark" ? "#c5d4ff" : "#12285e";
     ensureLayer(map, "places-fill", {
       id: "places-fill",
       type: "fill",
       source: "places",
-      paint: { "fill-color": "#8d3c2b", "fill-opacity": 0.28 },
+      paint: { "fill-color": placeFill, "fill-opacity": theme === "dark" ? 0.34 : 0.28 },
     });
     ensureLayer(map, "places-line", {
       id: "places-line",
       type: "line",
       source: "places",
-      paint: { "line-color": "#6f2e22", "line-width": 1.25 },
+      paint: { "line-color": placeLine, "line-width": 1.25 },
     });
     const radiusData = circle
       ? {
@@ -159,20 +169,23 @@ export function MapCanvas({
       id: "radius-fill",
       type: "fill",
       source: "radius",
-      paint: { "fill-color": "#6b4b1d", "fill-opacity": 0.18 },
+      paint: {
+        "fill-color": theme === "dark" ? "#6b93e8" : "#2f62c2",
+        "fill-opacity": theme === "dark" ? 0.22 : 0.18,
+      },
     });
-  }, [collection, circle, status]);
+  }, [collection, circle, status, theme]);
 
   return (
     <div className="map-frame" id={frameId} aria-busy={status === "loading"}>
       <div ref={containerRef} className="map-canvas" role="application" aria-label={label} />
       {status === "loading" ? (
-        <p className="map-note" role="status">
+        <p className="map-note tooltip" role="status">
           Loading the base map.
         </p>
       ) : null}
       {status === "failed" ? (
-        <p className="map-note" role="status">
+        <p className="map-note tooltip" role="status">
           The base map did not load. Place outlines appear when geometries do.
         </p>
       ) : null}
