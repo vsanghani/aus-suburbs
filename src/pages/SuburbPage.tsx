@@ -78,7 +78,9 @@ export function SuburbPage() {
           {stateName ? (
             <>
               {" · "}
-              <Link to={`/states/${state}`}>{stateName}</Link>
+              <Link className="state-link" to={`/states/${state}`}>
+                {stateName}
+              </Link>
             </>
           ) : state ? (
             ` · ${state.toUpperCase()}`

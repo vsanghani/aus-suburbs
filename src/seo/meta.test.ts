@@ -29,7 +29,13 @@ describe("head tags", () => {
     expect(html).toContain('name="description" content="A short record."');
     expect(html).toContain('rel="canonical" href="https://example.test/suburbs/vic/richmond"');
     expect(html).toContain('property="og:url" content="https://example.test/suburbs/vic/richmond"');
-    expect(html).toContain('name="twitter:card" content="summary"');
+    expect(html).toContain('name="twitter:card" content="summary_large_image"');
+    expect(html).toContain('property="og:image" content="https://example.test/share.png"');
+    expect(html).toContain('property="og:image:width" content="1200"');
+    expect(html).toContain('property="og:image:height" content="630"');
+    expect(html).toContain(`property="og:image:alt" content="${site.name}. ${site.description}"`);
+    expect(html).toContain('name="twitter:image" content="https://example.test/share.png"');
+    expect(html).toContain(`name="twitter:image:alt" content="${site.name}. ${site.description}"`);
     expect(html).toContain('property="og:title"');
   });
 
@@ -37,6 +43,9 @@ describe("head tags", () => {
     const html = renderHead({ title: "Explore", description: "A map.", path: "/explore" }, "");
     expect(html).not.toContain("canonical");
     expect(html).not.toContain("og:url");
+    expect(html).not.toContain("og:image");
+    expect(html).not.toContain("twitter:image");
+    expect(html).toContain('name="twitter:card" content="summary"');
     expect(html).toContain('property="og:title"');
   });
 });
