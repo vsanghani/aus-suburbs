@@ -461,7 +461,7 @@ CREATE TABLE curated.amenity_type (
   type_key text PRIMARY KEY,
   label text NOT NULL,
   place_group text,
-  CONSTRAINT amenity_type_key_ck CHECK (type_key ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$')
+  CONSTRAINT amenity_type_key_ck CHECK (type_key ~ '^[a-z0-9]+(?:[_-][a-z0-9]+)*$')
 );
 
 CREATE TABLE curated.amenity_feature (

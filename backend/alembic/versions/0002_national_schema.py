@@ -36,7 +36,9 @@ def _run(name: str) -> None:
     script = (SQL_DIR / name).read_text(encoding="utf-8")
     bind = op.get_bind()
     for statement in split_sql(script):
-        bind.exec_driver_sql(statement)
+        # psycopg treats % as a placeholder. RAISE ... % is a Postgres format
+        # string, so the percent is doubled only for the driver.
+        bind.exec_driver_sql(statement.replace("%", "%%"))
 
 
 def upgrade() -> None:

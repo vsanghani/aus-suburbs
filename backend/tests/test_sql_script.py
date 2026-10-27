@@ -50,4 +50,7 @@ def test_downgrade_keeps_schemas_and_extensions() -> None:
     assert "drop extension" not in lowered
     assert "drop view if exists curated.sitemap_entry" in lowered
     assert "drop function if exists curated.suburb_is_indexable(integer, integer)" in lowered
-    assert "alembic_version" not in lowered
+    executable = "\n".join(
+        line for line in lowered.splitlines() if not line.strip().startswith("--")
+    )
+    assert "alembic_version" not in executable
