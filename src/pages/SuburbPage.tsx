@@ -70,67 +70,80 @@ export function SuburbPage() {
         robots={notOnFile ? "noindex" : undefined}
         jsonLd={place ? placeJsonLd(place, copy.path, origin) : null}
       />
-      <p className="kicker">
-        {query.status === "loading" ? "Fetching" : notOnFile ? "Not on file" : "Suburb"}
-        {stateName ? ` · ${stateName}` : state ? ` · ${state.toUpperCase()}` : ""}
-      </p>
-      <h1>{place?.name ?? humaniseSlug(slug)}</h1>
-      {notOnFile ? (
-        <p className="lede">
-          {(query.error instanceof ApiError
-            ? query.error.detail
-            : "This path is not in the record.") +
-            " The heading is only the address you opened, with hyphens turned into words."}
+      <header className="record-mast">
+        <p className="kicker">
+          {query.status === "loading" ? "Fetching" : notOnFile ? "Not on file" : "Suburb"}
+          {stateName ? ` · ${stateName}` : state ? ` · ${state.toUpperCase()}` : ""}
         </p>
-      ) : (
-        <p className="lede">{place?.blurb ?? "No summary is attached."}</p>
-      )}
-      {query.status === "loading" ? <LoadingState /> : null}
-      {transportError ? <ErrorState error={query.error} onRetry={query.retry} /> : null}
-      <p className="meta-line">
-        <span>Postcode {place?.postcode ?? "not recorded"}</span>
-        <span>
-          Council{" "}
-          {place?.council_slug ? (
-            <Link to={`/councils/${place.state}/${place.council_slug}`}>
-              {place.council_name ?? place.council_slug}
-            </Link>
-          ) : (
-            "not recorded"
-          )}
-        </span>
-        <span>
-          Population {place?.population == null ? "not recorded" : formatNumber(place.population)}
-        </span>
-        <span>Traditional owners {place?.traditional_owners ?? "not recorded"}</span>
-      </p>
-      <p>{place?.description ?? "No description is attached."}</p>
-      {place && place.ranks.length > 0 ? (
-        <ul className="rank-list">
-          {place.ranks.map((rank) => (
-            <li key={rank.list_slug}>
-              <Link to={`/rankings/${rank.list_slug}`}>
-                {rank.list_title}
-                {rank.position == null ? "" : ` · ${rank.position}`}
-                {rank.scope ? ` · ${rank.scope}` : ""}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No list position is recorded.</p>
-      )}
-      <div className="actions">
-        <button type="button" className="button-line" onClick={() => void copyLink()}>
-          {copied ? "Link copied" : "Copy link"}
-        </button>
-        <button type="button" className="button-line" onClick={keep} disabled={!place}>
-          {kept ? "Kept on this browser" : "Keep"}
-        </button>
-        <span className="status-line" role="status">
-          {copied ? "The address is on the clipboard." : ""}
-          {!place && !copied ? "You can keep a place once it is on file." : ""}
-        </span>
+        <h1>{place?.name ?? humaniseSlug(slug)}</h1>
+        {notOnFile ? (
+          <p className="lede">
+            {(query.error instanceof ApiError
+              ? query.error.detail
+              : "This path is not in the record.") +
+              " The heading is only the address you opened, with hyphens turned into words."}
+          </p>
+        ) : (
+          <p className="lede">{place?.blurb ?? "No summary is attached."}</p>
+        )}
+        {query.status === "loading" ? <LoadingState /> : null}
+        {transportError ? <ErrorState error={query.error} onRetry={query.retry} /> : null}
+        <dl className="fact-row">
+          <div>
+            <dt>Postcode</dt>
+            <dd>{place?.postcode ?? "not recorded"}</dd>
+          </div>
+          <div>
+            <dt>Council</dt>
+            <dd>
+              {place?.council_slug ? (
+                <Link to={`/councils/${place.state}/${place.council_slug}`}>
+                  {place.council_name ?? place.council_slug}
+                </Link>
+              ) : (
+                "not recorded"
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>Population</dt>
+            <dd>{place?.population == null ? "not recorded" : formatNumber(place.population)}</dd>
+          </div>
+          <div>
+            <dt>Traditional owners</dt>
+            <dd>{place?.traditional_owners ?? "not recorded"}</dd>
+          </div>
+        </dl>
+        <div className="actions">
+          <button type="button" className="button-line" onClick={() => void copyLink()}>
+            {copied ? "Link copied" : "Copy link"}
+          </button>
+          <button type="button" className="button-line" onClick={keep} disabled={!place}>
+            {kept ? "Kept on this browser" : "Keep"}
+          </button>
+          <span className="status-line" role="status">
+            {copied ? "The address is on the clipboard." : ""}
+            {!place && !copied ? "You can keep a place once it is on file." : ""}
+          </span>
+        </div>
+      </header>
+      <div className="record-copy">
+        <p>{place?.description ?? "No description is attached."}</p>
+        {place && place.ranks.length > 0 ? (
+          <ul className="rank-list">
+            {place.ranks.map((rank) => (
+              <li key={rank.list_slug}>
+                <Link to={`/rankings/${rank.list_slug}`}>
+                  {rank.list_title}
+                  {rank.position == null ? "" : ` · ${rank.position}`}
+                  {rank.scope ? ` · ${rank.scope}` : ""}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No list position is recorded.</p>
+        )}
       </div>
       <SectionNav score={place?.score ?? null} />
       {registry.map((section) => (

@@ -172,7 +172,7 @@ export function MapCanvas({
     <div className="map-frame">
       <div ref={containerRef} className="map-canvas" role="application" aria-label={label} />
       {status === "failed" ? (
-        <p className="map-note">
+        <p className="map-note tooltip">
           The base map did not load. Place outlines appear when geometries do.
         </p>
       ) : null}

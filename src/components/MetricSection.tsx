@@ -23,7 +23,7 @@ export function MetricSection({
   return (
     <section
       id={config.id}
-      className="metric-section"
+      className={kind === "score" ? "metric-section metric-feature" : "metric-section"}
       tabIndex={-1}
       aria-labelledby={`${config.id}-title`}
     >

@@ -52,35 +52,37 @@ export function ComparePage() {
       ) : (
         <SearchField onPick={(place) => addPlace(place.state, place.slug)} />
       )}
-      <div className="seats">
-        {[0, 1, 2, 3].map((index) => {
-          const token = tokens[index];
-          if (!token) {
+      <div className="seat-tray">
+        <div className="seats">
+          {[0, 1, 2, 3].map((index) => {
+            const token = tokens[index];
+            if (!token) {
+              return (
+                <div className="seat" key={index}>
+                  <span>Seat {index + 1}</span>
+                  Empty
+                </div>
+              );
+            }
+            const { state, slug } = splitToken(token);
+            const loaded = places.find((place) => place.state === state && place.slug === slug);
             return (
-              <div className="seat" key={index}>
+              <div className="seat" key={token}>
                 <span>Seat {index + 1}</span>
-                Empty
+                <strong>{loaded?.name ?? humaniseSlug(slug)}</strong>
+                <small>{loaded ? state.toUpperCase() : "Not on file"}</small>
+                <button
+                  type="button"
+                  className="button-line"
+                  onClick={() => removePlace(token)}
+                  aria-label={`Remove ${loaded?.name ?? humaniseSlug(slug)}`}
+                >
+                  Remove
+                </button>
               </div>
             );
-          }
-          const { state, slug } = splitToken(token);
-          const loaded = places.find((place) => place.state === state && place.slug === slug);
-          return (
-            <div className="seat" key={token}>
-              <span>Seat {index + 1}</span>
-              <strong>{loaded?.name ?? humaniseSlug(slug)}</strong>
-              <small>{loaded ? state.toUpperCase() : "Not on file"}</small>
-              <button
-                type="button"
-                className="button-line"
-                onClick={() => removePlace(token)}
-                aria-label={`Remove ${loaded?.name ?? humaniseSlug(slug)}`}
-              >
-                Remove
-              </button>
-            </div>
-          );
-        })}
+          })}
+        </div>
       </div>
       {query.status === "loading" ? <LoadingState /> : null}
       {query.status === "error" ? <ErrorState error={query.error} onRetry={query.retry} /> : null}
@@ -219,9 +221,10 @@ function CompareChart({ places, tokens }: { places: SuburbDetail[]; tokens: stri
             <polygon
               key={item.token}
               points={points.join(" ")}
-              fill="none"
+              fill={CHART_STROKES[item.index] ?? "currentColor"}
+              fillOpacity="0.08"
               stroke={CHART_STROKES[item.index] ?? "currentColor"}
-              strokeWidth="1.5"
+              strokeWidth="1.75"
             />
           );
         })}

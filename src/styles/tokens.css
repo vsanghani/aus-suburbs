@@ -1,35 +1,39 @@
 :root {
   color-scheme: light;
-  --paper: #f4efe6;
-  --sheet: #faf6f0;
-  --ink: #231c16;
-  --ink-soft: #3c332b;
-  --faint: #5e554c;
-  --rule: #ddd2c3;
-  --rule-strong: #cbbba6;
+  --paper: #f6f1e8;
+  --sheet: #fffaf4;
+  --ink: #1c1916;
+  --ink-soft: #3a332c;
+  --faint: #4e463f;
+  --rule: rgba(72, 48, 28, 0.12);
+  --rule-strong: #d4c4b0;
   --terracotta: #8d3c2b;
   --terracotta-deep: #6f2e22;
   --terracotta-deeper: #542318;
   --terracotta-mark: #b85a3e;
-  --on-accent: #faf6f0;
+  --on-accent: #fffaf4;
   --ochre: #6b4b1d;
   --ochre-mark: #a07d3a;
-  --ochre-wash: #f0e4cc;
+  --ochre-wash: #f3e6d0;
   --sage: #3e5346;
   --sage-mark: #6e7f6a;
-  --sage-wash: #e3ebe4;
-  --clay: #e8dccb;
+  --sage-wash: #e4eee6;
+  --clay: #eadfce;
   --focus: #8d3c2b;
-  --serif: "Fraunces Variable", "Iowan Old Style", Palatino, "Palatino Linotype", serif;
-  --sans: "Public Sans Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --wash-apricot: rgba(232, 176, 128, 0.55);
+  --wash-sage: rgba(176, 198, 174, 0.5);
+  --wash-clay: rgba(214, 164, 142, 0.4);
+  --wash-sand: rgba(242, 214, 184, 0.38);
+  --sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-md: 1.0625rem;
   --text-lg: 1.25rem;
   --text-xl: 1.6rem;
-  --text-2xl: 2.4rem;
-  --text-3xl: clamp(2.6rem, 6vw, 4.2rem);
-  --text-4xl: clamp(3.4rem, 9vw, 6.5rem);
+  --text-2xl: 2.15rem;
+  --text-3xl: clamp(2.5rem, 5.4vw, 3.8rem);
+  --text-4xl: clamp(3.1rem, 6.6vw, 5.15rem);
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -38,32 +42,71 @@
   --space-6: 2.5rem;
   --space-7: 4rem;
   --space-8: 6.5rem;
-  --measure: 74rem;
+  --measure: 76rem;
   --gutter: clamp(1.15rem, 3.5vw, 2.75rem);
-  --header-h: 4.25rem;
-  --shadow: none;
+  --header-offset: 0.7rem;
+  --header-bar: 3.55rem;
+  --header-h: calc(var(--header-offset) + var(--header-bar) + 0.55rem);
+  --section-nav-h: 3rem;
+  --radius-panel: 22px;
+  --radius-control: 14px;
+  --radius-pill: 999px;
+  --blur-large: 8px;
+  --blur-control: 14px;
+  --blur-overlay: 16px;
+  --glass-saturate: 1.35;
+  --glass-fill: rgba(255, 250, 244, 0.72);
+  --glass-fill-raised: rgba(255, 250, 244, 0.84);
+  --glass-solid: #fffaf4;
+  --glass-line: rgba(72, 48, 28, 0.1);
+  --glass-sheen: rgba(255, 255, 255, 0.72);
+  --glass-inset: rgba(255, 250, 244, 0.58);
+  --glass-shadow: 0 1px 1px rgba(72, 42, 22, 0.04), 0 12px 32px rgba(86, 52, 28, 0.07);
+  --glass-sheen-gradient: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0) 42%
+  );
+  --accent-glass: rgba(111, 46, 34, 0.92);
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #1a1613;
+  --paper: #14110f;
   --sheet: #241f1b;
-  --ink: #f3ece3;
-  --ink-soft: #e4d9cc;
-  --faint: #b3a69a;
-  --rule: #3c342c;
-  --rule-strong: #5c4e42;
-  --terracotta: #e7b2a4;
+  --ink: #f6f1ea;
+  --ink-soft: #e7ddd2;
+  --faint: #c4b8aa;
+  --rule: rgba(246, 236, 224, 0.12);
+  --rule-strong: rgba(246, 236, 224, 0.22);
+  --terracotta: #f0c2b4;
   --terracotta-deep: #6f2e22;
   --terracotta-deeper: #542318;
   --terracotta-mark: #d4785c;
-  --on-accent: #faf6f0;
-  --ochre: #d7c4a1;
+  --on-accent: #fffaf4;
+  --ochre: #e4d2b0;
   --ochre-mark: #c6a15a;
-  --ochre-wash: #3a3123;
-  --sage: #c5d2c2;
+  --ochre-wash: #3a3126;
+  --sage: #d5e3d2;
   --sage-mark: #8aa084;
   --sage-wash: #24302a;
-  --clay: #2a241e;
-  --focus: #e7b2a4;
+  --clay: #2c261f;
+  --focus: #f0c2b4;
+  --wash-apricot: rgba(132, 72, 46, 0.38);
+  --wash-sage: rgba(62, 92, 74, 0.34);
+  --wash-clay: rgba(104, 64, 46, 0.32);
+  --wash-sand: rgba(92, 70, 48, 0.28);
+  --glass-fill: rgba(36, 30, 26, 0.74);
+  --glass-fill-raised: rgba(40, 34, 30, 0.88);
+  --glass-solid: #2a241f;
+  --glass-line: rgba(255, 244, 232, 0.14);
+  --glass-sheen: rgba(255, 244, 232, 0.18);
+  --glass-inset: rgba(255, 244, 232, 0.06);
+  --glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.24), 0 14px 32px rgba(0, 0, 0, 0.32);
+  --glass-sheen-gradient: linear-gradient(
+    180deg,
+    rgba(255, 244, 232, 0.14),
+    rgba(255, 244, 232, 0) 46%
+  );
+  --accent-glass: rgba(111, 46, 34, 0.94);
 }

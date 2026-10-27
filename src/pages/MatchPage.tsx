@@ -48,75 +48,77 @@ export function MatchPage() {
         title="Match"
         lede="Move the sliders. The list re-ranks suburbs by the mix you set, once scores exist."
       />
-      <div className="pills" role="group" aria-label="Starting mixes">
-        {PRESETS.map((preset) => (
-          <button
-            key={preset.id}
-            type="button"
-            className="pill"
-            aria-pressed={preset.id === presetId}
-            onClick={() => setValues(preset.values)}
-          >
-            {preset.label}
-          </button>
-        ))}
-      </div>
-      <div className="stack" aria-hidden="true">
-        {WEIGHTS.map((weight) => (
-          <i key={weight.id} style={{ width: formatShare(normalised[weight.id] ?? 0) }} />
-        ))}
-      </div>
-      <p>
-        The bar is your mix, normalised to 100. The address keeps it, so the link can be shared.
-      </p>
-      {WEIGHTS.map((weight) => (
-        <div className="slider-row" key={weight.id}>
-          <label htmlFor={`weight-${weight.id}`}>{weight.label}</label>
-          <input
-            id={`weight-${weight.id}`}
-            type="range"
-            min={0}
-            max={100}
-            value={values[weight.id] ?? 50}
-            aria-valuetext={`${weight.label}, ${formatShare(normalised[weight.id] ?? 0)} of the mix`}
-            aria-describedby={`weight-${weight.id}-help`}
-            onChange={(event) =>
-              setValues((current) => ({ ...current, [weight.id]: Number(event.target.value) }))
-            }
-          />
-          <span className="num">{formatShare(normalised[weight.id] ?? 0)}</span>
-          <p id={`weight-${weight.id}-help`}>{weight.help}</p>
+      <div className="control-deck">
+        <div className="pills" role="group" aria-label="Starting mixes">
+          {PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              className="pill"
+              aria-pressed={preset.id === presetId}
+              onClick={() => setValues(preset.values)}
+            >
+              {preset.label}
+            </button>
+          ))}
         </div>
-      ))}
-      <label className="field">
-        Weekly housing budget, optional
-        <input
-          inputMode="numeric"
-          value={budgetWeekly}
-          onChange={(event) => setBudgetWeekly(event.target.value.replace(/[^\d]/g, ""))}
+        <div className="stack" aria-hidden="true">
+          {WEIGHTS.map((weight) => (
+            <i key={weight.id} style={{ width: formatShare(normalised[weight.id] ?? 0) }} />
+          ))}
+        </div>
+        <p>
+          The bar is your mix, normalised to 100. The address keeps it, so the link can be shared.
+        </p>
+        {WEIGHTS.map((weight) => (
+          <div className="slider-row" key={weight.id}>
+            <label htmlFor={`weight-${weight.id}`}>{weight.label}</label>
+            <input
+              id={`weight-${weight.id}`}
+              type="range"
+              min={0}
+              max={100}
+              value={values[weight.id] ?? 50}
+              aria-valuetext={`${weight.label}, ${formatShare(normalised[weight.id] ?? 0)} of the mix`}
+              aria-describedby={`weight-${weight.id}-help`}
+              onChange={(event) =>
+                setValues((current) => ({ ...current, [weight.id]: Number(event.target.value) }))
+              }
+            />
+            <span className="num">{formatShare(normalised[weight.id] ?? 0)}</span>
+            <p id={`weight-${weight.id}-help`}>{weight.help}</p>
+          </div>
+        ))}
+        <label className="field">
+          Weekly housing budget, optional
+          <input
+            inputMode="numeric"
+            value={budgetWeekly}
+            onChange={(event) => setBudgetWeekly(event.target.value.replace(/[^\d]/g, ""))}
+          />
+        </label>
+        <label className="field">
+          Commute toward
+          <input value={commuteTo} onChange={(event) => setCommuteTo(event.target.value)} />
+        </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={needsSchools}
+            onChange={(event) => setNeedsSchools(event.target.checked)}
+          />
+          Needs schools or early learning
+        </label>
+        <FilterPills
+          label="Limit to a state"
+          value={stateCode}
+          onChange={setStateCode}
+          options={[
+            { id: "all", label: "All states" },
+            ...STATES.map((state) => ({ id: state.code, label: state.name })),
+          ]}
         />
-      </label>
-      <label className="field">
-        Commute toward
-        <input value={commuteTo} onChange={(event) => setCommuteTo(event.target.value)} />
-      </label>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={needsSchools}
-          onChange={(event) => setNeedsSchools(event.target.checked)}
-        />
-        Needs schools or early learning
-      </label>
-      <FilterPills
-        label="Limit to a state"
-        value={stateCode}
-        onChange={setStateCode}
-        options={[
-          { id: "all", label: "All states" },
-          ...STATES.map((state) => ({ id: state.code, label: state.name })),
-        ]}
-      />
+      </div>
       {query.status === "loading" ? <LoadingState label="Sending the weights." /> : null}
       {query.status === "error" ? <ErrorState error={query.error} onRetry={query.retry} /> : null}
       {query.status === "ready" ? (

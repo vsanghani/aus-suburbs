@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { site } from "../config/site";
 import { shortlistSnapshot, subscribeShortlist } from "../lib/shortlist";
 import { applyTheme, useThemeName, type ThemeName } from "../lib/theme";
+import { Icon } from "./Icon";
 
 const links = [
   { to: "/explore", label: "Explore" },
@@ -48,10 +49,12 @@ export function SiteHeader() {
       </nav>
       <div className="theme-switch" role="group" aria-label="Colour theme">
         <button type="button" aria-pressed={theme === "light"} onClick={() => choose("light")}>
-          Light
+          <Icon name="sun" />
+          <span className="theme-label">Light</span>
         </button>
         <button type="button" aria-pressed={theme === "dark"} onClick={() => choose("dark")}>
-          Dark
+          <Icon name="moon" />
+          <span className="theme-label">Dark</span>
         </button>
       </div>
       <button
@@ -61,6 +64,7 @@ export function SiteHeader() {
         aria-controls="site-nav"
         onClick={() => setOpenPath(open ? null : location.pathname)}
       >
+        <Icon name={open ? "close" : "menu"} />
         {open ? "Close" : "Menu"}
       </button>
     </header>
