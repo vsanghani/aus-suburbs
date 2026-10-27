@@ -55,14 +55,13 @@ function analyticsAllowed(choice, optOut) {
   return choice === "accept_all" && !optOut;
 }
 
-function stateBody({ choice, analytics, version, timestamp, visitorId }) {
+function stateBody({ choice, analytics, version, timestamp }) {
   return {
     choice,
     essential: true,
     analytics,
     version,
     timestamp,
-    visitorId,
   };
 }
 
@@ -161,7 +160,6 @@ function undecided() {
     analytics: false,
     version: POLICY_VERSION,
     timestamp: null,
-    visitorId: null,
   });
 }
 
@@ -221,19 +219,16 @@ async function dispatchConsent(request, options) {
   const optOut = privacyOptOut(request);
   const jar = readJar(request.headers.get("cookie"));
   const stored = parseConsent(jar.get(CONSENT_COOKIE));
-  const storedVisitorId = visitorIdFrom(jar.get(VISITOR_COOKIE));
 
   if (method === "GET") {
     if (!stored) return jsonResponse(200, undecided());
-    const analytics = analyticsAllowed(stored.choice, optOut);
     return jsonResponse(
       200,
       stateBody({
         choice: stored.choice,
-        analytics,
+        analytics: analyticsAllowed(stored.choice, optOut),
         version: stored.version,
         timestamp: stored.timestamp,
-        visitorId: analytics ? storedVisitorId : null,
       }),
     );
   }
@@ -245,9 +240,8 @@ async function dispatchConsent(request, options) {
   const timestamp = now().toISOString();
   const secure = requestIsHttps(request);
   const cookies = [serializeConsentCookie(encodeConsent(choice, timestamp), secure)];
-  let visitorId = null;
   if (choice === "accept_all") {
-    visitorId = storedVisitorId ?? randomId();
+    let visitorId = visitorIdFrom(jar.get(VISITOR_COOKIE)) ?? randomId();
     if (!UUID_V4.test(visitorId)) {
       throw new Error("Visitor id generator did not return a UUID v4.");
     }
@@ -270,7 +264,6 @@ async function dispatchConsent(request, options) {
       analytics: analyticsAllowed(choice, optOut),
       version: POLICY_VERSION,
       timestamp,
-      visitorId: analyticsAllowed(choice, optOut) ? visitorId : null,
     }),
     { cookies },
   );

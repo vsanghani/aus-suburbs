@@ -83,8 +83,9 @@ function expectShape(payload) {
     "analytics",
     "version",
     "timestamp",
-    "visitorId",
   ]);
+  expect(payload).not.toHaveProperty("visitorId");
+  expect(JSON.stringify(payload)).not.toContain(VID);
   expect(payload.essential).toBe(true);
   expect(typeof payload.version).toBe("number");
 }
@@ -101,7 +102,6 @@ describe("POST /api/consent", () => {
       analytics: true,
       version: POLICY_VERSION,
       timestamp: TIMESTAMP,
-      visitorId: VID,
     });
     expect(cookies).toEqual([consentCookie("accept_all"), visitorCookie()]);
     expect(cookies.join("\n")).not.toMatch(/Domain=/i);
@@ -119,7 +119,6 @@ describe("POST /api/consent", () => {
       analytics: false,
       version: POLICY_VERSION,
       timestamp: TIMESTAMP,
-      visitorId: null,
     });
     expect(cookies).toEqual([consentCookie("essential_only"), clearedVisitorCookie()]);
     expect(calls).toEqual([]);
@@ -131,7 +130,6 @@ describe("POST /api/consent", () => {
       choice: "reject_all",
       essential: true,
       analytics: false,
-      visitorId: null,
     });
     expect(cookies).toEqual([consentCookie("reject_all"), clearedVisitorCookie()]);
     expect(calls).toEqual([]);
@@ -142,17 +140,19 @@ describe("POST /api/consent", () => {
     const jar = `${CONSENT_COOKIE}=${consentValue("accept_all")}; ${VISITOR_COOKIE}=${VID}`;
     for (const choice of ["essential_only", "reject_all"]) {
       const next = await send(postChoice(choice, { cookie: jar }));
-      expect(next.payload).toMatchObject({ choice, analytics: false, visitorId: null });
+      expect(next.payload).toMatchObject({ choice, analytics: false });
+      expect(next.payload).not.toHaveProperty("visitorId");
       expect(next.cookies[1]).toBe(clearedVisitorCookie());
       expect(next.calls).toEqual([]);
       const read = await send(
         request("GET", { cookie: `${CONSENT_COOKIE}=${consentValue(choice)}` }),
       );
       expect(read.cookies).toEqual([]);
-      expect(read.payload.visitorId).toBeNull();
+      expect(read.payload).not.toHaveProperty("visitorId");
       expect(read.calls).toEqual([]);
     }
-    expect(first.payload.visitorId).toBe(VID);
+    expect(first.payload).not.toHaveProperty("visitorId");
+    expect(first.cookies[1]).toBe(visitorCookie(VID));
   });
 
   it("reuses kf_vid and refreshes its max-age only when the visitor posts all again", async () => {
@@ -167,7 +167,8 @@ describe("POST /api/consent", () => {
       },
     );
     expect(minted).toEqual([]);
-    expect(again.payload.visitorId).toBe(VID);
+    expect(again.payload).not.toHaveProperty("visitorId");
+    expect(JSON.stringify(again.payload)).not.toContain(VID);
     expect(again.cookies[1]).toBe(visitorCookie(VID));
     expect(again.calls).toEqual([{ visitorId: VID, timestamp: TIMESTAMP, version: 1 }]);
   });
@@ -176,7 +177,8 @@ describe("POST /api/consent", () => {
     const { payload, cookies } = await send(
       postChoice("accept_all", { cookie: `${VISITOR_COOKIE}=not-a-uuid` }),
     );
-    expect(payload.visitorId).toBe(VID);
+    expect(payload).not.toHaveProperty("visitorId");
+    expect(JSON.stringify(payload)).not.toContain(VID);
     expect(cookies[1]).toBe(visitorCookie(VID));
   });
 
@@ -340,7 +342,8 @@ describe("POST /api/consent", () => {
         },
       });
       expect(response.status).toBe(200);
-      expect(payload.visitorId).toBe(VID);
+      expect(payload).not.toHaveProperty("visitorId");
+      expect(JSON.stringify(payload)).not.toContain(VID);
       expect(cookies).toHaveLength(2);
       expect(spy).toHaveBeenCalled();
     } finally {
@@ -377,7 +380,6 @@ describe("GET /api/consent", () => {
       analytics: false,
       version: POLICY_VERSION,
       timestamp: null,
-      visitorId: null,
     });
     expect(cookies).toEqual([]);
     expect(calls).toEqual([]);
@@ -403,38 +405,32 @@ describe("GET /api/consent", () => {
       analytics: false,
       version: POLICY_VERSION,
       timestamp: TIMESTAMP,
-      visitorId: null,
     });
   });
 
-  it("returns the visitor id only while analytics consent is stored", async () => {
+  it("does not put kf_vid in the JSON, including when analytics is on", async () => {
     const present = await send(
       request("GET", {
         cookie: `${CONSENT_COOKIE}=${consentValue("accept_all")}; ${VISITOR_COOKIE}=${VID}`,
       }),
     );
-    expect(present.payload).toMatchObject({
+    expect(present.payload).toEqual({
       choice: "accept_all",
+      essential: true,
       analytics: true,
-      visitorId: VID,
+      version: POLICY_VERSION,
+      timestamp: TIMESTAMP,
     });
+    expect(JSON.stringify(present.payload)).not.toContain(VID);
     expect(present.cookies).toEqual([]);
-
-    const missing = await send(
-      request("GET", { cookie: `${CONSENT_COOKIE}=${consentValue("accept_all")}` }),
-    );
-    expect(missing.payload).toMatchObject({
-      choice: "accept_all",
-      analytics: true,
-      visitorId: null,
-    });
 
     const junk = await send(
       request("GET", {
         cookie: `${CONSENT_COOKIE}=${consentValue("accept_all")}; ${VISITOR_COOKIE}=not-a-uuid`,
       }),
     );
-    expect(junk.payload.visitorId).toBeNull();
+    expect(junk.payload).not.toHaveProperty("visitorId");
+    expect(JSON.stringify(junk.payload)).not.toContain("not-a-uuid");
     expect(junk.payload.analytics).toBe(true);
   });
 
@@ -457,7 +453,7 @@ describe("GET /api/consent", () => {
     const { cookies, payload } = await send(request("GET", { cookie }));
     expect(payload.choice).toBeNull();
     expect(payload.analytics).toBe(false);
-    expect(payload.visitorId).toBeNull();
+    expect(payload).not.toHaveProperty("visitorId");
     expect(cookies).toEqual([]);
   });
 });
@@ -478,7 +474,6 @@ describe("privacy signals", () => {
       analytics: false,
       version: POLICY_VERSION,
       timestamp: TIMESTAMP,
-      visitorId: null,
     });
     expect(cookies).toEqual([consentCookie("essential_only"), clearedVisitorCookie()]);
     expect(calls).toEqual([]);
@@ -499,7 +494,6 @@ describe("privacy signals", () => {
       analytics: false,
       version: POLICY_VERSION,
       timestamp: TIMESTAMP,
-      visitorId: null,
     });
   });
 
@@ -507,7 +501,8 @@ describe("privacy signals", () => {
     const { payload } = await send(
       postChoice("accept_all", { headers: { "sec-gpc": "0", dnt: "0" } }),
     );
-    expect(payload).toMatchObject({ choice: "accept_all", analytics: true, visitorId: VID });
+    expect(payload).toMatchObject({ choice: "accept_all", analytics: true });
+    expect(payload).not.toHaveProperty("visitorId");
   });
 });
 

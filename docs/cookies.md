@@ -49,18 +49,18 @@ There is no CORS header. Call it same-origin (`credentials: "same-origin"`). A b
 
 ## Endpoint contract
 
-The banner posts and then reads the cookie. It does not read this JSON. GET and any other caller still get the same shape, with the canonical choice names.
+The banner posts and then reads the cookie. It does not read this JSON. GET and any other caller still get the same shape, with the canonical choice names. The body is `{ choice, essential, analytics, version, timestamp }`. It never includes `kf_vid`. That cookie is `HttpOnly`, so page JavaScript cannot read it, and the JSON does not hand the value back.
 
-`essential` is always `true`: it means essential storage is allowed, not that the visitor pressed “Essential only”. The button is `choice`. `analytics` is `true` only when `choice` is `"accept_all"` and the request did not send `Sec-GPC: 1` or `DNT: 1`. `visitorId` is the `kf_vid` string when analytics is on and an id is stored, otherwise `null`. It is `null` whenever analytics is off, including a `GET` of a stored `accept_all` choice while GPC or DNT is set.
+`essential` is always `true`: it means essential storage is allowed, not that the visitor pressed “Essential only”. The button is `choice`. `analytics` is `true` only when `choice` is `"accept_all"` and the request did not send `Sec-GPC: 1` or `DNT: 1`.
 
-| Situation                               | `choice`           | `essential` | `analytics` | `visitorId`    |
-| --------------------------------------- | ------------------ | ----------- | ----------- | -------------- |
-| No decision yet                         | `null`             | `true`      | `false`     | `null`         |
-| Essential only                          | `"essential_only"` | `true`      | `false`     | `null`         |
-| Reject all                              | `"reject_all"`     | `true`      | `false`     | `null`         |
-| Accept all, no GPC/DNT                  | `"accept_all"`     | `true`      | `true`      | UUID or `null` |
-| `POST` accept all with GPC or DNT       | `"essential_only"` | `true`      | `false`     | `null`         |
-| `GET` stored accept-all with GPC or DNT | `"accept_all"`     | `true`      | `false`     | `null`         |
+| Situation                               | `choice`           | `essential` | `analytics` |
+| --------------------------------------- | ------------------ | ----------- | ----------- |
+| No decision yet                         | `null`             | `true`      | `false`     |
+| Essential only                          | `"essential_only"` | `true`      | `false`     |
+| Reject all                              | `"reject_all"`     | `true`      | `false`     |
+| Accept all, no GPC/DNT                  | `"accept_all"`     | `true`      | `true`      |
+| `POST` accept all with GPC or DNT       | `"essential_only"` | `true`      | `false`     |
+| `GET` stored accept-all with GPC or DNT | `"accept_all"`     | `true`      | `false`     |
 
 `version` is a number. On a decision it is the version stored in the cookie. When `choice` is `null` it is the current policy version a new POST would store. `timestamp` is an ISO-8601 UTC string (`Date.toISOString()`) when a decision is stored, and `null` when `choice` is `null`. Show the banner when `choice` is `null`.
 
@@ -85,12 +85,11 @@ Accept all, no privacy signal. `kf_consent` and `kf_vid` are both set. On http, 
   "essential": true,
   "analytics": true,
   "version": 1,
-  "timestamp": "2026-10-27T10:45:00.000Z",
-  "visitorId": "550e8400-e29b-41d4-a716-446655440000"
+  "timestamp": "2026-10-27T10:45:00.000Z"
 }
 ```
 
-Essential only, and reject all, use the same shape with `analytics: false` and `visitorId: null`. Reject:
+The visitor id is only in the `kf_vid` `Set-Cookie` header. Essential only, and reject all, use the same shape with `analytics: false`. Reject:
 
 ```json
 {
@@ -98,14 +97,13 @@ Essential only, and reject all, use the same shape with `analytics: false` and `
   "essential": true,
   "analytics": false,
   "version": 1,
-  "timestamp": "2026-10-27T10:45:00.000Z",
-  "visitorId": null
+  "timestamp": "2026-10-27T10:45:00.000Z"
 }
 ```
 
 Those responses set `kf_consent` and expire `kf_vid`.
 
-**GPC / DNT deviation.** `Sec-GPC: 1` or `DNT: 1` on a POST of `accept_all` (or the alias `all`) is stored as `essential_only`, even though the visitor pressed Accept all. The cookie the page reads therefore says `essential_only`, so analytics stays off. The JSON says the same thing (`choice: "essential_only"`, `analytics: false`, `visitorId: null`), but the banner ignores the body and uses the cookie. `kf_vid` is not set, and an existing one is expired. A later request without the signal does not turn analytics back on; the visitor has to POST `accept_all` again. Other header values (`0`, or the header absent) are not an opt-out.
+**GPC / DNT deviation.** `Sec-GPC: 1` or `DNT: 1` on a POST of `accept_all` (or the alias `all`) is stored as `essential_only`, even though the visitor pressed Accept all. The cookie the page reads therefore says `essential_only`, so analytics stays off. The JSON says the same thing (`choice: "essential_only"`, `analytics: false`), but the banner ignores the body and uses the cookie. `kf_vid` is not set, and an existing one is expired. A later request without the signal does not turn analytics back on; the visitor has to POST `accept_all` again. Other header values (`0`, or the header absent) are not an opt-out.
 
 Buttons:
 
@@ -138,8 +136,7 @@ No decision (missing cookie, malformed cookie, or a policy version other than th
   "essential": true,
   "analytics": false,
   "version": 1,
-  "timestamp": null,
-  "visitorId": null
+  "timestamp": null
 }
 ```
 
@@ -151,12 +148,11 @@ Stored essential choice:
   "essential": true,
   "analytics": false,
   "version": 1,
-  "timestamp": "2026-10-27T10:45:00.000Z",
-  "visitorId": null
+  "timestamp": "2026-10-27T10:45:00.000Z"
 }
 ```
 
-Stored accept-all, and the request has no GPC or DNT. `visitorId` is `null` here only when `kf_vid` is missing or not a UUID v4. GET will not mint a replacement.
+Stored accept-all, and the request has no GPC or DNT. GET does not return the visitor id and will not mint one.
 
 ```json
 {
@@ -164,12 +160,11 @@ Stored accept-all, and the request has no GPC or DNT. `visitorId` is `null` here
   "essential": true,
   "analytics": true,
   "version": 1,
-  "timestamp": "2026-10-27T10:45:00.000Z",
-  "visitorId": "550e8400-e29b-41d4-a716-446655440000"
+  "timestamp": "2026-10-27T10:45:00.000Z"
 }
 ```
 
-Stored accept-all while `Sec-GPC: 1` or `DNT: 1` is set. The stored choice stays `"accept_all"` because GET does not write. Analytics is off for this request, and the id is withheld. The cookies stay until a POST changes them.
+Stored accept-all while `Sec-GPC: 1` or `DNT: 1` is set. The stored choice stays `"accept_all"` because GET does not write. Analytics is off for this request. The cookies, including `kf_vid`, stay until a POST changes them. The JSON still does not contain the id.
 
 ```json
 {
@@ -177,8 +172,7 @@ Stored accept-all while `Sec-GPC: 1` or `DNT: 1` is set. The stored choice stays
   "essential": true,
   "analytics": false,
   "version": 1,
-  "timestamp": "2026-10-27T10:45:00.000Z",
-  "visitorId": null
+  "timestamp": "2026-10-27T10:45:00.000Z"
 }
 ```
 
@@ -195,6 +189,6 @@ The banner itself does not call GET. It reads `kf_consent`.
 
 ## Visit recording
 
-`server/visit-record.mjs` exports `recordConsentedVisit`. It is a no-op. `handleConsent` calls it only after a POST has recorded `accept_all`, with `{ visitorId, timestamp, version }` and nothing else. It is not called for `essential_only`, `reject_all`, a GPC or DNT downgrade, a GET, or a rejected body. If the hook throws, the consent response is still returned and the cookies are still set.
+`server/visit-record.mjs` exports `recordConsentedVisit`. It is a no-op. `handleConsent` calls it only after a POST has recorded `accept_all`, with `{ visitorId, timestamp, version }` on the server and nothing else. That id is not copied into the HTTP body. The hook is not called for `essential_only`, `reject_all`, a GPC or DNT downgrade, a GET, or a rejected body. If the hook throws, the consent response is still returned and the cookies are still set.
 
 A later change can write a visit from that function. The write needs its own limited database role. The API role on Vercel is read-only. This change adds no database credentials, tables, or connection strings. Do not point the hook at the read-only API role.
