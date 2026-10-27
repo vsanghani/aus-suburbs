@@ -1,6 +1,8 @@
-# Suburb record
+# Kerbfox
 
-A national shell for an Australian suburb record. Search, a map, a long suburb page, councils, ranked lists, a four-place compare, and a match page with personal weights. The product name lives in [`src/config/site.ts`](src/config/site.ts). The npm package name is the only other place it is set.
+A national shell for an Australian suburb record. Search, a map, a long suburb page, councils, ranked lists, a four-place compare, and a match page with personal weights. The display name lives in [`src/config/site.ts`](src/config/site.ts). The npm package name is `kerbfox`.
+
+Source: https://github.com/vsanghani/kerbfox
 
 No suburb rows, geometries, or scraped tables are included. The API returns empty payloads with `dataset_connected: false`. The interface treats that as “not loaded”, which is different from a real zero.
 
