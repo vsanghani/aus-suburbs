@@ -178,6 +178,16 @@ test("documents set no cookies, and consent is set by the server", async ({ requ
   const suburb = await request.get("/suburbs/vic/richmond");
   expect(setCookies(suburb.headersArray())).toEqual([]);
 
+  const idleSignal = await request.get("/api/consent", { headers: { "sec-gpc": "1" } });
+  expect(idleSignal.status()).toBe(200);
+  expect(idleSignal.headers()["cache-control"]).toBe("private, no-store");
+  expect(setCookies(idleSignal.headersArray())).toEqual([]);
+  expect(await idleSignal.json()).toMatchObject({
+    choice: null,
+    analytics: false,
+    privacySignal: "gpc",
+  });
+
   const essential = await request.post("/api/consent", {
     data: { choice: "essential_only", version: 1 },
   });
@@ -231,12 +241,30 @@ test("documents set no cookies, and consent is set by the server", async ({ requ
   expect(visitorId.length).toBeGreaterThan(0);
   expect(JSON.stringify(acceptedBody)).not.toContain(visitorId);
 
+  const quietRead = await request.get("/api/consent");
+  expect(quietRead.status()).toBe(200);
+  expect(setCookies(quietRead.headersArray())).toEqual([]);
+  expect(await quietRead.json()).toMatchObject({ choice: "accept_all", privacySignal: null });
+
   const signalRead = await request.get("/api/consent", {
     headers: { "sec-gpc": "1" },
   });
   expect(signalRead.status()).toBe(200);
   expect(signalRead.headers()["cache-control"]).toBe("private, no-store");
-  expect(setCookies(signalRead.headersArray())).toEqual([]);
+  const signalCookies = setCookies(signalRead.headersArray());
+  const rewritten = signalCookies.find((cookie) => cookie.startsWith("kf_consent="));
+  expect(rewritten).toContain("Max-Age=31536000");
+  expect(rewritten).toContain("Path=/");
+  expect(rewritten).toContain("SameSite=Lax");
+  expect(rewritten).not.toMatch(/HttpOnly/i);
+  expect(
+    JSON.parse(decodeURIComponent(rewritten!.split(";")[0].slice("kf_consent=".length))),
+  ).toMatchObject({ choice: "essential_only", version: 1 });
+  const clearedVid = signalCookies.find((cookie) => cookie.startsWith("kf_vid="));
+  expect(clearedVid).toContain("Max-Age=0");
+  expect(clearedVid).toContain("HttpOnly");
+  expect(clearedVid).toContain("Secure");
+  expect(clearedVid).toContain("SameSite=Lax");
   const signalBody = await signalRead.json();
   expect(signalBody).toEqual({
     choice: "essential_only",
@@ -247,6 +275,7 @@ test("documents set no cookies, and consent is set by the server", async ({ requ
     privacySignal: "gpc",
   });
   expect(JSON.stringify(signalBody)).not.toContain(visitorId);
+  expect(signalBody).not.toHaveProperty("visitorId");
 
   const optedOut = await request.post("/api/consent", {
     data: { choice: "accept_all", version: 1 },

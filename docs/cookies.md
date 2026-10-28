@@ -23,7 +23,7 @@ kf_consent=<urlencoded-json>; Max-Age=31536000; Path=/; SameSite=Lax
 
 Both durations are `Max-Age=31536000` (365 days). `kf_vid` is optional: it is absent unless the recorded choice is `accept_all`.
 
-`kf_vid` is `HttpOnly`, `Secure`, `SameSite=Lax`, and `Path=/`. It is set only when the recorded choice is `accept_all`, and not when `Sec-GPC: 1` or `DNT: 1` downgrades that choice. Any other recorded choice expires it (`Max-Age=0`). A later POST of `accept_all` reuses a valid existing id and sets the 12-month lifetime again, because the visitor posted again. `GET /api/consent` never writes a cookie, so a read cannot slide either lifetime forward and cannot reveal `kf_vid`.
+`kf_vid` is `HttpOnly`, `Secure`, `SameSite=Lax`, and `Path=/`. It is set only when the recorded choice is `accept_all`, and not when `Sec-GPC: 1` or `DNT: 1` downgrades that choice. Any other recorded choice expires it (`Max-Age=0`). A later POST of `accept_all` reuses a valid existing id and sets the 12-month lifetime again, because the visitor posted again. A GET with no privacy signal writes no cookie, so that read cannot slide either lifetime forward and cannot reveal `kf_vid`. A GET with `Sec-GPC: 1` or `DNT: 1` expires an existing `kf_vid` and, when `kf_consent` says `accept_all`, rewrites it to `essential_only` with the same version and a fresh timestamp. That rewrite starts a new 12-month `Max-Age`. If there is nothing to change, that GET writes nothing.
 
 `kf_consent` is allowed under every choice, including reject and before the visitor has chosen. Reject means “no analytics cookie”, not “no cookies at all”.
 
@@ -59,7 +59,7 @@ The banner reads this JSON. GET and POST return the same shape, with the canonic
 
 GET and POST apply that signal the same way. `accept_all` (and the alias `all`) becomes `essential_only` in the JSON. `analytics` is `false`. The body does not contain `kf_vid`. POST stores that downgrade in `kf_consent`, does not set `kf_vid`, and expires one that is already there. An explicit `essential_only` or `reject_all` stays that choice, and `privacySignal` is still set. A GET with no usable cookie stays `choice: null` so the banner can show, with `privacySignal` set when the browser sent one.
 
-Under GPC or DNT, a GET reports `essential_only` but does not write cookies, so an older `accept_all` cookie and `kf_vid` stay in the browser until the next POST. The banner never writes `kf_vid`. When the GET succeeds, the banner stores the returned choice in `kf_consent`. When the GET fails or 404s, it leaves `kf_consent` alone.
+Under GPC or DNT, GET reports `essential_only` and updates the browser to match. If `kf_consent` says `accept_all`, GET rewrites it to `essential_only`, keeps the stored version, and sets a fresh timestamp. If `kf_vid` is present, GET expires it (`Max-Age=0`, with the same `Path`, `SameSite`, `Secure`, and `HttpOnly` attributes). GET emits those `Set-Cookie` headers only when there is something to change. Otherwise it writes nothing. A GET with no privacy signal writes no cookies. The visit hook is not called while a signal is present, so an existing `kf_vid` is not recorded. The banner reads the GET body. It never writes `kf_vid`. If the GET fails or 404s, it falls back to `kf_consent`.
 
 | Situation                               | `choice`           | `essential` | `analytics` | `privacySignal` |
 | --------------------------------------- | ------------------ | ----------- | ----------- | --------------- |
@@ -116,7 +116,7 @@ The visitor id is only in the `kf_vid` `Set-Cookie` header. Essential only, and 
 
 Those responses set `kf_consent` and expire `kf_vid`.
 
-**GPC / DNT.** `Sec-GPC: 1` or `DNT: 1` on a POST of `accept_all` (or the alias `all`) is stored as `essential_only`, even though the visitor pressed Accept all. The banner stores that returned choice, not the button. GET of a stored `accept_all` reports the same `choice`, `analytics: false`, and the same `privacySignal`. Under GPC or DNT, that GET reports `essential_only` but does not write cookies, so an older `accept_all` cookie and `kf_vid` stay in the browser until the next POST. `kf_vid` is not set on the POST, an existing one is expired, and neither response body contains it. A later request without the signal does not turn analytics back on after the POST has stored `essential_only`; the visitor has to POST `accept_all` again.
+**GPC / DNT.** `Sec-GPC: 1` or `DNT: 1` on a POST of `accept_all` (or the alias `all`) is stored as `essential_only`, even though the visitor pressed Accept all. The banner stores that returned choice, not the button. GET of a stored `accept_all` reports the same `choice`, `analytics: false`, and the same `privacySignal`, and rewrites `kf_consent` to `essential_only` with the same version and a fresh timestamp. An existing `kf_vid` is expired on that GET. GET sends a `Set-Cookie` only for a stored `accept_all` or an existing `kf_vid`. `kf_vid` is not set on the POST, an existing one is expired, and neither response body contains it. The visit hook is not called on either request while the signal is present. A later request without the signal does not turn analytics back on after the choice has been stored as `essential_only`; the visitor has to POST `accept_all` again.
 
 ```json
 {
@@ -152,7 +152,7 @@ Invalid input is `400` with `{ "detail": "..." }` and no `Set-Cookie`. That incl
 
 ### `GET /api/consent`
 
-No request body. No `Set-Cookie`. Does not call the visit hook and does not renew `Max-Age`. The banner calls this endpoint for its state, and falls back to the `kf_consent` cookie if the GET fails or returns 404. Alias choice names in an old cookie are returned as the canonical names.
+No request body. Does not call the visit hook. A GET with no privacy signal sends no `Set-Cookie` and does not renew `Max-Age`. Under `Sec-GPC: 1` or `DNT: 1`, GET expires an existing `kf_vid` and, when the stored choice is `accept_all`, rewrites `kf_consent` to `essential_only` (same version, fresh timestamp). It emits `Set-Cookie` only for those changes. The response stays `Cache-Control: private, no-store`. The banner calls this endpoint for its state and reads the JSON body. It falls back to the `kf_consent` cookie if the GET fails or returns 404. Alias choice names in an old cookie are returned as the canonical names.
 
 No decision (missing cookie, malformed cookie, or a policy version other than the current one):
 
@@ -167,7 +167,7 @@ No decision (missing cookie, malformed cookie, or a policy version other than th
 }
 ```
 
-The same GET with `Sec-GPC: 1` or `DNT: 1` still has `choice: null` and writes nothing. `privacySignal` is `"gpc"` or `"dnt"`.
+The same GET with `Sec-GPC: 1` or `DNT: 1` still has `choice: null`. It writes nothing when `kf_vid` is absent. If `kf_vid` is present, that GET expires it and still does not record a visit. `privacySignal` is `"gpc"` or `"dnt"`.
 
 Stored essential choice:
 
@@ -195,7 +195,7 @@ Stored accept-all, and the request has no GPC or DNT. GET does not return the vi
 }
 ```
 
-Stored accept-all while `Sec-GPC: 1` or `DNT: 1` is set. GET reports `essential_only`, not the stored `accept_all`. Analytics is off. `privacySignal` is `"gpc"` or `"dnt"`. GET does not write cookies, so an older `accept_all` cookie and `kf_vid` stay in the browser until the next POST. The JSON does not contain the id.
+Stored accept-all while `Sec-GPC: 1` or `DNT: 1` is set. GET reports `essential_only`, not the stored `accept_all`. Analytics is off. `privacySignal` is `"gpc"` or `"dnt"`. GET rewrites `kf_consent` to `essential_only` with the same version and a fresh timestamp, and expires `kf_vid` when that cookie is present. The JSON does not contain the id. The `timestamp` below is that fresh value.
 
 ```json
 {

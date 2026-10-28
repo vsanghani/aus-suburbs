@@ -11,10 +11,11 @@ import { recordConsentedVisit } from "./visit-record.mjs";
  * `kf_vid` stays HttpOnly. The page never creates or clears it.
  *
  * `kf_vid` is set only for a recorded choice of `accept_all`. `Sec-GPC: 1`
- * and `DNT: 1` are the same on GET and POST: an `accept_all` choice is
- * reported as `essential_only`, analytics stays off, and the id is not set
- * or returned. POST stores that downgrade. GET only reports it.
- * GET never writes, so a read cannot slide a 12-month lifetime forward.
+ * and `DNT: 1` are the same on GET and POST: an `accept_all` choice is stored
+ * as `essential_only`, analytics stays off, and the id is not set or returned.
+ * GET rewrites that cookie and expires an existing `kf_vid` only when one of
+ * those is present. A GET with no signal writes nothing. The visit hook is
+ * not called while a signal is present.
  */
 
 export const CONSENT_PATH = "/api/consent";
@@ -160,8 +161,13 @@ function parseConsent(raw) {
   };
 }
 
-function encodeConsent(choice, timestamp) {
-  return encodeURIComponent(JSON.stringify({ choice, version: POLICY_VERSION, timestamp }));
+function encodeConsent(choice, timestamp, version = POLICY_VERSION) {
+  return encodeURIComponent(JSON.stringify({ choice, version, timestamp }));
+}
+
+function visitorCookiePresent(jar) {
+  const raw = jar.get(VISITOR_COOKIE);
+  return typeof raw === "string" && raw.length > 0;
 }
 
 function undecided(privacySignal) {
@@ -232,17 +238,33 @@ async function dispatchConsent(request, options) {
   const stored = parseConsent(jar.get(CONSENT_COOKIE));
 
   if (method === "GET") {
-    if (!stored) return jsonResponse(200, undecided(privacySignal));
-    const choice = effectiveChoice(stored.choice, privacySignal);
+    const cookies = [];
+    let choice = stored?.choice ?? null;
+    let timestamp = stored?.timestamp ?? null;
+    if (privacySignal !== null && stored?.choice === "accept_all") {
+      choice = "essential_only";
+      timestamp = now().toISOString();
+      cookies.push(
+        serializeConsentCookie(
+          encodeConsent(choice, timestamp, stored.version),
+          requestIsHttps(request),
+        ),
+      );
+    }
+    if (privacySignal !== null && visitorCookiePresent(jar)) {
+      cookies.push(serializeVisitorCookie("", 0));
+    }
+    if (!stored) return jsonResponse(200, undecided(privacySignal), { cookies });
     return jsonResponse(
       200,
       stateBody({
         choice,
         analytics: analyticsAllowed(choice, privacySignal),
         version: stored.version,
-        timestamp: stored.timestamp,
+        timestamp,
         privacySignal,
       }),
+      { cookies },
     );
   }
 
@@ -253,7 +275,9 @@ async function dispatchConsent(request, options) {
   const timestamp = now().toISOString();
   const secure = requestIsHttps(request);
   const cookies = [serializeConsentCookie(encodeConsent(choice, timestamp), secure)];
-  if (choice === "accept_all") {
+  // A privacy signal has already turned accept_all into essential_only. Do not
+  // read kf_vid into the visit hook, and do not record a visit.
+  if (privacySignal === null && choice === "accept_all") {
     let visitorId = visitorIdFrom(jar.get(VISITOR_COOKIE)) ?? randomId();
     if (!UUID_V4.test(visitorId)) {
       throw new Error("Visitor id generator did not return a UUID v4.");

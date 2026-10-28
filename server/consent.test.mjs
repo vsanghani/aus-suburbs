@@ -499,19 +499,20 @@ describe("privacy signals", () => {
     ["Sec-GPC", { "sec-gpc": "1" }, "gpc"],
     ["DNT", { dnt: "1" }, "dnt"],
   ])(
-    "reports a stored accept-all as essential_only on GET for %s without writing",
+    "rewrites a stored accept-all and expires kf_vid on GET for %s",
     async (name, headers, privacySignal) => {
       expect(name.length).toBeGreaterThan(0);
+      const storedAt = "2026-01-01T00:00:00.000Z";
       const { response, cookies, payload, calls } = await send(
         request("GET", {
-          cookie: `${CONSENT_COOKIE}=${consentValue("accept_all")}; ${VISITOR_COOKIE}=${VID}`,
+          cookie: `${CONSENT_COOKIE}=${consentValue("accept_all", storedAt)}; ${VISITOR_COOKIE}=${VID}`,
           headers,
         }),
       );
       expect(response.status).toBe(200);
       expectNoStore(response);
-      expect(cookies).toEqual([]);
       expect(calls).toEqual([]);
+      expect(cookies).toEqual([consentCookie("essential_only", TIMESTAMP), clearedVisitorCookie()]);
       expectShape(payload);
       expect(payload).toEqual({
         choice: "essential_only",
@@ -545,7 +546,11 @@ describe("privacy signals", () => {
         headers,
       }),
     );
-    expect(read.cookies).toEqual([]);
+    expect(read.calls).toEqual([]);
+    expect(read.cookies).toEqual([
+      consentCookie("essential_only", TIMESTAMP),
+      clearedVisitorCookie(),
+    ]);
     expect(read.payload).toEqual({
       choice: "essential_only",
       essential: true,
@@ -573,7 +578,8 @@ describe("privacy signals", () => {
         headers: { "sec-gpc": "1" },
       }),
     );
-    expect(essential.cookies).toEqual([]);
+    expect(essential.calls).toEqual([]);
+    expect(essential.cookies).toEqual([clearedVisitorCookie()]);
     expect(essential.payload).toEqual({
       choice: "essential_only",
       essential: true,
@@ -585,11 +591,59 @@ describe("privacy signals", () => {
     expect(JSON.stringify(essential.payload)).not.toContain(VID);
   });
 
-  it("reports the signal on an undecided GET and writes nothing", async () => {
+  it("rewrites accept_all on GET and does not clear a kf_vid that is absent", async () => {
+    const { cookies, calls, payload } = await send(
+      request("GET", {
+        cookie: `${CONSENT_COOKIE}=${consentValue("accept_all", "2026-01-01T00:00:00.000Z")}`,
+        headers: { "sec-gpc": "1" },
+      }),
+    );
+    expect(calls).toEqual([]);
+    expect(cookies).toEqual([consentCookie("essential_only", TIMESTAMP)]);
+    expect(payload.timestamp).toBe(TIMESTAMP);
+    expect(payload.version).toBe(POLICY_VERSION);
+    expect(payload).not.toHaveProperty("visitorId");
+  });
+
+  it("writes nothing on GET when a signal has no accept_all and no kf_vid", async () => {
+    const { response, cookies, payload, calls } = await send(
+      request("GET", {
+        cookie: `${CONSENT_COOKIE}=${consentValue("reject_all")}`,
+        headers: { dnt: "1" },
+      }),
+    );
+    expectNoStore(response);
+    expect(cookies).toEqual([]);
+    expect(calls).toEqual([]);
+    expect(payload).toMatchObject({
+      choice: "reject_all",
+      analytics: false,
+      timestamp: TIMESTAMP,
+      privacySignal: "dnt",
+    });
+  });
+
+  it("writes nothing on GET when no privacy signal is present", async () => {
+    const { cookies, payload, calls } = await send(
+      request("GET", {
+        cookie: `${CONSENT_COOKIE}=${consentValue("accept_all")}; ${VISITOR_COOKIE}=${VID}`,
+      }),
+    );
+    expect(cookies).toEqual([]);
+    expect(calls).toEqual([]);
+    expect(payload).toMatchObject({
+      choice: "accept_all",
+      analytics: true,
+      privacySignal: null,
+    });
+    expect(JSON.stringify(payload)).not.toContain(VID);
+  });
+
+  it("expires a stray kf_vid on an undecided GET and does not record it", async () => {
     const { cookies, payload, calls } = await send(
       request("GET", { headers: { dnt: "1" }, cookie: `${VISITOR_COOKIE}=${VID}` }),
     );
-    expect(cookies).toEqual([]);
+    expect(cookies).toEqual([clearedVisitorCookie()]);
     expect(calls).toEqual([]);
     expect(payload).toEqual({
       choice: null,
@@ -600,6 +654,20 @@ describe("privacy signals", () => {
       privacySignal: "dnt",
     });
     expect(JSON.stringify(payload)).not.toContain(VID);
+  });
+
+  it("reports the signal on an undecided GET and writes nothing when kf_vid is absent", async () => {
+    const { cookies, payload, calls } = await send(request("GET", { headers: { "sec-gpc": "1" } }));
+    expect(cookies).toEqual([]);
+    expect(calls).toEqual([]);
+    expect(payload).toEqual({
+      choice: null,
+      essential: true,
+      analytics: false,
+      version: POLICY_VERSION,
+      timestamp: null,
+      privacySignal: "gpc",
+    });
   });
 
   it("does not treat other GPC or DNT values as opt-out", async () => {
