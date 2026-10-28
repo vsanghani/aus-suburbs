@@ -1,35 +1,16 @@
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { PageIntro } from "../components/PageIntro";
 import { privacyCopy } from "../seo/copy";
 import { Head } from "../seo/Head";
 
 export function PrivacyPage() {
-  const { hash } = useLocation();
-  useEffect(() => {
-    if (hash !== "#cookies") return;
-    document.getElementById("cookies")?.scrollIntoView();
-  }, [hash]);
-
   return (
     <main className="page" id="content">
       <Head {...privacyCopy()} />
       <PageIntro
         kicker="Privacy"
         title="What this site stores"
-        lede="There are no accounts. Theme and kept suburbs stay in this browser. A cookie remembers this browser only if you accept."
+        lede="There are no accounts. A few things stay in this browser, and nowhere else."
       />
-      <h2 id="cookies">Cookies</h2>
-      <p>
-        The cookie bar stores your choice in a first-party cookie named “kf_consent”. It holds which
-        button you picked, a version number, and the date, and it lasts about a year. Accept all
-        lets the site remember this browser. Essential only and Reject all record the choice and do
-        not. Cookie settings in the footer opens the bar again.
-      </p>
-      <p>
-        If you choose Accept all, the server can also set an anonymous visitor cookie named
-        “kf_vid”. Essential only and Reject all clear it when the server receives the new choice.
-      </p>
       <h2>On this browser</h2>
       <p>The colour theme is stored under the key “theme”.</p>
       <p>
