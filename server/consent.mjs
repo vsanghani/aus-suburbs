@@ -11,7 +11,9 @@ import { recordConsentedVisit } from "./visit-record.mjs";
  * `kf_vid` stays HttpOnly. The page never creates or clears it.
  *
  * `kf_vid` is set only for a recorded choice of `accept_all`. `Sec-GPC: 1`
- * and `DNT: 1` store `accept_all` as `essential_only` and do not set it.
+ * and `DNT: 1` are the same on GET and POST: an `accept_all` choice is
+ * reported as `essential_only`, analytics stays off, and the id is not set
+ * or returned. POST stores that downgrade. GET only reports it.
  * GET never writes, so a read cannot slide a 12-month lifetime forward.
  */
 
@@ -35,8 +37,15 @@ const MAX_BODY_BYTES = 1024;
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EXPIRED = "Thu, 01 Jan 1970 00:00:00 GMT";
 
-function privacyOptOut(request) {
-  return request.headers.get("sec-gpc") === "1" || request.headers.get("dnt") === "1";
+function privacySignalFrom(request) {
+  if (request.headers.get("sec-gpc") === "1") return "gpc";
+  if (request.headers.get("dnt") === "1") return "dnt";
+  return null;
+}
+
+function effectiveChoice(choice, privacySignal) {
+  if (privacySignal !== null && choice === "accept_all") return "essential_only";
+  return choice;
 }
 
 function normaliseChoice(value) {
@@ -51,17 +60,18 @@ function requestIsHttps(request) {
   return forwarded.split(",")[0].trim().toLowerCase() === "https";
 }
 
-function analyticsAllowed(choice, optOut) {
-  return choice === "accept_all" && !optOut;
+function analyticsAllowed(choice, privacySignal) {
+  return choice === "accept_all" && privacySignal === null;
 }
 
-function stateBody({ choice, analytics, version, timestamp }) {
+function stateBody({ choice, analytics, version, timestamp, privacySignal }) {
   return {
     choice,
     essential: true,
     analytics,
     version,
     timestamp,
+    privacySignal,
   };
 }
 
@@ -154,12 +164,13 @@ function encodeConsent(choice, timestamp) {
   return encodeURIComponent(JSON.stringify({ choice, version: POLICY_VERSION, timestamp }));
 }
 
-function undecided() {
+function undecided(privacySignal) {
   return stateBody({
     choice: null,
     analytics: false,
     version: POLICY_VERSION,
     timestamp: null,
+    privacySignal,
   });
 }
 
@@ -216,19 +227,21 @@ async function dispatchConsent(request, options) {
   const now = options.now ?? (() => new Date());
   const randomId = options.randomId ?? (() => randomUUID());
   const recordVisit = options.recordVisit ?? recordConsentedVisit;
-  const optOut = privacyOptOut(request);
+  const privacySignal = privacySignalFrom(request);
   const jar = readJar(request.headers.get("cookie"));
   const stored = parseConsent(jar.get(CONSENT_COOKIE));
 
   if (method === "GET") {
-    if (!stored) return jsonResponse(200, undecided());
+    if (!stored) return jsonResponse(200, undecided(privacySignal));
+    const choice = effectiveChoice(stored.choice, privacySignal);
     return jsonResponse(
       200,
       stateBody({
-        choice: stored.choice,
-        analytics: analyticsAllowed(stored.choice, optOut),
+        choice,
+        analytics: analyticsAllowed(choice, privacySignal),
         version: stored.version,
         timestamp: stored.timestamp,
+        privacySignal,
       }),
     );
   }
@@ -236,7 +249,7 @@ async function dispatchConsent(request, options) {
   const parsed = await readChoice(request);
   if (parsed.error) return jsonError(400, parsed.error);
 
-  const choice = optOut && parsed.choice === "accept_all" ? "essential_only" : parsed.choice;
+  const choice = effectiveChoice(parsed.choice, privacySignal);
   const timestamp = now().toISOString();
   const secure = requestIsHttps(request);
   const cookies = [serializeConsentCookie(encodeConsent(choice, timestamp), secure)];
@@ -261,9 +274,10 @@ async function dispatchConsent(request, options) {
     200,
     stateBody({
       choice,
-      analytics: analyticsAllowed(choice, optOut),
+      analytics: analyticsAllowed(choice, privacySignal),
       version: POLICY_VERSION,
       timestamp,
+      privacySignal,
     }),
     { cookies },
   );

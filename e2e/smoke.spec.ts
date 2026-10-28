@@ -190,6 +190,7 @@ test("documents set no cookies, and consent is set by the server", async ({ requ
     analytics: false,
     version: 1,
     timestamp: expect.any(String),
+    privacySignal: null,
   });
   const essentialCookies = setCookies(essential.headersArray());
   const consentCookie = essentialCookies.find((cookie) => cookie.startsWith("kf_consent="));
@@ -215,6 +216,11 @@ test("documents set no cookies, and consent is set by the server", async ({ requ
   });
   expect(accepted.status()).toBe(200);
   const acceptedBody = await accepted.json();
+  expect(acceptedBody).toMatchObject({
+    choice: "accept_all",
+    analytics: true,
+    privacySignal: null,
+  });
   expect(acceptedBody).not.toHaveProperty("visitorId");
   const acceptedCookies = setCookies(accepted.headersArray());
   const vidCookie = acceptedCookies.find((cookie) => /^kf_vid=[0-9a-f-]{36}/i.test(cookie));
@@ -224,6 +230,23 @@ test("documents set no cookies, and consent is set by the server", async ({ requ
   const visitorId = vidCookie?.split(";")[0]?.slice("kf_vid=".length) ?? "";
   expect(visitorId.length).toBeGreaterThan(0);
   expect(JSON.stringify(acceptedBody)).not.toContain(visitorId);
+
+  const signalRead = await request.get("/api/consent", {
+    headers: { "sec-gpc": "1" },
+  });
+  expect(signalRead.status()).toBe(200);
+  expect(signalRead.headers()["cache-control"]).toBe("private, no-store");
+  expect(setCookies(signalRead.headersArray())).toEqual([]);
+  const signalBody = await signalRead.json();
+  expect(signalBody).toEqual({
+    choice: "essential_only",
+    essential: true,
+    analytics: false,
+    version: 1,
+    timestamp: expect.any(String),
+    privacySignal: "gpc",
+  });
+  expect(JSON.stringify(signalBody)).not.toContain(visitorId);
 
   const optedOut = await request.post("/api/consent", {
     data: { choice: "accept_all", version: 1 },
@@ -237,6 +260,7 @@ test("documents set no cookies, and consent is set by the server", async ({ requ
     analytics: false,
     version: 1,
     timestamp: expect.any(String),
+    privacySignal: "gpc",
   });
   expect(JSON.stringify(optedOutBody)).not.toContain("visitorId");
   const optedOutCookies = setCookies(optedOut.headersArray());

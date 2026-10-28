@@ -6,10 +6,10 @@ The banner POSTs the choice and then reads `kf_consent`. It ignores the response
 
 ## Cookie table
 
-| Name         | Purpose                                                                                                          | Category  | Duration                                                                          |
-| ------------ | ---------------------------------------------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------- |
-| `kf_consent` | Remembers the choice (`accept_all`, `essential_only`, or `reject_all`), the policy version, and the time of it.  | Essential | 12 months (`Max-Age=31536000`, 365 days). Set for every choice, including reject. |
-| `kf_vid`     | Random anonymous visitor id (UUID v4). No name, email, or other account data. The page never writes this cookie. | Analytics | 12 months, and only while the recorded choice is `accept_all`.                    |
+| Name         | Purpose                                                                                                                                                 | Category  | Duration  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------- |
+| `kf_consent` | Remembers the choice (`accept_all`, `essential_only`, or `reject_all`), the policy version, and the time of it. Set for every choice, including reject. | Essential | 12 months |
+| `kf_vid`     | Random anonymous visitor id (UUID v4). No name, email, or other account data. The page never writes this cookie. Set only for a recorded `accept_all`.  | Optional  | 12 months |
 
 Both cookies are first-party and host-only (no `Domain` attribute).
 
@@ -21,7 +21,9 @@ kf_consent=<urlencoded-json>; Max-Age=31536000; Path=/; SameSite=Lax
 
 `Secure` is appended only when the request is https (`https:` URL, or `X-Forwarded-Proto: https`). It is omitted on http so a local banner can read the cookie.
 
-`kf_vid` is `HttpOnly`, `Secure`, `SameSite=Lax`, and `Path=/`. It is set only when the recorded choice is `accept_all`, and not when `Sec-GPC: 1` or `DNT: 1` downgrades that choice. Any other recorded choice expires it (`Max-Age=0`). A later POST of `accept_all` reuses a valid existing id and sets the 12-month lifetime again, because the visitor posted again. `GET /api/consent` never writes a cookie, so a read cannot slide either lifetime forward.
+Both durations are `Max-Age=31536000` (365 days). `kf_vid` is optional: it is absent unless the recorded choice is `accept_all`.
+
+`kf_vid` is `HttpOnly`, `Secure`, `SameSite=Lax`, and `Path=/`. It is set only when the recorded choice is `accept_all`, and not when `Sec-GPC: 1` or `DNT: 1` downgrades that choice. Any other recorded choice expires it (`Max-Age=0`). A later POST of `accept_all` reuses a valid existing id and sets the 12-month lifetime again, because the visitor posted again. `GET /api/consent` never writes a cookie, so a read cannot slide either lifetime forward and cannot reveal `kf_vid`.
 
 `kf_consent` is allowed under every choice, including reject and before the visitor has chosen. Reject means “no analytics cookie”, not “no cookies at all”.
 
@@ -49,18 +51,25 @@ There is no CORS header. Call it same-origin (`credentials: "same-origin"`). A b
 
 ## Endpoint contract
 
-The banner posts and then reads the cookie. It does not read this JSON. GET and any other caller still get the same shape, with the canonical choice names. The body is `{ choice, essential, analytics, version, timestamp }`. It never includes `kf_vid`. That cookie is `HttpOnly`, so page JavaScript cannot read it, and the JSON does not hand the value back.
+The banner posts and then reads the cookie. It does not read this JSON today. GET and POST still return the same shape, with the canonical choice names. The body is `{ choice, essential, analytics, version, timestamp, privacySignal }`. It never includes `kf_vid`. That cookie is `HttpOnly`, so page JavaScript cannot read it, and the JSON does not hand the value back.
 
-`essential` is always `true`: it means essential storage is allowed, not that the visitor pressed “Essential only”. The button is `choice`. `analytics` is `true` only when `choice` is `"accept_all"` and the request did not send `Sec-GPC: 1` or `DNT: 1`.
+`essential` is always `true`: it means essential storage is allowed, not that the visitor pressed “Essential only”. The button is `choice`. `analytics` is `true` only when `choice` is `"accept_all"`. A privacy signal never leaves `choice` as `"accept_all"`, so analytics is off whenever `privacySignal` is set.
 
-| Situation                               | `choice`           | `essential` | `analytics` |
-| --------------------------------------- | ------------------ | ----------- | ----------- |
-| No decision yet                         | `null`             | `true`      | `false`     |
-| Essential only                          | `"essential_only"` | `true`      | `false`     |
-| Reject all                              | `"reject_all"`     | `true`      | `false`     |
-| Accept all, no GPC/DNT                  | `"accept_all"`     | `true`      | `true`      |
-| `POST` accept all with GPC or DNT       | `"essential_only"` | `true`      | `false`     |
-| `GET` stored accept-all with GPC or DNT | `"accept_all"`     | `true`      | `false`     |
+`privacySignal` tells the banner the browser signal was honoured. It is `"gpc"` when the request has `Sec-GPC: 1`, `"dnt"` when that header is not `1` and `DNT` is `1`, and `null` when neither signal is set. If both headers are `1`, the value is `"gpc"`. Other values (`0`, or the header absent) are not a signal.
+
+GET and POST apply that signal the same way. `accept_all` (and the alias `all`) becomes `essential_only` in the JSON. `analytics` is `false`. The body does not contain `kf_vid`. POST does not set that cookie, and it expires one that is already there. GET writes nothing. An explicit `essential_only` or `reject_all` stays that choice, and `privacySignal` is still set. A GET with no usable cookie stays `choice: null` so the banner can show, with `privacySignal` set when the browser sent one. POST stores the downgrade in `kf_consent`. GET does not write, so a cookie that already says `accept_all` stays on the browser until a POST; the JSON for that GET is still `essential_only`.
+
+| Situation                               | `choice`           | `essential` | `analytics` | `privacySignal` |
+| --------------------------------------- | ------------------ | ----------- | ----------- | --------------- |
+| No decision, no signal                  | `null`             | `true`      | `false`     | `null`          |
+| No decision, `Sec-GPC: 1`               | `null`             | `true`      | `false`     | `"gpc"`         |
+| No decision, `DNT: 1`                   | `null`             | `true`      | `false`     | `"dnt"`         |
+| Essential only                          | `"essential_only"` | `true`      | `false`     | `null`          |
+| Reject all                              | `"reject_all"`     | `true`      | `false`     | `null`          |
+| Accept all, no signal                   | `"accept_all"`     | `true`      | `true`      | `null`          |
+| Accept all on GET or POST, `Sec-GPC: 1` | `"essential_only"` | `true`      | `false`     | `"gpc"`         |
+| Accept all on GET or POST, `DNT: 1`     | `"essential_only"` | `true`      | `false`     | `"dnt"`         |
+| Accept all on GET or POST, both signals | `"essential_only"` | `true`      | `false`     | `"gpc"`         |
 
 `version` is a number. On a decision it is the version stored in the cookie. When `choice` is `null` it is the current policy version a new POST would store. `timestamp` is an ISO-8601 UTC string (`Date.toISOString()`) when a decision is stored, and `null` when `choice` is `null`. Show the banner when `choice` is `null`.
 
@@ -85,11 +94,12 @@ Accept all, no privacy signal. `kf_consent` and `kf_vid` are both set. On http, 
   "essential": true,
   "analytics": true,
   "version": 1,
-  "timestamp": "2026-10-27T10:45:00.000Z"
+  "timestamp": "2026-10-27T10:45:00.000Z",
+  "privacySignal": null
 }
 ```
 
-The visitor id is only in the `kf_vid` `Set-Cookie` header. Essential only, and reject all, use the same shape with `analytics: false`. Reject:
+The visitor id is only in the `kf_vid` `Set-Cookie` header. Essential only, and reject all, use the same shape with `analytics: false` and `privacySignal: null`. Reject:
 
 ```json
 {
@@ -97,13 +107,27 @@ The visitor id is only in the `kf_vid` `Set-Cookie` header. Essential only, and 
   "essential": true,
   "analytics": false,
   "version": 1,
-  "timestamp": "2026-10-27T10:45:00.000Z"
+  "timestamp": "2026-10-27T10:45:00.000Z",
+  "privacySignal": null
 }
 ```
 
 Those responses set `kf_consent` and expire `kf_vid`.
 
-**GPC / DNT deviation.** `Sec-GPC: 1` or `DNT: 1` on a POST of `accept_all` (or the alias `all`) is stored as `essential_only`, even though the visitor pressed Accept all. The cookie the page reads therefore says `essential_only`, so analytics stays off. The JSON says the same thing (`choice: "essential_only"`, `analytics: false`), but the banner ignores the body and uses the cookie. `kf_vid` is not set, and an existing one is expired. A later request without the signal does not turn analytics back on; the visitor has to POST `accept_all` again. Other header values (`0`, or the header absent) are not an opt-out.
+**GPC / DNT.** `Sec-GPC: 1` or `DNT: 1` on a POST of `accept_all` (or the alias `all`) is stored as `essential_only`, even though the visitor pressed Accept all. GET of a stored `accept_all` reports the same `choice`, `analytics: false`, and the same `privacySignal`. The POST cookie therefore says `essential_only`, so a banner that only reads `kf_consent` keeps analytics off. GET does not rewrite that cookie: if it already says `accept_all`, it stays until a POST. `kf_vid` is not set on the POST, an existing one is expired, and neither response body contains it. A later request without the signal does not turn analytics back on after the POST has stored `essential_only`; the visitor has to POST `accept_all` again.
+
+```json
+{
+  "choice": "essential_only",
+  "essential": true,
+  "analytics": false,
+  "version": 1,
+  "timestamp": "2026-10-27T10:45:00.000Z",
+  "privacySignal": "gpc"
+}
+```
+
+`privacySignal` is `"dnt"` when `DNT: 1` is the only signal. The banner can show that the browser signal was honoured. The current banner ignores this body and reads `kf_consent`.
 
 Buttons:
 
@@ -136,9 +160,12 @@ No decision (missing cookie, malformed cookie, or a policy version other than th
   "essential": true,
   "analytics": false,
   "version": 1,
-  "timestamp": null
+  "timestamp": null,
+  "privacySignal": null
 }
 ```
+
+The same GET with `Sec-GPC: 1` or `DNT: 1` still has `choice: null` and writes nothing. `privacySignal` is `"gpc"` or `"dnt"`.
 
 Stored essential choice:
 
@@ -148,7 +175,8 @@ Stored essential choice:
   "essential": true,
   "analytics": false,
   "version": 1,
-  "timestamp": "2026-10-27T10:45:00.000Z"
+  "timestamp": "2026-10-27T10:45:00.000Z",
+  "privacySignal": null
 }
 ```
 
@@ -160,19 +188,21 @@ Stored accept-all, and the request has no GPC or DNT. GET does not return the vi
   "essential": true,
   "analytics": true,
   "version": 1,
-  "timestamp": "2026-10-27T10:45:00.000Z"
+  "timestamp": "2026-10-27T10:45:00.000Z",
+  "privacySignal": null
 }
 ```
 
-Stored accept-all while `Sec-GPC: 1` or `DNT: 1` is set. The stored choice stays `"accept_all"` because GET does not write. Analytics is off for this request. The cookies, including `kf_vid`, stay until a POST changes them. The JSON still does not contain the id.
+Stored accept-all while `Sec-GPC: 1` or `DNT: 1` is set. GET reports `essential_only`, not the stored `accept_all`. Analytics is off. `privacySignal` is `"gpc"` or `"dnt"`. GET still sets no cookie, so `kf_consent` and `kf_vid` stay until a POST changes them. The JSON does not contain the id.
 
 ```json
 {
-  "choice": "accept_all",
+  "choice": "essential_only",
   "essential": true,
   "analytics": false,
   "version": 1,
-  "timestamp": "2026-10-27T10:45:00.000Z"
+  "timestamp": "2026-10-27T10:45:00.000Z",
+  "privacySignal": "gpc"
 }
 ```
 
