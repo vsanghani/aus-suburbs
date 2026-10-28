@@ -1,9 +1,11 @@
 import { useSyncExternalStore } from "react";
 import {
   bannerOpenSnapshot,
+  consentNoticeOpen,
   getConsent,
   serverBannerOpen,
   serverConsent,
+  serverNoticeOpen,
   subscribeConsentStore,
   type Consent,
 } from "./consent";
@@ -16,4 +18,9 @@ export function useConsent(): Consent {
 /** Whether the cookie bar should be visible. False while hydrating. */
 export function useCookieBannerOpen(): boolean {
   return useSyncExternalStore(subscribeConsentStore, bannerOpenSnapshot, serverBannerOpen);
+}
+
+/** Privacy-signal notice. False while hydrating, so the first paint does not include it. */
+export function useConsentNotice(): boolean {
+  return useSyncExternalStore(subscribeConsentStore, consentNoticeOpen, serverNoticeOpen);
 }

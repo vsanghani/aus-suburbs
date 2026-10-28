@@ -1,13 +1,33 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { recordConsent, type ConsentChoice } from "../lib/consent";
-import { useCookieBannerOpen } from "../lib/useConsent";
+import {
+  CONSENT_NOTICE,
+  dismissConsentNotice,
+  recordConsent,
+  refreshConsentFromServer,
+  type ConsentChoice,
+} from "../lib/consent";
+import { useConsentNotice, useCookieBannerOpen } from "../lib/useConsent";
+
+const BODY =
+  "We use essential cookies to make this site work. If you choose Accept all, we also set an anonymous ID so we can recognise returning visitors and see how the site is used. Essential only and Reject all keep this off. You can change your choice at any time.";
 
 const choices: { choice: ConsentChoice; label: string }[] = [
   { choice: "accept_all", label: "Accept all" },
   { choice: "essential_only", label: "Essential only" },
   { choice: "reject_all", label: "Reject all" },
 ];
+
+function PrivacyNotice() {
+  return (
+    <div className="cookie-notice" role="status" aria-live="polite">
+      <p>{CONSENT_NOTICE}</p>
+      <button type="button" className="cookie-notice-dismiss" onClick={dismissConsentNotice}>
+        Dismiss
+      </button>
+    </div>
+  );
+}
 
 /**
  * Non-modal cookie bar. It is not rendered on the server, so the cached HTML
@@ -16,8 +36,13 @@ const choices: { choice: ConsentChoice; label: string }[] = [
  */
 export function CookieBanner() {
   const open = useCookieBannerOpen();
+  const notice = useConsentNotice();
   const [busy, setBusy] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    void refreshConsentFromServer();
+  }, []);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -30,13 +55,15 @@ export function CookieBanner() {
     };
   }, [open]);
 
-  if (!open) return null;
-
   function choose(choice: ConsentChoice) {
     if (busy) return;
     setBusy(true);
     void recordConsent(choice).finally(() => setBusy(false));
   }
+
+  const noticeNode = notice ? <PrivacyNotice /> : null;
+
+  if (!open) return noticeNode;
 
   return (
     <div
@@ -50,14 +77,18 @@ export function CookieBanner() {
       tabIndex={-1}
       data-nosnippet=""
     >
-      <p id="cookie-banner-title" className="cookie-banner-title">
-        Cookies
-      </p>
-      <p id="cookie-banner-copy" className="cookie-banner-copy">
-        Want this site to remember this browser next time? That only happens if you accept.
-        Essential only and Reject all leave it off. The choice is stored in a cookie on this
-        browser. Details are in the <Link to="/privacy#cookies">privacy note</Link>.
-      </p>
+      <div className="cookie-banner-scroll">
+        <p id="cookie-banner-title" className="cookie-banner-title">
+          Cookies
+        </p>
+        <p id="cookie-banner-copy" className="cookie-banner-copy">
+          {BODY}
+        </p>
+        <p className="cookie-banner-details">
+          <Link to="/privacy#cookies">Cookie details</Link>
+        </p>
+      </div>
+      {noticeNode}
       <div className="cookie-actions" role="group" aria-label="Cookie choices">
         {choices.map((item) => (
           <button

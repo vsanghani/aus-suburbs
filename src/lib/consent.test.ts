@@ -4,12 +4,15 @@ import { CONSENT_ENDPOINT } from "./consentApi";
 import {
   CONSENT_COOKIE,
   CONSENT_MAX_AGE_SECONDS,
+  CONSENT_NOTICE,
   CONSENT_VERSION,
   bannerOpenSnapshot,
+  consentNoticeOpen,
   getConsent,
   isCurrentConsent,
   openCookieSettings,
   recordConsent,
+  refreshConsentFromServer,
   resetConsentStore,
   serializeConsentCookie,
   subscribeConsent,
@@ -210,5 +213,156 @@ describe("consent cookie", () => {
     expect(bannerOpenSnapshot()).toBe(false);
     openCookieSettings();
     expect(bannerOpenSnapshot()).toBe(true);
+  });
+
+  it("reads state from GET and falls back to the cookie", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          choice: "reject_all",
+          essential: true,
+          analytics: false,
+          version: CONSENT_VERSION,
+          timestamp: "2026-03-01T00:00:00.000Z",
+          privacySignal: null,
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    );
+    await refreshConsentFromServer();
+    expect(fetchMock).toHaveBeenCalledWith(
+      CONSENT_ENDPOINT,
+      expect.objectContaining({ method: "GET", credentials: "same-origin", cache: "no-store" }),
+    );
+    expect(getConsent()).toMatchObject({
+      choice: "reject_all",
+      analytics: false,
+      essential: true,
+      version: CONSENT_VERSION,
+      timestamp: "2026-03-01T00:00:00.000Z",
+    });
+    expect(document.cookie).not.toContain("kf_vid");
+
+    clearCookies();
+    resetConsentStore();
+    document.cookie = serializeConsentCookie("essential_only", {
+      now: new Date("2026-04-04T00:00:00.000Z"),
+      secure: false,
+    });
+    resetConsentStore();
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
+    await refreshConsentFromServer();
+    expect(getConsent().choice).toBe("essential_only");
+
+    clearCookies();
+    resetConsentStore();
+    fetchMock.mockRejectedValueOnce(new Error("offline"));
+    document.cookie = serializeConsentCookie("accept_all", {
+      now: new Date("2026-04-05T00:00:00.000Z"),
+      secure: false,
+    });
+    resetConsentStore();
+    await refreshConsentFromServer();
+    expect(getConsent()).toMatchObject({ choice: "accept_all", analytics: true });
+
+    clearCookies();
+    resetConsentStore();
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          choice: null,
+          essential: true,
+          analytics: false,
+          version: null,
+          timestamp: null,
+          privacySignal: null,
+        }),
+        { status: 200 },
+      ),
+    );
+    await refreshConsentFromServer();
+    expect(getConsent().choice).toBeNull();
+    expect(bannerOpenSnapshot()).toBe(true);
+    expect(consentNoticeOpen()).toBe(false);
+  });
+
+  it("stores the choice returned by POST, including a privacy-signal downgrade", async () => {
+    const timestamp = "2026-08-01T00:00:00.000Z";
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          choice: "essential_only",
+          essential: true,
+          analytics: false,
+          version: CONSENT_VERSION,
+          timestamp,
+          privacySignal: "gpc",
+        }),
+        { status: 200 },
+      ),
+    );
+    await expect(recordConsent("accept_all")).resolves.toBe("server");
+    expect(getConsent()).toMatchObject({
+      choice: "essential_only",
+      analytics: false,
+      essential: true,
+      timestamp,
+    });
+    expect(document.cookie).not.toContain("accept_all");
+    expect(document.cookie).not.toContain("kf_vid");
+    expect(consentNoticeOpen()).toBe(true);
+
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          choice: "essential_only",
+          essential: true,
+          analytics: false,
+          version: CONSENT_VERSION,
+          timestamp,
+        }),
+        { status: 200 },
+      ),
+    );
+    await recordConsent("accept_all");
+    expect(getConsent().choice).toBe("essential_only");
+    expect(consentNoticeOpen()).toBe(true);
+
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          choice: "essential_only",
+          essential: true,
+          analytics: false,
+          version: CONSENT_VERSION,
+          timestamp,
+          privacySignal: null,
+        }),
+        { status: 200 },
+      ),
+    );
+    await recordConsent("accept_all");
+    expect(getConsent().choice).toBe("essential_only");
+    expect(consentNoticeOpen()).toBe(false);
+    expect(CONSENT_NOTICE).toBe(
+      "We've kept analytics off because your browser sent a privacy signal.",
+    );
+  });
+
+  it("shows the settings notice for a browser signal only when the server did not send one", () => {
+    document.cookie = serializeConsentCookie("essential_only", {
+      now: new Date("2026-05-01T00:00:00.000Z"),
+      secure: false,
+    });
+    resetConsentStore();
+    Object.defineProperty(navigator, "globalPrivacyControl", { configurable: true, value: true });
+    openCookieSettings();
+    expect(consentNoticeOpen()).toBe(true);
+    delete (navigator as { globalPrivacyControl?: boolean }).globalPrivacyControl;
+
+    Object.defineProperty(navigator, "doNotTrack", { configurable: true, value: "1" });
+    openCookieSettings();
+    expect(consentNoticeOpen()).toBe(true);
+    Object.defineProperty(navigator, "doNotTrack", { configurable: true, value: null });
   });
 });
