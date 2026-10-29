@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { CookieBanner } from "./components/CookieBanner";
 import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
@@ -45,6 +46,7 @@ export function App() {
         </Routes>
       </RouteErrorBoundary>
       <SiteFooter />
+      <CookieBanner />
     </>
   );
 }
