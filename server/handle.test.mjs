@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { once } from "node:events";
 import { describe, expect, it } from "vitest";
+import { createFetchHandler as createConsentFetchHandler } from "../api/consent.js";
 import { createFetchHandler } from "../api/ssr.js";
 import * as renderer from "../src/entry-server.tsx";
 import {
@@ -282,52 +283,6 @@ describe("vercel serverless entry", () => {
     expect(down.text).toContain("did not respond");
   });
 
-  it("forwards both consent cookies from POST /api/consent without the document cache", async () => {
-    const upstream = createServer((req, res) => {
-      if (req.method === "POST" && req.url === "/api/consent") {
-        res.writeHead(204, [
-          ["set-cookie", "kf_consent=from-server; Path=/; SameSite=Lax"],
-          ["set-cookie", "kf_vid=anon; Path=/; HttpOnly; SameSite=Lax"],
-          ["cache-control", "no-store"],
-        ]);
-        res.end();
-        return;
-      }
-      res.writeHead(404);
-      res.end();
-    });
-    upstream.listen(0, "127.0.0.1");
-    await once(upstream, "listening");
-    const address = upstream.address();
-    const base = `http://127.0.0.1:${address.port}`;
-    try {
-      const response = await handler(
-        () => {
-          throw new Error("unused");
-        },
-        { SSR_API_BASE: base },
-      ).fetch(
-        new Request("http://ssr.local/api/consent", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ choice: "accept_all", version: 1 }),
-        }),
-      );
-      expect(response.status).toBe(204);
-      expect(response.headers.get("cache-control")).toBe("no-store");
-      expect(response.headers.get("cache-control")).not.toBe(DOCUMENT_CACHE_CONTROL);
-      const cookies = response.headers.getSetCookie();
-      expect(cookies).toEqual(
-        expect.arrayContaining([
-          expect.stringContaining("kf_consent=from-server"),
-          expect.stringContaining("kf_vid=anon"),
-        ]),
-      );
-    } finally {
-      upstream.close();
-    }
-  });
-
   it("does not serve static files from the function, and blocks paths outside dist", async () => {
     const dir = await mkdtemp(join(tmpdir(), "ssr-static-"));
     await writeFile(join(dir, "index.html"), "shell");
@@ -446,5 +401,52 @@ describe("vercel serverless entry", () => {
       "kf_vid=two; Path=/; Secure",
     ]);
     expect(folded["cache-control"]).toBe("private, no-store");
+  });
+});
+
+describe("consent serverless entry", () => {
+  it("forwards both consent cookies from POST /api/consent without the document cache", async () => {
+    const visitorId = "550e8400-e29b-41d4-a716-446655440000";
+    const response = await createConsentFetchHandler({
+      now: () => new Date("2026-10-27T10:45:00.000Z"),
+      randomId: () => visitorId,
+    }).fetch(
+      new Request("http://ssr.local/api/consent", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ choice: "accept_all", version: 1 }),
+      }),
+    );
+    expect(response.status).toBe(200);
+    const cacheControl = response.headers.get("cache-control");
+    expect(cacheControl).toBe(NO_STORE_CACHE_CONTROL);
+    expect(cacheControl).toContain("no-store");
+    expect(cacheControl).not.toBe(DOCUMENT_CACHE_CONTROL);
+    expect(cacheControl).not.toContain("s-maxage=300");
+    expect(cacheControl).not.toContain("stale-while-revalidate=86400");
+    expect(response.headers.get("cdn-cache-control")).toBe("no-store");
+    expect(response.headers.get("vercel-cdn-cache-control")).toBe("no-store");
+    const cookies = response.headers.getSetCookie();
+    expect(cookies).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("kf_consent="),
+        expect.stringContaining(`kf_vid=${visitorId}`),
+      ]),
+    );
+    const consentCookie = cookies.find((cookie) => cookie.startsWith("kf_consent="));
+    const visitorCookie = cookies.find((cookie) => cookie.startsWith("kf_vid="));
+    expect(consentCookie).toContain("accept_all");
+    expect(consentCookie).not.toMatch(/HttpOnly/i);
+    expect(visitorCookie).toContain(`kf_vid=${visitorId}`);
+    expect(visitorCookie).toMatch(/HttpOnly/i);
+    const folded = nodeHeadersFromResponse(response);
+    expect(folded["set-cookie"]).toEqual(cookies);
+    expect(folded["set-cookie"]).toHaveLength(2);
+    expect(folded["cache-control"]).toBe(NO_STORE_CACHE_CONTROL);
+    expect(folded["cache-control"]).not.toBe(DOCUMENT_CACHE_CONTROL);
+    const payload = await response.json();
+    expect(payload.choice).toBe("accept_all");
+    expect(payload).not.toHaveProperty("visitorId");
+    expect(JSON.stringify(payload)).not.toContain(visitorId);
   });
 });
