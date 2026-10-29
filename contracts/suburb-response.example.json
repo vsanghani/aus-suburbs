@@ -1,0 +1,560 @@
+{
+  "example": true,
+  "note": "Illustrative shape for the future suburb page. These figures are not a record of a real place and are not served by the API. SAL code 20000 is a placeholder. data_level is the finest geography used in that section: suburb, postcode, lga, or state. A section based on postcode-level data has data_level postcode. A stored zero is a real zero. not_available is a gap, with a reason.",
+  "overview": {
+    "data_level": "suburb",
+    "name": "Richmond",
+    "state": "vic",
+    "state_name": "Victoria",
+    "slug": "richmond",
+    "path": "vic/richmond",
+    "sal_code": "20000",
+    "postcodes": ["3121"],
+    "primary_postcode": "3121",
+    "council": {
+      "name": "Yarra",
+      "slug": "yarra",
+      "lga_code": "27350"
+    },
+    "region": {
+      "name": "Melbourne - Inner",
+      "slug": "melbourne-inner",
+      "sa4_code": "206"
+    },
+    "traditional_owners": null,
+    "latitude": -37.818,
+    "longitude": 144.998,
+    "geometry": null,
+    "population": {
+      "metric_key": "population",
+      "value": 28100,
+      "unit": "persons",
+      "source": {
+        "name": "Census of Population and Housing, General Community Profile",
+        "agency": "Australian Bureau of Statistics"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2021-08-10",
+      "status": "ok",
+      "geo_level": "suburb",
+      "fallback_from": null
+    },
+    "blurb": null
+  },
+  "score": {
+    "data_level": "suburb",
+    "value": 55,
+    "tier": "mixed",
+    "base": 50,
+    "formula_status": "draft",
+    "inputs_used": 6,
+    "inputs_skipped": 4,
+    "groups": [
+      {
+        "id": "transport",
+        "label": "Public transport",
+        "direction": "positive",
+        "max_points": 8,
+        "points": 6,
+        "skipped": false,
+        "skip_reason": null,
+        "chart_value": 75,
+        "metric": {
+          "metric_key": "transit-stops-1km",
+          "value": 42,
+          "unit": "stops",
+          "source": {
+            "name": "GTFS timetable feed, illustrative",
+            "agency": "Department of Transport and Planning"
+          },
+          "licence": {
+            "id": "CC-BY-4.0",
+            "text": "Creative Commons Attribution 4.0 International"
+          },
+          "as_of": "2024-09-30",
+          "status": "ok",
+          "geo_level": "suburb",
+          "fallback_from": null
+        }
+      },
+      {
+        "id": "education",
+        "label": "Schools and early learning",
+        "direction": "positive",
+        "max_points": 8,
+        "points": 4,
+        "skipped": false,
+        "skip_reason": null,
+        "chart_value": 50,
+        "metric": {
+          "metric_key": "school-count",
+          "value": 6,
+          "unit": "schools",
+          "source": {
+            "name": "School locations, illustrative",
+            "agency": "Department of Education"
+          },
+          "licence": {
+            "id": "CC-BY-4.0",
+            "text": "Creative Commons Attribution 4.0 International"
+          },
+          "as_of": "2024-06-30",
+          "status": "ok",
+          "geo_level": "suburb",
+          "fallback_from": null
+        }
+      },
+      {
+        "id": "errands",
+        "label": "Everyday shops and services",
+        "direction": "positive",
+        "max_points": 6,
+        "points": null,
+        "skipped": true,
+        "skip_reason": "Input not loaded. It is not treated as zero.",
+        "chart_value": null,
+        "metric": {
+          "metric_key": "supermarket-count",
+          "value": null,
+          "unit": "supermarkets",
+          "source": {
+            "name": "Supermarket locations, illustrative",
+            "agency": "Open data, licence not yet cleared"
+          },
+          "licence": {
+            "id": "unconfirmed",
+            "text": "Licence text is copied from the file at fetch time. This row is not a clearance."
+          },
+          "as_of": null,
+          "status": "not_available",
+          "reason": "No commercially cleared supermarket list is loaded for this suburb.",
+          "geo_level": "suburb",
+          "fallback_from": null
+        }
+      },
+      {
+        "id": "hazards",
+        "label": "Flood and fire overlays",
+        "direction": "negative",
+        "max_points": 8,
+        "points": -2,
+        "skipped": false,
+        "skip_reason": null,
+        "chart_value": 25,
+        "metric": {
+          "metric_key": "flood-overlay-pct",
+          "value": 12.5,
+          "unit": "%",
+          "source": {
+            "name": "Planning scheme overlays, illustrative",
+            "agency": "Department of Transport and Planning"
+          },
+          "licence": {
+            "id": "CC-BY-4.0",
+            "text": "Creative Commons Attribution 4.0 International"
+          },
+          "as_of": "2024-03-01",
+          "status": "ok",
+          "geo_level": "suburb",
+          "fallback_from": null
+        }
+      }
+    ]
+  },
+  "housing": {
+    "data_level": "postcode",
+    "median_rent": {
+      "metric_key": "median-rent",
+      "value": 520,
+      "unit": "$/week",
+      "source": {
+        "name": "Rental report, illustrative quarter",
+        "agency": "Department of Families, Fairness and Housing"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-09-30",
+      "status": "ok",
+      "geo_level": "postcode",
+      "fallback_from": "suburb",
+      "period": "2024-Q3"
+    },
+    "median_house_price": {
+      "metric_key": "median-house",
+      "value": 1250000,
+      "unit": "$",
+      "source": {
+        "name": "Property sales statistics, illustrative quarter",
+        "agency": "Valuer-General Victoria"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-09-30",
+      "status": "ok",
+      "geo_level": "postcode",
+      "fallback_from": "suburb",
+      "period": "2024-Q3"
+    },
+    "median_unit_price": {
+      "metric_key": "median-unit",
+      "value": null,
+      "unit": "$",
+      "source": {
+        "name": "Property sales statistics, illustrative quarter",
+        "agency": "Valuer-General Victoria"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": null,
+      "status": "not_available",
+      "reason": "The agency did not publish a unit median for this postcode in the quarter.",
+      "geo_level": "postcode",
+      "fallback_from": "suburb"
+    }
+  },
+  "education": {
+    "data_level": "suburb",
+    "school_count": {
+      "metric_key": "school-count",
+      "value": 6,
+      "unit": "schools",
+      "source": {
+        "name": "School locations, illustrative",
+        "agency": "Department of Education"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-06-30",
+      "status": "ok",
+      "geo_level": "suburb",
+      "fallback_from": null
+    },
+    "childcare_count": {
+      "metric_key": "childcare-count",
+      "value": 4,
+      "unit": "services",
+      "source": {
+        "name": "Child care services, illustrative",
+        "agency": "Australian Children's Education and Care Quality Authority"
+      },
+      "licence": {
+        "id": "unconfirmed",
+        "text": "Confirm the ACECQA terms before enabling this source."
+      },
+      "as_of": "2024-06-30",
+      "status": "ok",
+      "geo_level": "suburb",
+      "fallback_from": null
+    }
+  },
+  "transport": {
+    "data_level": "suburb",
+    "stops_within_1km": {
+      "metric_key": "transit-stops-1km",
+      "value": 42,
+      "unit": "stops",
+      "source": {
+        "name": "GTFS timetable feed, illustrative",
+        "agency": "Department of Transport and Planning"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-09-30",
+      "status": "ok",
+      "geo_level": "suburb",
+      "fallback_from": null
+    },
+    "train_lines_within_1km": {
+      "metric_key": "train",
+      "value": 2,
+      "unit": "lines",
+      "source": {
+        "name": "GTFS timetable feed, illustrative",
+        "agency": "Department of Transport and Planning"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-09-30",
+      "status": "ok",
+      "geo_level": "suburb",
+      "fallback_from": null
+    }
+  },
+  "services": {
+    "data_level": "lga",
+    "hospital_distance_m": {
+      "metric_key": "distance-hospital-m",
+      "value": 2400,
+      "unit": "m",
+      "source": {
+        "name": "Hospital locations, illustrative",
+        "agency": "Department of Health"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-01-01",
+      "status": "ok",
+      "geo_level": "lga",
+      "fallback_from": "suburb"
+    },
+    "police_distance_m": {
+      "metric_key": "distance-police-m",
+      "value": 900,
+      "unit": "m",
+      "source": {
+        "name": "Police station locations, illustrative",
+        "agency": "Victoria Police"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-01-01",
+      "status": "ok",
+      "geo_level": "lga",
+      "fallback_from": "suburb"
+    },
+    "fire_distance_m": {
+      "metric_key": "distance-fire-m",
+      "value": 1100,
+      "unit": "m",
+      "source": {
+        "name": "Fire station locations, illustrative",
+        "agency": "Fire Rescue Victoria"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-01-01",
+      "status": "ok",
+      "geo_level": "lga",
+      "fallback_from": "suburb"
+    },
+    "ambulance_distance_m": {
+      "metric_key": "distance-ambulance-m",
+      "value": 1800,
+      "unit": "m",
+      "source": {
+        "name": "Ambulance branch locations, illustrative",
+        "agency": "Ambulance Victoria"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-01-01",
+      "status": "ok",
+      "geo_level": "lga",
+      "fallback_from": "suburb"
+    },
+    "supermarket_distance_m": {
+      "metric_key": "distance-supermarket-m",
+      "value": null,
+      "unit": "m",
+      "source": {
+        "name": "Supermarket locations, illustrative",
+        "agency": "Open data, licence not yet cleared"
+      },
+      "licence": {
+        "id": "unconfirmed",
+        "text": "Licence text is copied from the file at fetch time. This row is not a clearance."
+      },
+      "as_of": null,
+      "status": "not_available",
+      "reason": "No commercially cleared supermarket list is loaded, so the distance is not calculated.",
+      "geo_level": "suburb",
+      "fallback_from": null
+    }
+  },
+  "safety": {
+    "data_level": "postcode",
+    "notes": [
+      "Rates follow footfall. A busy centre can look worse than a quiet street with the same chance of harm."
+    ],
+    "person_rate": {
+      "metric_key": "person-rate",
+      "value": 14.2,
+      "unit": "per 1,000",
+      "source": {
+        "name": "Recorded offences, illustrative year",
+        "agency": "Crime Statistics Agency"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-06-30",
+      "status": "ok",
+      "geo_level": "postcode",
+      "fallback_from": "suburb"
+    },
+    "property_rate": {
+      "metric_key": "property-rate",
+      "value": 38.0,
+      "unit": "per 1,000",
+      "source": {
+        "name": "Recorded offences, illustrative year",
+        "agency": "Crime Statistics Agency"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-06-30",
+      "status": "ok",
+      "geo_level": "postcode",
+      "fallback_from": "suburb"
+    },
+    "deception_rate": {
+      "metric_key": "deception-rate",
+      "value": 9.1,
+      "unit": "per 1,000",
+      "source": {
+        "name": "Recorded offences, illustrative year",
+        "agency": "Crime Statistics Agency"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-06-30",
+      "status": "ok",
+      "geo_level": "postcode",
+      "fallback_from": "suburb"
+    },
+    "youth_rate": {
+      "metric_key": "youth-rate",
+      "value": null,
+      "unit": "per 1,000 aged 10–17",
+      "source": {
+        "name": "Alleged offender incidents, illustrative",
+        "agency": "Crime Statistics Agency"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": null,
+      "status": "not_available",
+      "reason": "Published for the council, not the suburb.",
+      "geo_level": "lga",
+      "fallback_from": "suburb"
+    }
+  },
+  "climate_hazards": {
+    "data_level": "suburb",
+    "flood_pct": {
+      "metric_key": "flood-overlay-pct",
+      "value": 12.5,
+      "unit": "%",
+      "source": {
+        "name": "Planning scheme overlays, illustrative",
+        "agency": "Department of Transport and Planning"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-03-01",
+      "status": "ok",
+      "geo_level": "suburb",
+      "fallback_from": null
+    },
+    "bushfire_pct": {
+      "metric_key": "bushfire-pct",
+      "value": 0,
+      "unit": "%",
+      "source": {
+        "name": "Planning scheme overlays, illustrative",
+        "agency": "Department of Transport and Planning"
+      },
+      "licence": {
+        "id": "CC-BY-4.0",
+        "text": "Creative Commons Attribution 4.0 International"
+      },
+      "as_of": "2024-03-01",
+      "status": "ok",
+      "geo_level": "suburb",
+      "fallback_from": null
+    },
+    "hot_days": {
+      "metric_key": "hot-days",
+      "value": null,
+      "unit": "days/year",
+      "source": {
+        "name": "Climate station normals, illustrative",
+        "agency": "Bureau of Meteorology"
+      },
+      "licence": {
+        "id": "unconfirmed",
+        "text": "Bureau of Meteorology terms are not cleared for this product yet."
+      },
+      "as_of": null,
+      "status": "not_available",
+      "reason": "No cleared climate series is loaded. The gap is not stored as zero days.",
+      "geo_level": "state",
+      "fallback_from": "suburb"
+    }
+  },
+  "amenities": {
+    "data_level": "state",
+    "park_count": {
+      "metric_key": "park-count",
+      "value": 40,
+      "unit": "parks",
+      "source": {
+        "name": "Park locations, state rollup, illustrative",
+        "agency": "Open data, shown here only as a shape"
+      },
+      "licence": {
+        "id": "unconfirmed",
+        "text": "OpenStreetMap is ODbL. A real load of that source stays disabled until the share-alike duty is accepted."
+      },
+      "as_of": "2024-01-01",
+      "status": "ok",
+      "geo_level": "state",
+      "fallback_from": "suburb"
+    }
+  },
+  "meta": {
+    "state": "vic",
+    "slug": "richmond",
+    "path": "vic/richmond",
+    "sections_filled": 9,
+    "own_figure_sections": 5,
+    "sections_filled_ids": [
+      "census",
+      "score",
+      "housing",
+      "education",
+      "transport",
+      "emergency",
+      "crime",
+      "hazards",
+      "amenities"
+    ],
+    "own_figure_section_ids": ["census", "score", "education", "transport", "hazards"],
+    "indexable": true,
+    "min_sections_filled": 4,
+    "min_own_figure_sections": 2,
+    "last_updated": "2024-09-30"
+  }
+}
