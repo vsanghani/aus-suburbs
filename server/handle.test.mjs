@@ -11,6 +11,7 @@ import {
   DOCUMENT_CACHE_CONTROL,
   NO_STORE_CACHE_CONTROL,
   handleRequest,
+  nodeHeadersFromResponse,
   openStatic,
 } from "./handle.mjs";
 
@@ -267,5 +268,99 @@ describe("vercel serverless entry", () => {
     expect(response.status).toBe(404);
     expect(response.headers.get("content-type")).toContain("text/html");
     expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+  });
+
+  it("sets no cookies on the SSR path and does not vary cached HTML on cookies", async () => {
+    const tracked = {
+      cookie: "kf_consent=ignored; kf_vid=11111111-1111-4111-8111-111111111111",
+      "sec-gpc": "1",
+      dnt: "1",
+    };
+    const plainHome = await handler(() => {
+      throw new Error("home does not fetch");
+    }).fetch(new Request("http://ssr.local/"));
+    const cookieHome = await handler(() => {
+      throw new Error("home does not fetch");
+    }).fetch(new Request("http://ssr.local/", { headers: tracked }));
+    expect(cookieHome.headers.get("cache-control")).toBe(DOCUMENT_CACHE_CONTROL);
+    expect(cookieHome.headers.get("cache-control")).toContain("s-maxage=300");
+    expect(cookieHome.headers.get("cache-control")).toContain("stale-while-revalidate=86400");
+    expect(cookieHome.headers.get("cdn-cache-control")).toContain("s-maxage=300");
+    expect(cookieHome.headers.get("vary")).toBeNull();
+    expect(cookieHome.headers.getSetCookie()).toEqual([]);
+    expect(await cookieHome.text()).toBe(await plainHome.text());
+
+    const suburbHit = await handler(
+      jsonFetch((url) => {
+        expect(url).toBe("http://api.test/api/v1/suburbs/vic/richmond");
+        return { body: suburb };
+      }),
+    ).fetch(new Request("http://ssr.local/suburbs/vic/richmond", { headers: tracked }));
+    expect(suburbHit.status).toBe(200);
+    expect(suburbHit.headers.get("cache-control")).toBe(DOCUMENT_CACHE_CONTROL);
+    expect(suburbHit.headers.getSetCookie()).toEqual([]);
+    expect(suburbHit.headers.get("vary") ?? "").not.toMatch(/cookie/i);
+
+    const missing = await handler(
+      jsonFetch(() => ({ status: 404, body: { detail: "No suburb is on file." } })),
+    ).fetch(new Request("http://ssr.local/suburbs/vic/richmond", { headers: tracked }));
+    expect(missing.status).toBe(404);
+    expect(missing.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+    expect(missing.headers.get("cache-control")).not.toContain("s-maxage");
+    expect(missing.headers.getSetCookie()).toEqual([]);
+
+    const redirect = await handler(() => {
+      throw new Error("redirects do not fetch");
+    }).fetch(new Request("http://ssr.local/Suburbs/VIC/Richmond/", { headers: tracked }));
+    expect(redirect.status).toBe(301);
+    expect(redirect.headers.getSetCookie()).toEqual([]);
+    expect(redirect.headers.get("cache-control")).toContain("s-maxage=86400");
+
+    const sitemap = await handler(
+      jsonFetch(() => ({
+        body: { dataset_connected: false, total: null, suburbs: [], offset: 0, limit: 100 },
+      })),
+    ).fetch(new Request("http://ssr.local/sitemap.xml", { headers: tracked }));
+    expect(sitemap.status).toBe(200);
+    expect(sitemap.headers.get("cache-control")).toContain("s-maxage=300");
+    expect(sitemap.headers.getSetCookie()).toEqual([]);
+
+    const robots = await handler(() => {
+      throw new Error("robots does not fetch");
+    }).fetch(new Request("http://ssr.local/robots.txt", { headers: tracked }));
+    expect(robots.headers.getSetCookie()).toEqual([]);
+
+    const consent = await handleRequest(
+      new Request("http://ssr.local/api/consent", {
+        method: "POST",
+        headers: { ...tracked, "content-type": "application/json" },
+        body: JSON.stringify({ choice: "all" }),
+      }),
+      {
+        isProd: true,
+        serveStatic: false,
+        renderer,
+        template,
+        env: { VITE_SITE_ORIGIN: origin, SSR_API_BASE: "http://127.0.0.1:9" },
+      },
+    );
+    expect(consent.status).toBe(404);
+    expect(await consent.json()).toEqual({ detail: "Not found." });
+    expect(consent.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+    expect(consent.headers.get("cache-control")).not.toContain("s-maxage");
+    expect(consent.headers.getSetCookie()).toEqual([]);
+  });
+
+  it("keeps every Set-Cookie header when writing a Node response", () => {
+    const headers = new Headers();
+    headers.append("set-cookie", "kf_consent=one; Path=/; Secure");
+    headers.append("set-cookie", "kf_vid=two; Path=/; Secure");
+    headers.set("cache-control", "private, no-store");
+    const folded = nodeHeadersFromResponse(new Response("{}", { status: 200, headers }));
+    expect(folded["set-cookie"]).toEqual([
+      "kf_consent=one; Path=/; Secure",
+      "kf_vid=two; Path=/; Secure",
+    ]);
+    expect(folded["cache-control"]).toBe("private, no-store");
   });
 });

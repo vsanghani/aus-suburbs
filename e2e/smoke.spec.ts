@@ -162,6 +162,145 @@ test("suburb HTML is rendered before javascript, and the sitemap stays empty of 
   expect(await robots.text()).toContain("Sitemap: http://127.0.0.1:4173/sitemap.xml");
 });
 
+function setCookies(headers: { name: string; value: string }[]) {
+  return headers
+    .filter((header) => header.name.toLowerCase() === "set-cookie")
+    .map((header) => header.value);
+}
+
+test("documents set no cookies, and consent is set by the server", async ({ request }) => {
+  const home = await request.get("/");
+  expect(home.status()).toBe(200);
+  expect(home.headers()["cache-control"]).toContain("s-maxage=300");
+  expect(home.headers()["cache-control"]).toContain("stale-while-revalidate=86400");
+  expect(setCookies(home.headersArray())).toEqual([]);
+
+  const suburb = await request.get("/suburbs/vic/richmond");
+  expect(setCookies(suburb.headersArray())).toEqual([]);
+
+  const idleSignal = await request.get("/api/consent", { headers: { "sec-gpc": "1" } });
+  expect(idleSignal.status()).toBe(200);
+  expect(idleSignal.headers()["cache-control"]).toBe("private, no-store");
+  expect(setCookies(idleSignal.headersArray())).toEqual([]);
+  expect(await idleSignal.json()).toMatchObject({
+    choice: null,
+    analytics: false,
+    privacySignal: "gpc",
+  });
+
+  const essential = await request.post("/api/consent", {
+    data: { choice: "essential_only", version: 1 },
+  });
+  expect(essential.status()).toBe(200);
+  expect(essential.headers()["cache-control"]).toBe("private, no-store");
+  const essentialBody = await essential.json();
+  expect(essentialBody).toEqual({
+    choice: "essential_only",
+    essential: true,
+    analytics: false,
+    version: 1,
+    timestamp: expect.any(String),
+    privacySignal: null,
+  });
+  const essentialCookies = setCookies(essential.headersArray());
+  const consentCookie = essentialCookies.find((cookie) => cookie.startsWith("kf_consent="));
+  expect(consentCookie).toBeDefined();
+  expect(consentCookie).toContain("Max-Age=31536000");
+  expect(consentCookie).toContain("Path=/");
+  expect(consentCookie).toContain("SameSite=Lax");
+  expect(consentCookie).not.toContain("Secure");
+  expect(consentCookie).not.toMatch(/HttpOnly/i);
+  expect(
+    JSON.parse(decodeURIComponent(consentCookie!.split(";")[0].slice("kf_consent=".length))),
+  ).toMatchObject({
+    choice: "essential_only",
+    version: 1,
+  });
+  const cleared = essentialCookies.find((cookie) => cookie.startsWith("kf_vid="));
+  expect(cleared).toContain("HttpOnly");
+  expect(cleared).toContain("Secure");
+  expect(cleared).toContain("SameSite=Lax");
+
+  const accepted = await request.post("/api/consent", {
+    data: { choice: "accept_all", version: 1 },
+  });
+  expect(accepted.status()).toBe(200);
+  const acceptedBody = await accepted.json();
+  expect(acceptedBody).toMatchObject({
+    choice: "accept_all",
+    analytics: true,
+    privacySignal: null,
+  });
+  expect(acceptedBody).not.toHaveProperty("visitorId");
+  const acceptedCookies = setCookies(accepted.headersArray());
+  const vidCookie = acceptedCookies.find((cookie) => /^kf_vid=[0-9a-f-]{36}/i.test(cookie));
+  expect(vidCookie).toMatch(/HttpOnly/);
+  expect(vidCookie).toMatch(/Secure/);
+  expect(vidCookie).toMatch(/SameSite=Lax/);
+  const visitorId = vidCookie?.split(";")[0]?.slice("kf_vid=".length) ?? "";
+  expect(visitorId.length).toBeGreaterThan(0);
+  expect(JSON.stringify(acceptedBody)).not.toContain(visitorId);
+
+  const quietRead = await request.get("/api/consent");
+  expect(quietRead.status()).toBe(200);
+  expect(setCookies(quietRead.headersArray())).toEqual([]);
+  expect(await quietRead.json()).toMatchObject({ choice: "accept_all", privacySignal: null });
+
+  const signalRead = await request.get("/api/consent", {
+    headers: { "sec-gpc": "1" },
+  });
+  expect(signalRead.status()).toBe(200);
+  expect(signalRead.headers()["cache-control"]).toBe("private, no-store");
+  const signalCookies = setCookies(signalRead.headersArray());
+  const rewritten = signalCookies.find((cookie) => cookie.startsWith("kf_consent="));
+  expect(rewritten).toContain("Max-Age=31536000");
+  expect(rewritten).toContain("Path=/");
+  expect(rewritten).toContain("SameSite=Lax");
+  expect(rewritten).not.toMatch(/HttpOnly/i);
+  expect(
+    JSON.parse(decodeURIComponent(rewritten!.split(";")[0].slice("kf_consent=".length))),
+  ).toMatchObject({ choice: "essential_only", version: 1 });
+  const clearedVid = signalCookies.find((cookie) => cookie.startsWith("kf_vid="));
+  expect(clearedVid).toContain("Max-Age=0");
+  expect(clearedVid).toContain("HttpOnly");
+  expect(clearedVid).toContain("Secure");
+  expect(clearedVid).toContain("SameSite=Lax");
+  const signalBody = await signalRead.json();
+  expect(signalBody).toEqual({
+    choice: "essential_only",
+    essential: true,
+    analytics: false,
+    version: 1,
+    timestamp: expect.any(String),
+    privacySignal: "gpc",
+  });
+  expect(JSON.stringify(signalBody)).not.toContain(visitorId);
+  expect(signalBody).not.toHaveProperty("visitorId");
+
+  const optedOut = await request.post("/api/consent", {
+    data: { choice: "accept_all", version: 1 },
+    headers: { "sec-gpc": "1" },
+  });
+  expect(optedOut.status()).toBe(200);
+  const optedOutBody = await optedOut.json();
+  expect(optedOutBody).toEqual({
+    choice: "essential_only",
+    essential: true,
+    analytics: false,
+    version: 1,
+    timestamp: expect.any(String),
+    privacySignal: "gpc",
+  });
+  expect(JSON.stringify(optedOutBody)).not.toContain("visitorId");
+  const optedOutCookies = setCookies(optedOut.headersArray());
+  const optedOutConsent = optedOutCookies.find((cookie) => cookie.startsWith("kf_consent="));
+  expect(
+    JSON.parse(decodeURIComponent(optedOutConsent!.split(";")[0].slice("kf_consent=".length)))
+      .choice,
+  ).toBe("essential_only");
+  expect(optedOutCookies.some((cookie) => /kf_vid=[0-9a-f-]{36}/i.test(cookie))).toBe(false);
+});
+
 test("match sliders and a ranking list explain the empty record", async ({ page }) => {
   await page.goto("/match");
   await expect(page.getByRole("heading", { name: "Match" })).toBeVisible();

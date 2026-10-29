@@ -37,7 +37,7 @@ In another:
 npm run dev
 ```
 
-`npm run dev` starts the Node server on port 5173. It renders pages and proxies `/api` and `/health` to `http://127.0.0.1:8000`. Leave `VITE_API_BASE` empty for that. Set it, or `SSR_API_BASE`, when the API is hosted elsewhere. Set `VITE_SITE_ORIGIN` (no trailing slash) before you care about canonical links; see `docs/handoff.md`.
+`npm run dev` starts the Node server on port 5173. It renders pages and proxies `/api` and `/health` to `http://127.0.0.1:8000`, except `POST` and `GET /api/consent`, which this server answers itself. See `docs/cookies.md`. Leave `VITE_API_BASE` empty for that. Set it, or `SSR_API_BASE`, when the API is hosted elsewhere. Set `VITE_SITE_ORIGIN` (no trailing slash) before you care about canonical links; see `docs/handoff.md`.
 
 `make api` loads `.env` if it exists, then starts uvicorn from `backend/`. Alembic and the catalogue path do not depend on the working directory: the default contracts directory is resolved from the package file.
 
@@ -70,6 +70,8 @@ Backend checks, from `backend/` with the venv active: `ruff check .`, `ruff form
 ## Layout
 
 ```
+api/consent.js              first-party consent cookies
+docs/cookies.md             cookie names and the /api/consent contract
 src/config/site.ts          display name
 src/styles/tokens.css       colour, type, space
 src/metrics/registry.ts     suburb sections
