@@ -34,4 +34,13 @@ describe("vercel.json", () => {
     expect(bySource["/fonts/(.*)"][0].value).toBe("public, max-age=300");
     expect(bySource["/favicon.svg"][0].value).toBe("public, max-age=300");
   });
+
+  it("keeps the consent endpoint out of the shared cache", () => {
+    const consent = config.headers.find((entry) => entry.source === "/api/consent");
+    expect(consent?.headers).toEqual([
+      { key: "Cache-Control", value: "private, no-store" },
+      { key: "CDN-Cache-Control", value: "no-store" },
+      { key: "Vercel-CDN-Cache-Control", value: "no-store" },
+    ]);
+  });
 });

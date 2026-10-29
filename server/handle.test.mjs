@@ -5,12 +5,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { once } from "node:events";
 import { describe, expect, it } from "vitest";
+import { createFetchHandler as createConsentFetchHandler } from "../api/consent.js";
 import { createFetchHandler } from "../api/ssr.js";
 import * as renderer from "../src/entry-server.tsx";
 import {
   DOCUMENT_CACHE_CONTROL,
   NO_STORE_CACHE_CONTROL,
   handleRequest,
+  nodeHeadersFromResponse,
   openStatic,
 } from "./handle.mjs";
 
@@ -195,6 +197,44 @@ describe("vercel serverless entry", () => {
     expect(bare.text).not.toContain("Sitemap:");
   });
 
+  it("serves the same suburb HTML with or without a consent cookie or a crawler", async () => {
+    const fetchImpl = jsonFetch(() => ({ body: suburb }));
+    const headersList = [
+      {},
+      {
+        cookie: `kf_consent=${encodeURIComponent(
+          JSON.stringify({
+            choice: "accept_all",
+            version: 1,
+            timestamp: "2026-01-01T00:00:00.000Z",
+          }),
+        )}`,
+      },
+      {
+        "user-agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+      },
+    ];
+    const bodies = [];
+    for (const headers of headersList) {
+      const response = await handler(fetchImpl).fetch(
+        new Request("http://ssr.local/suburbs/vic/richmond", { headers }),
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("set-cookie")).toBeNull();
+      expect(response.headers.get("cache-control")).toBe(DOCUMENT_CACHE_CONTROL);
+      expect(response.headers.get("vary")).toBeNull();
+      bodies.push(await response.text());
+    }
+    expect(bodies[1]).toBe(bodies[0]);
+    expect(bodies[2]).toBe(bodies[0]);
+    expect(bodies[0]).toContain("Richmond");
+    expect(bodies[0]).toContain("<h1");
+    expect(bodies[0]).toContain("Cookie settings");
+    expect(bodies[0]).not.toContain('role="dialog"');
+    expect(bodies[0]).not.toContain(">Accept all<");
+    expect(bodies[0]).not.toContain("kf_vid");
+  });
+
   it("proxies /api and /health to the API base and does not cache a dead proxy", async () => {
     const upstream = createServer((req, res) => {
       if (req.url === "/health") {
@@ -267,5 +307,146 @@ describe("vercel serverless entry", () => {
     expect(response.status).toBe(404);
     expect(response.headers.get("content-type")).toContain("text/html");
     expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+  });
+
+  it("sets no cookies on the SSR path and does not vary cached HTML on cookies", async () => {
+    const tracked = {
+      cookie: "kf_consent=ignored; kf_vid=11111111-1111-4111-8111-111111111111",
+      "sec-gpc": "1",
+      dnt: "1",
+    };
+    const plainHome = await handler(() => {
+      throw new Error("home does not fetch");
+    }).fetch(new Request("http://ssr.local/"));
+    const cookieHome = await handler(() => {
+      throw new Error("home does not fetch");
+    }).fetch(new Request("http://ssr.local/", { headers: tracked }));
+    expect(cookieHome.headers.get("cache-control")).toBe(DOCUMENT_CACHE_CONTROL);
+    expect(cookieHome.headers.get("cache-control")).toContain("s-maxage=300");
+    expect(cookieHome.headers.get("cache-control")).toContain("stale-while-revalidate=86400");
+    expect(cookieHome.headers.get("cdn-cache-control")).toContain("s-maxage=300");
+    expect(cookieHome.headers.get("vary")).toBeNull();
+    expect(cookieHome.headers.getSetCookie()).toEqual([]);
+    expect(await cookieHome.text()).toBe(await plainHome.text());
+
+    const suburbHit = await handler(
+      jsonFetch((url) => {
+        expect(url).toBe("http://api.test/api/v1/suburbs/vic/richmond");
+        return { body: suburb };
+      }),
+    ).fetch(new Request("http://ssr.local/suburbs/vic/richmond", { headers: tracked }));
+    expect(suburbHit.status).toBe(200);
+    expect(suburbHit.headers.get("cache-control")).toBe(DOCUMENT_CACHE_CONTROL);
+    expect(suburbHit.headers.getSetCookie()).toEqual([]);
+    expect(suburbHit.headers.get("vary") ?? "").not.toMatch(/cookie/i);
+
+    const missing = await handler(
+      jsonFetch(() => ({ status: 404, body: { detail: "No suburb is on file." } })),
+    ).fetch(new Request("http://ssr.local/suburbs/vic/richmond", { headers: tracked }));
+    expect(missing.status).toBe(404);
+    expect(missing.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+    expect(missing.headers.get("cache-control")).not.toContain("s-maxage");
+    expect(missing.headers.getSetCookie()).toEqual([]);
+
+    const redirect = await handler(() => {
+      throw new Error("redirects do not fetch");
+    }).fetch(new Request("http://ssr.local/Suburbs/VIC/Richmond/", { headers: tracked }));
+    expect(redirect.status).toBe(301);
+    expect(redirect.headers.getSetCookie()).toEqual([]);
+    expect(redirect.headers.get("cache-control")).toContain("s-maxage=86400");
+
+    const sitemap = await handler(
+      jsonFetch(() => ({
+        body: { dataset_connected: false, total: null, suburbs: [], offset: 0, limit: 100 },
+      })),
+    ).fetch(new Request("http://ssr.local/sitemap.xml", { headers: tracked }));
+    expect(sitemap.status).toBe(200);
+    expect(sitemap.headers.get("cache-control")).toContain("s-maxage=300");
+    expect(sitemap.headers.getSetCookie()).toEqual([]);
+
+    const robots = await handler(() => {
+      throw new Error("robots does not fetch");
+    }).fetch(new Request("http://ssr.local/robots.txt", { headers: tracked }));
+    expect(robots.headers.getSetCookie()).toEqual([]);
+
+    const consent = await handleRequest(
+      new Request("http://ssr.local/api/consent", {
+        method: "POST",
+        headers: { ...tracked, "content-type": "application/json" },
+        body: JSON.stringify({ choice: "all" }),
+      }),
+      {
+        isProd: true,
+        serveStatic: false,
+        renderer,
+        template,
+        env: { VITE_SITE_ORIGIN: origin, SSR_API_BASE: "http://127.0.0.1:9" },
+      },
+    );
+    expect(consent.status).toBe(404);
+    expect(await consent.json()).toEqual({ detail: "Not found." });
+    expect(consent.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
+    expect(consent.headers.get("cache-control")).not.toContain("s-maxage");
+    expect(consent.headers.getSetCookie()).toEqual([]);
+  });
+
+  it("keeps every Set-Cookie header when writing a Node response", () => {
+    const headers = new Headers();
+    headers.append("set-cookie", "kf_consent=one; Path=/; Secure");
+    headers.append("set-cookie", "kf_vid=two; Path=/; Secure");
+    headers.set("cache-control", "private, no-store");
+    const folded = nodeHeadersFromResponse(new Response("{}", { status: 200, headers }));
+    expect(folded["set-cookie"]).toEqual([
+      "kf_consent=one; Path=/; Secure",
+      "kf_vid=two; Path=/; Secure",
+    ]);
+    expect(folded["cache-control"]).toBe("private, no-store");
+  });
+});
+
+describe("consent serverless entry", () => {
+  it("forwards both consent cookies from POST /api/consent without the document cache", async () => {
+    const visitorId = "550e8400-e29b-41d4-a716-446655440000";
+    const response = await createConsentFetchHandler({
+      now: () => new Date("2026-10-27T10:45:00.000Z"),
+      randomId: () => visitorId,
+    }).fetch(
+      new Request("http://ssr.local/api/consent", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ choice: "accept_all", version: 1 }),
+      }),
+    );
+    expect(response.status).toBe(200);
+    const cacheControl = response.headers.get("cache-control");
+    expect(cacheControl).toBe(NO_STORE_CACHE_CONTROL);
+    expect(cacheControl).toContain("no-store");
+    expect(cacheControl).not.toBe(DOCUMENT_CACHE_CONTROL);
+    expect(cacheControl).not.toContain("s-maxage=300");
+    expect(cacheControl).not.toContain("stale-while-revalidate=86400");
+    expect(response.headers.get("cdn-cache-control")).toBe("no-store");
+    expect(response.headers.get("vercel-cdn-cache-control")).toBe("no-store");
+    const cookies = response.headers.getSetCookie();
+    expect(cookies).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("kf_consent="),
+        expect.stringContaining(`kf_vid=${visitorId}`),
+      ]),
+    );
+    const consentCookie = cookies.find((cookie) => cookie.startsWith("kf_consent="));
+    const visitorCookie = cookies.find((cookie) => cookie.startsWith("kf_vid="));
+    expect(consentCookie).toContain("accept_all");
+    expect(consentCookie).not.toMatch(/HttpOnly/i);
+    expect(visitorCookie).toContain(`kf_vid=${visitorId}`);
+    expect(visitorCookie).toMatch(/HttpOnly/i);
+    const folded = nodeHeadersFromResponse(response);
+    expect(folded["set-cookie"]).toEqual(cookies);
+    expect(folded["set-cookie"]).toHaveLength(2);
+    expect(folded["cache-control"]).toBe(NO_STORE_CACHE_CONTROL);
+    expect(folded["cache-control"]).not.toBe(DOCUMENT_CACHE_CONTROL);
+    const payload = await response.json();
+    expect(payload.choice).toBe("accept_all");
+    expect(payload).not.toHaveProperty("visitorId");
+    expect(JSON.stringify(payload)).not.toContain(visitorId);
   });
 });
